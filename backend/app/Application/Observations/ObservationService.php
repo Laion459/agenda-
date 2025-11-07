@@ -55,6 +55,38 @@ class ObservationService
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }
+
+    public function listForDoctor(User $doctorUser, int $patientId, int $perPage = 20): LengthAwarePaginator
+    {
+        $doctor = $doctorUser->doctor;
+
+        if (! $doctor) {
+            throw ValidationException::withMessages([
+                'doctor' => __('Somente médicos podem acessar este histórico.'),
+            ]);
+        }
+
+        $hasRelationship = Appointment::query()
+            ->where('doctor_id', $doctor->id)
+            ->where('patient_id', $patientId)
+            ->exists();
+
+        if (! $hasRelationship) {
+            throw ValidationException::withMessages([
+                'patient' => __('Você não possui atendimentos registrados para este paciente.'),
+            ]);
+        }
+
+        return Observation::query()
+            ->where('patient_id', $patientId)
+            ->with([
+                'doctor.user',
+                'patient.user',
+                'appointment.doctor.user',
+            ])
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
+    }
 }
 
 

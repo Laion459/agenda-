@@ -23,7 +23,8 @@ import {
 } from "@/services/appointment-service";
 import { fetchDoctors } from "@/services/doctor-service";
 import { createObservation } from "@/services/observation-service";
-import { Appointment, Doctor } from "@/types";
+import { fetchPatientObservationHistory } from "@/services/patient-observation-service";
+import { Appointment, Doctor, Observation } from "@/types";
 import { useAuthStore } from "@/store/auth-store";
 import { handleApiError } from "@/lib/handle-api-error";
 
@@ -62,6 +63,8 @@ export default function AppointmentsPage() {
   const [selectedReschedule, setSelectedReschedule] = useState<Appointment | null>(null);
   const [detail, setDetail] = useState<Appointment | null>(null);
   const [detailLoadingId, setDetailLoadingId] = useState<number | null>(null);
+  const [patientHistory, setPatientHistory] = useState<Observation[] | null>(null);
+  const [patientHistoryLoading, setPatientHistoryLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const user = useAuthStore((state) => state.user);
 
@@ -202,6 +205,7 @@ export default function AppointmentsPage() {
     try {
       const response = await fetchAppointment(appointment.id);
       setDetail(response);
+      setPatientHistory(null);
     } catch (error) {
       handleApiError(error, 'Não foi possível carregar detalhes');
     } finally {
@@ -217,6 +221,18 @@ export default function AppointmentsPage() {
       })),
     [doctors]
   );
+
+  const loadPatientHistory = async (patientId: number) => {
+    setPatientHistoryLoading(true);
+    try {
+      const response = await fetchPatientObservationHistory(patientId);
+      setPatientHistory(response.data ?? []);
+    } catch (error) {
+      handleApiError(error, 'Não foi possível carregar o histórico do paciente');
+    } finally {
+      setPatientHistoryLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -632,6 +648,55 @@ export default function AppointmentsPage() {
                 Fechar
               </Button>
             </div>
+            {detail.patient && isDoctor && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase text-slate-500">Histórico completo</p>
+                  <Button
+                    variant="ghost"
+                    onClick={() => loadPatientHistory(detail.patient!.id)}
+                    disabled={patientHistoryLoading}
+                  >
+                    {patientHistoryLoading ? 'Carregando...' : 'Ver histórico'}
+                  </Button>
+                </div>
+                {patientHistory && (
+                  <div className="max-h-64 overflow-y-auto border border-slate-200 p-3">
+                    {patientHistory.length === 0 ? (
+                      <p className="text-sm text-slate-500">Nenhuma observação registrada para este paciente.</p>
+                    ) : (
+                      <ul className="space-y-3 text-sm">
+                        {patientHistory.map((obs) => (
+                          <li key={obs.id} className="rounded-md border border-slate-200 p-3">
+                            <p className="font-medium text-slate-800">
+                              {new Date(obs.created_at).toLocaleString('pt-BR', {
+                                dateStyle: 'short',
+                                timeStyle: 'short',
+                              })}
+                            </p>
+                            <p className="text-xs text-slate-500">Responsável: {obs.doctor?.name ?? '---'}</p>
+                            <p className="mt-1 text-xs text-slate-500">Anamnese</p>
+                            <p className="text-sm text-slate-700">{obs.anamnesis}</p>
+                            {obs.diagnosis && (
+                              <>
+                                <p className="mt-2 text-xs text-slate-500">Diagnóstico</p>
+                                <p className="text-sm text-slate-700">{obs.diagnosis}</p>
+                              </>
+                            )}
+                            {obs.prescription && (
+                              <>
+                                <p className="mt-2 text-xs text-slate-500">Prescrição</p>
+                                <p className="text-sm text-slate-700">{obs.prescription}</p>
+                              </>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Card>
       )}

@@ -35,6 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('patient/observations', [ObservationController::class, 'index']);
     });
 
+    Route::middleware('role:DOCTOR')->group(function () {
+        Route::get('doctor/patients/{patient}/observations', [ObservationController::class, 'historyForDoctor']);
+    });
+
     Route::middleware('role:ADMIN')->group(function () {
         Route::post('health-insurances', [HealthInsuranceController::class, 'store']);
         Route::put('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'update']);

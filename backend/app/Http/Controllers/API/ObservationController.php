@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Observations\StoreObservationRequest;
 use App\Http\Resources\ObservationResource;
 use App\Models\Appointment;
+use App\Models\Patient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -28,6 +29,17 @@ class ObservationController extends Controller
     {
         $observations = $this->service->listForPatient(
             $request->user(),
+            (int) $request->query('per_page', 20)
+        );
+
+        return ObservationResource::collection($observations)->response();
+    }
+
+    public function historyForDoctor(Request $request, Patient $patient): JsonResponse
+    {
+        $observations = $this->service->listForDoctor(
+            $request->user(),
+            $patient->id,
             (int) $request->query('per_page', 20)
         );
 
