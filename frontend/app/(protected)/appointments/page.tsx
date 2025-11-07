@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { StatusBadge, getStatusLabel } from "@/components/ui/status-badge";
 import {
   cancelAppointment,
   confirmAppointment,
@@ -54,6 +55,14 @@ const rescheduleSchema = z.object({
 });
 
 type RescheduleForm = z.infer<typeof rescheduleSchema>;
+
+const APPOINTMENT_STATUS_OPTIONS = [
+  { value: "", label: "Todos" },
+  { value: "PENDING", label: "Pendentes" },
+  { value: "CONFIRMED", label: "Confirmadas" },
+  { value: "COMPLETED", label: "Concluídas" },
+  { value: "CANCELLED", label: "Canceladas" },
+];
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -226,8 +235,8 @@ export default function AppointmentsPage() {
   const loadPatientHistory = async (patientId: number) => {
     setPatientHistoryLoading(true);
     try {
-      const response = await fetchPatientObservationHistory(patientId);
-      setPatientHistory(response.data ?? []);
+      const history = await fetchPatientObservationHistory(patientId);
+      setPatientHistory(history);
     } catch (error) {
       handleApiError(error, 'Não foi possível carregar o histórico do paciente');
     } finally {
@@ -318,14 +327,14 @@ export default function AppointmentsPage() {
               <select
                 id="status_filter"
                 className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={statusFilter ?? ''}
+                value={statusFilter ?? ""}
                 onChange={(event) => setStatusFilter(event.target.value || undefined)}
               >
-                <option value="">Todos</option>
-                <option value="PENDING">Pendentes</option>
-                <option value="CONFIRMED">Confirmadas</option>
-                <option value="COMPLETED">Concluídas</option>
-                <option value="CANCELLED">Canceladas</option>
+                {APPOINTMENT_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
         </CardHeader>
@@ -374,9 +383,7 @@ export default function AppointmentsPage() {
                     <td className="px-4 py-2 text-slate-700">{appointment.doctor?.name ?? '---'}</td>
                     <td className="px-4 py-2 text-slate-700">{appointment.patient?.name ?? '---'}</td>
                     <td className="px-4 py-2">
-                      <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                        {appointment.status}
-                      </span>
+                      <StatusBadge status={appointment.status} />
                     </td>
                     <td className="px-4 py-2 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
@@ -565,7 +572,7 @@ export default function AppointmentsPage() {
                 <div className="grid gap-2 md:grid-cols-2">
                   <div>
                     <p className="text-xs font-semibold uppercase text-slate-500">Status</p>
-                    <p className="text-sm text-slate-800">{detail.status}</p>
+                    <StatusBadge status={detail.status} />
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase text-slate-500">Data</p>
@@ -578,7 +585,7 @@ export default function AppointmentsPage() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase text-slate-500">Tipo</p>
-                    <p className="text-sm text-slate-800">{detail.type}</p>
+                    <p className="text-sm text-slate-800">{detail.type === 'ONLINE' ? 'Online' : 'Presencial'}</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase text-slate-500">Duração</p>
@@ -633,7 +640,7 @@ export default function AppointmentsPage() {
                     {detail.logs.map((log) => (
                       <li key={log.id} className="rounded-md border border-slate-200 p-3 text-sm">
                         <p className="font-medium text-slate-800">
-                          {log.old_status ?? 'N/A'} → {log.new_status}
+                          {log.old_status ? getStatusLabel(log.old_status) : '—'} → {getStatusLabel(log.new_status)}
                         </p>
                         <p className="text-xs text-slate-500">
                           {new Date(log.changed_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
