@@ -28,13 +28,13 @@
 
 ## 1. Preparação do Ambiente
 ### 1.1 Estrutura de Pastas
-- [ ] Definir estrutura raiz: `backend/`, `frontend/`, `deploy/`, `docs/`, `scripts/`.
-- [ ] Criar diretórios de suporte (`.github/`, `tests/`, `docker/`, `migrations/`, `seeders/`).
+- [x] Definir estrutura raiz: `backend/`, `frontend/`, `deploy/`, `docs/`, `scripts/`.
+- [x] Criar diretórios de suporte (`.github/`, `tests/`, `docker/`, `migrations/`, `seeders/`).
 
 ### 1.2 Ferramentas e Dependências Globais
-- [ ] Definir versões estáveis: PHP 8.3 LTS, Laravel 11.x, Node.js 20.x LTS, Next.js 14.x, PostgreSQL 16.x, Redis 7.x.
-- [ ] Configurar Docker/Docker Compose com containers independentes (app, db, redis, mailcatcher).
-- [ ] Configurar Makefile ou scripts PowerShell/Bash para comandos de automação (build, lint, test).
+- [x] Definir versões estáveis: PHP 8.3 LTS, Laravel 11.x, Node.js 20.x LTS, Next.js 14.x, PostgreSQL 16.x, Redis 7.x.
+- [x] Configurar Docker/Docker Compose com containers independentes (app, db, redis, mailcatcher).
+- [x] Configurar Makefile ou scripts PowerShell/Bash para comandos de automação (build, lint, test).
 - [ ] Configurar `pre-commit` (lint, formatadores, testes rápidos).
 
 ### 1.3 Observabilidade de Desenvolvimento
@@ -46,8 +46,8 @@
 
 ## 2. Backend Laravel (API REST)
 ### 2.1 Bootstrap do Projeto
-- [ ] Criar projeto Laravel (`backend/`) com Sanctum habilitado.
-- [ ] Configurar `.env.example` com parâmetros padrão (DB, cache, mail, queue).
+- [x] Criar projeto Laravel (`backend/`) com Sanctum habilitado.
+- [x] Configurar `.env.example` com parâmetros padrão (DB, cache, mail, queue).
 - [ ] Definir namespaces e providers customizados (Domain, Application, Infra).
 
 ### 2.2 Camadas e Módulos
@@ -58,18 +58,18 @@
 - [ ] Configurar Service Container para injeção de dependências.
 
 ### 2.3 Modelagem de Dados
-- [ ] Criar migrations conforme MER (`users`, `patients`, `doctors`, `appointments`, `schedules`, `observations`, `health_insurances`, relacionamentos N:M, `notifications`).
-- [ ] Adicionar índices e constraints (unique, foreign keys, enums).
-- [ ] Criar seeders/factories para dados iniciais e testes.
+- [x] Criar migrations conforme MER (`users`, `patients`, `doctors`, `appointments`, `schedules`, `observations`, `health_insurances`, relacionamentos N:M, `notifications`).
+- [x] Adicionar índices e constraints (unique, foreign keys, enums).
+- [x] Criar seeders/factories para dados iniciais e testes.
 
 ### 2.4 Casos de Uso e Endpoints
-- [ ] Autenticação e gestão de sessão (login, refresh, logout, bloqueio por tentativas).
+- [x] Autenticação e gestão de sessão (login, refresh, logout, bloqueio por tentativas).
 - [ ] Cadastro e gestão de usuários (admin, médico, paciente).
-- [ ] Gestão de agenda médica (CRUD de schedules, bloqueios).
-- [ ] Agendamento, cancelamento e remarcação de consultas.
-- [ ] Observações médicas e prontuário.
+- [x] Gestão de agenda médica (CRUD de schedules, bloqueios).
+- [x] Agendamento, cancelamento e remarcação de consultas.
+- [x] Observações médicas e prontuário.
 - [ ] Relatórios administrativos (consulta, pacientes, médicos, faturamento, ocupação).
-- [ ] Gestão de convênios (CRUD, vinculação com pacientes/médicos).
+- [x] Gestão de convênios (CRUD, vinculação com pacientes/médicos).
 - [ ] Notificações (fila de envio, templates).
 - [ ] Logs de auditoria e histórico.
 
@@ -89,9 +89,9 @@
 
 ## 3. Frontend Next.js
 ### 3.1 Bootstrap do Projeto
-- [ ] Criar projeto Next.js (`frontend/`) com TypeScript e App Router.
-- [ ] Configurar ESLint + Prettier + Stylelint + Husky.
-- [ ] Integrar Tailwind CSS com design system customizado.
+- [x] Criar projeto Next.js (`frontend/`) com TypeScript e App Router.
+- [x] Configurar ESLint + Prettier + Stylelint + Husky.
+- [x] Integrar Tailwind CSS com design system customizado.
 
 ### 3.2 Arquitetura de Pastas
 - [ ] Estrutura recomendada:
@@ -106,16 +106,16 @@
 ### 3.3 Funcionalidades
 - [ ] Autenticação com SSR + persistência de sessão (cookies HttpOnly).
 - [ ] Dashboards específicos (admin, médico, paciente).
-- [ ] Fluxos completos de agendamento, remarcação e cancelamento.
-- [ ] Gestão de agendas para médicos (calendário interativo).
-- [ ] Visualização de histórico e prontuário para perfis autorizados.
+- [x] Fluxos completos de agendamento, remarcação e cancelamento.
+- [x] Gestão de agendas para médicos (calendário interativo).
+- [x] Visualização de histórico e prontuário para perfis autorizados.
 - [ ] Gestão administrativa (relatórios, convênios, usuários).
-- [ ] Notificações e alertas (toast, e-mail opt-in/out).
+- [x] Notificações e alertas (toast, e-mail opt-in/out).
 - [ ] Acessibilidade (WCAG AA) e responsividade (mobile-first).
 
 ### 3.4 Comunicação com API
-- [ ] Configurar Axios (ou Fetch API) com interceptors (tokens, erros).
-- [ ] Criar camada de serviços tipados com Zod/Yup para validar payloads.
+- [x] Configurar Axios (ou Fetch API) com interceptors (tokens, erros).
+- [x] Criar camada de serviços tipados com Zod/Yup para validar payloads.
 - [ ] Implementar React Query para cache de dados e sincronização em tempo real (refetch).
 - [ ] Aplicar optimistic updates quando apropriado.
 
@@ -128,7 +128,7 @@
 ---
 
 ## 4. Banco de Dados PostgreSQL
-- [ ] Criar scripts de criação (migrations) e seeds conforme MER.
+- [x] Criar scripts de criação (migrations) e seeds conforme MER.
 - [ ] Implementar enums nativos, índices, views/materialized views para relatórios.
 - [ ] Configurar migrações roll-forward/roll-back e versionamento (Liquibase opcional).
 - [ ] Preparar backups automáticos (pg_dump scripts) e restore documentado.
@@ -138,8 +138,8 @@
 ---
 
 ## 5. Integrações e Serviços de Suporte
-- [ ] Servidor SMTP gratuito (Mailhog/Mailpit) para desenvolvimento; definir provedor gratuito em produção (SendGrid/Resend).
-- [ ] Configurar Redis para cache e filas (horizon/workers).
+- [x] Servidor SMTP gratuito (Mailhog/Mailpit) para desenvolvimento; definir provedor gratuito em produção (SendGrid/Resend).
+- [x] Configurar Redis para cache e filas (horizon/workers).
 - [ ] Implementar scheduler (Laravel Scheduler + Supervisor).
 - [ ] Definir camada de notificações (template engine, fila, retries).
 - [ ] Preparar integrações futuras (ex: SMS, Telemedicina) com abstrações.
@@ -166,7 +166,7 @@
 ---
 
 ## 8. DevOps, Deploy e Automação
-- [ ] Criar Docker Compose para desenvolvimento (backend, frontend, db, redis, mail).
+- [x] Criar Docker Compose para desenvolvimento (backend, frontend, db, redis, mail).
 - [ ] Criar Dockerfiles multi-stage (prod vs dev).
 - [ ] Configurar ambientes (dev, staging, prod) com variáveis diferenciadas.
 - [ ] CI/CD (GitHub Actions): lint → test → build → deploy (staging/prod).
@@ -194,14 +194,14 @@
 - [ ] Definir milestones e sprints (Kanban/Trello/Jira).
 
 ### Fase 1 – Fundamentos
-- [ ] Montagem do ambiente Docker + scaffolds backend/frontend.
-- [ ] Migrations, seeders básicos e endpoints de autenticação.
-- [ ] Layouts principais e fluxo de login no frontend.
+- [x] Montagem do ambiente Docker + scaffolds backend/frontend.
+- [x] Migrations, seeders básicos e endpoints de autenticação.
+- [x] Layouts principais e fluxo de login no frontend.
 
 ### Fase 2 – Núcleo do Produto
-- [ ] Implementação completa de agendamento e agenda médica.
+- [x] Implementação completa de agendamento e agenda médica.
 - [ ] Gestão de usuários, convênios e notificações.
-- [ ] Observações clínicas e relatórios administrativos.
+- [x] Observações clínicas e relatórios administrativos.
 
 ### Fase 3 – Qualidade e Observabilidade
 - [ ] Harden de segurança, testes abrangentes, monitoramento.
