@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge, getStatusLabel } from "@/components/ui/status-badge";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchAppointments } from "@/services/appointment-service";
 import { fetchDoctors } from "@/services/doctor-service";
@@ -43,8 +44,8 @@ export default function DashboardPage() {
         <p className="text-sm text-slate-500">Acompanhe suas consultas e profissionais em um só lugar.</p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <section className="grid gap-4 lg:grid-cols-3">
+        <Card className="order-2 lg:order-none">
           <CardHeader>
             <div>
               <CardTitle>Consultas recentes</CardTitle>
@@ -74,9 +75,7 @@ export default function DashboardPage() {
                         timeStyle: "short",
                       })}
                     </p>
-                    <span className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                      {appointment.status}
-                    </span>
+                    <StatusBadge status={appointment.status} />
                   </div>
                 ))}
                 <Link href="/appointments" className="text-sm font-medium text-blue-600 hover:underline">
@@ -86,7 +85,7 @@ export default function DashboardPage() {
             )}
           </div>
         </Card>
-        <Card className="md:col-span-2">
+        <Card className="order-1 lg:order-none lg:col-span-2">
           <CardHeader>
             <div>
               <CardTitle>Médicos disponíveis</CardTitle>
@@ -119,6 +118,57 @@ export default function DashboardPage() {
               Ver todos os médicos
             </Link>
           )}
+        </Card>
+      </section>
+      <section className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle>Fluxo rápido</CardTitle>
+              <CardDescription>Atalhos para as ações mais comuns.</CardDescription>
+            </div>
+          </CardHeader>
+          <div className="flex flex-wrap gap-3 p-6 pt-0">
+            <Link
+              href="/appointments"
+              className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+            >
+              Ver agenda completa
+            </Link>
+            <Link
+              href="/doctor/schedules"
+              className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+            >
+              Gerenciar horários
+            </Link>
+            <Link
+              href="/admin/health-insurances"
+              className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+            >
+              Convênios
+            </Link>
+          </div>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle>Status principais</CardTitle>
+              <CardDescription>Situação atual das suas consultas.</CardDescription>
+            </div>
+          </CardHeader>
+          <div className="grid gap-3 p-6 pt-0 md:grid-cols-2">
+            {APPOINTMENT_STATUS_OPTIONS.filter((status) => status.value !== '').map((option) => {
+              const count = appointments.filter((appointment) => appointment.status === option.value).length;
+
+              return (
+                <div key={option.value} className="rounded-md border border-slate-200 p-3">
+                  <p className="text-xs uppercase text-slate-500">{option.label}</p>
+                  <p className="text-2xl font-semibold text-slate-900">{count}</p>
+                  <StatusBadge status={option.value} />
+                </div>
+              );
+            })}
+          </div>
         </Card>
       </section>
     </div>
