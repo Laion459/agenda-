@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\AppointmentController;
+use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\DoctorController;
+use App\Http\Controllers\API\HealthInsuranceController;
 use App\Http\Controllers\API\ObservationController;
 use App\Http\Controllers\API\ScheduleController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,7 @@ Route::prefix('auth')->group(function () {
 
 Route::get('doctors', [DoctorController::class, 'index']);
 Route::get('doctors/{doctor}', [DoctorController::class, 'show']);
+Route::get('health-insurances', [HealthInsuranceController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('appointments', [AppointmentController::class, 'index']);
@@ -31,6 +33,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:PATIENT')->group(function () {
         Route::get('patient/observations', [ObservationController::class, 'index']);
+    });
+
+    Route::middleware('role:ADMIN')->group(function () {
+        Route::post('health-insurances', [HealthInsuranceController::class, 'store']);
+        Route::put('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'update']);
+        Route::delete('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'destroy']);
     });
 
     Route::get('doctor/schedules', [ScheduleController::class, 'index']);

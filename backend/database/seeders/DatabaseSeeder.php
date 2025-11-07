@@ -12,6 +12,7 @@ use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\Schedule;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -26,12 +27,16 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
 
-        $admin = User::factory()->admin()->create([
-            'name' => 'Administrador Agenda+',
-            'email' => 'admin@agendaplus.test',
-            'phone' => '+5511999990000',
-        ]);
-        $admin->assignRole(UserRole::ADMIN->value);
+        $admin = User::query()->firstOrCreate(
+            ['email' => 'admin@agendaplus.test'],
+            [
+                'name' => 'Administrador Agenda+',
+                'phone' => '+5511999990000',
+                'password' => Hash::make('password'),
+                'role' => UserRole::ADMIN->value,
+            ]
+        );
+        $admin->syncRoles([UserRole::ADMIN->value]);
 
         $healthInsurances = HealthInsurance::factory(5)->create();
 

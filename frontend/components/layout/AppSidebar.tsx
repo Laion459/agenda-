@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { clsx } from "clsx";
-import { CalendarCheck, CalendarClock, CalendarDays, LayoutDashboard, NotebookText } from "lucide-react";
+import { CalendarCheck, CalendarClock, CalendarDays, LayoutDashboard, NotebookText, ShieldCheck } from "lucide-react";
 
 import { useAuthStore } from "@/store/auth-store";
 
@@ -29,6 +29,10 @@ export function AppSidebar() {
 
   if (user?.role === "PATIENT") {
     links.push({ href: "/patient/observations", label: "Histórico clínico", icon: NotebookText });
+  }
+
+  if (user?.role === "ADMIN") {
+    links.push({ href: "/admin/health-insurances", label: "Convênios", icon: ShieldCheck });
   }
 
   if (user?.role === "DOCTOR") {

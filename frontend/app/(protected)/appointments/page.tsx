@@ -62,6 +62,7 @@ export default function AppointmentsPage() {
   const [selectedReschedule, setSelectedReschedule] = useState<Appointment | null>(null);
   const [detail, setDetail] = useState<Appointment | null>(null);
   const [detailLoadingId, setDetailLoadingId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const user = useAuthStore((state) => state.user);
 
   const isDoctor = user?.role === 'DOCTOR';
@@ -105,7 +106,7 @@ export default function AppointmentsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const appointmentsResponse = await fetchAppointments({ per_page: 20 });
+        const appointmentsResponse = await fetchAppointments({ per_page: 20, status: statusFilter });
         setAppointments(appointmentsResponse.data ?? []);
 
         if (isPatient) {
@@ -120,10 +121,10 @@ export default function AppointmentsPage() {
     }
 
     load();
-  }, [isPatient]);
+  }, [isPatient, statusFilter]);
 
   const reloadAppointments = async () => {
-    const response = await fetchAppointments({ per_page: 20 });
+    const response = await fetchAppointments({ per_page: 20, status: statusFilter });
     setAppointments(response.data ?? []);
   };
 
@@ -217,10 +218,6 @@ export default function AppointmentsPage() {
     [doctors]
   );
 
-  if (loading) {
-    return <p className="text-sm text-slate-500">Carregando consultas...</p>;
-  }
-
   return (
     <div className="space-y-6">
       {isPatient && (
@@ -231,52 +228,63 @@ export default function AppointmentsPage() {
               <CardDescription>Escolha o médico e o horário desejado.</CardDescription>
             </div>
           </CardHeader>
-          <form onSubmit={handleSubmit(onCreateAppointment)} className="grid gap-4 p-6 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="doctor_id">Médico</Label>
-              <select
-                id="doctor_id"
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                {...register('doctor_id')}
-              >
-                <option value="">Selecione</option>
-                {doctorOptions.map((doctor) => (
-                  <option key={doctor.value} value={doctor.value}>
-                    {doctor.label}
-                  </option>
-                ))}
-              </select>
-              {errors.doctor_id && <p className="text-xs text-red-500">{errors.doctor_id.message as string}</p>}
+          {loading ? (
+            <div className="grid gap-4 p-6 md:grid-cols-2">
+              <Skeleton className="h-10 w-full md:col-span-2" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full md:col-span-2" />
+              <Skeleton className="h-10 w-32" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="scheduled_at">Data e hora</Label>
-              <Input id="scheduled_at" type="datetime-local" {...register('scheduled_at')} />
-              {errors.scheduled_at && <p className="text-xs text-red-500">{errors.scheduled_at.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="duration_minutes">Duração (min)</Label>
-              <Input id="duration_minutes" type="number" {...register('duration_minutes', { valueAsNumber: true })} />
-              {errors.duration_minutes && <p className="text-xs text-red-500">{errors.duration_minutes.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Tipo</Label>
-              <select
-                id="type"
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                {...register('type')}
-              >
-                <option value="PRESENTIAL">Presencial</option>
-                <option value="ONLINE">Online</option>
-              </select>
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes">Observações</Label>
-              <Input id="notes" placeholder="Informações adicionais (opcional)" {...register('notes')} />
-            </div>
-            <div className="md:col-span-2">
-              <Button type="submit">Solicitar consulta</Button>
-            </div>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit(onCreateAppointment)} className="grid gap-4 p-6 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="doctor_id">Médico</Label>
+                <select
+                  id="doctor_id"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  {...register('doctor_id')}
+                >
+                  <option value="">Selecione</option>
+                  {doctorOptions.map((doctor) => (
+                    <option key={doctor.value} value={doctor.value}>
+                      {doctor.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.doctor_id && <p className="text-xs text-red-500">{errors.doctor_id.message as string}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="scheduled_at">Data e hora</Label>
+                <Input id="scheduled_at" type="datetime-local" {...register('scheduled_at')} />
+                {errors.scheduled_at && <p className="text-xs text-red-500">{errors.scheduled_at.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration_minutes">Duração (min)</Label>
+                <Input id="duration_minutes" type="number" {...register('duration_minutes', { valueAsNumber: true })} />
+                {errors.duration_minutes && <p className="text-xs text-red-500">{errors.duration_minutes.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Tipo</Label>
+                <select
+                  id="type"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  {...register('type')}
+                >
+                  <option value="PRESENTIAL">Presencial</option>
+                  <option value="ONLINE">Online</option>
+                </select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="notes">Observações</Label>
+                <Input id="notes" placeholder="Informações adicionais (opcional)" {...register('notes')} />
+              </div>
+              <div className="md:col-span-2">
+                <Button type="submit">Solicitar consulta</Button>
+              </div>
+            </form>
+          )}
         </Card>
       )}
 
@@ -286,6 +294,23 @@ export default function AppointmentsPage() {
             <CardTitle>Consultas</CardTitle>
             <CardDescription>Acompanhe todas as suas consultas agendadas.</CardDescription>
           </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3 md:mt-0">
+              <Label className="text-xs uppercase text-slate-500" htmlFor="status_filter">
+                Status
+              </Label>
+              <select
+                id="status_filter"
+                className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={statusFilter ?? ''}
+                onChange={(event) => setStatusFilter(event.target.value || undefined)}
+              >
+                <option value="">Todos</option>
+                <option value="PENDING">Pendentes</option>
+                <option value="CONFIRMED">Confirmadas</option>
+                <option value="COMPLETED">Concluídas</option>
+                <option value="CANCELLED">Canceladas</option>
+              </select>
+            </div>
         </CardHeader>
         <div className="overflow-x-auto">
           {loading ? (
@@ -484,6 +509,20 @@ export default function AppointmentsPage() {
               </Button>
             </div>
           </form>
+        </Card>
+      )}
+
+      {detailLoadingId && !detail && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Detalhes da consulta</CardTitle>
+            <CardDescription>Carregando informações...</CardDescription>
+          </CardHeader>
+          <div className="space-y-2 p-6">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
         </Card>
       )}
 

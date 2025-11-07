@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { handleApiError } from "@/lib/handle-api-error";
 import {
   createSchedule,
   deleteSchedule,
@@ -64,8 +67,8 @@ export default function DoctorSchedulesPage() {
       try {
         const response = await fetchDoctorSchedules();
         setSchedules(response.data ?? []);
-      } catch (error: any) {
-        toast.error(error?.response?.data?.message ?? "Não foi possível carregar a agenda.");
+      } catch (error) {
+        handleApiError(error, "Não foi possível carregar a agenda.");
       } finally {
         setLoading(false);
       }
@@ -88,8 +91,8 @@ export default function DoctorSchedulesPage() {
       toast.success("Horário registrado com sucesso.");
       reset();
       await refresh();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message ?? "Erro ao registrar horário.");
+    } catch (error) {
+      handleApiError(error, "Erro ao registrar horário.");
     }
   };
 
@@ -99,8 +102,8 @@ export default function DoctorSchedulesPage() {
       await deleteSchedule(id);
       toast.success("Horário removido.");
       await refresh();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message ?? "Não foi possível remover.");
+    } catch (error) {
+      handleApiError(error, "Não foi possível remover.");
     } finally {
       setDeletingId(null);
     }
@@ -166,9 +169,13 @@ export default function DoctorSchedulesPage() {
         </CardHeader>
         <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
           {loading ? (
-            <p className="p-6 text-sm text-slate-500">Carregando horários...</p>
+            <div className="space-y-3 p-6">
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+            </div>
           ) : schedules.length === 0 ? (
-            <p className="p-6 text-sm text-slate-500">Nenhum horário cadastrado.</p>
+            <EmptyState className="m-4">Nenhum horário cadastrado.</EmptyState>
           ) : (
             <ul className="divide-y divide-slate-200">
               {schedules.map((schedule) => (
@@ -186,7 +193,7 @@ export default function DoctorSchedulesPage() {
                     onClick={() => handleDelete(schedule.id)}
                     disabled={deletingId === schedule.id}
                   >
-                    Excluir
+                    {deletingId === schedule.id ? "Removendo..." : "Excluir"}
                   </Button>
                 </li>
               ))}
