@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -543,162 +544,160 @@ export default function AppointmentsPage() {
       )}
 
       {detail && (
-        <Card>
-          <CardHeader>
-            <div>
-              <CardTitle>Detalhes da consulta</CardTitle>
-              <CardDescription>
-                {detail.patient?.name ?? 'Paciente'} • {detail.doctor?.name ?? 'Médico'}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <div className="grid gap-4 p-6">
-            <div className="grid gap-2 md:grid-cols-2">
+        <Tabs defaultValue="overview">
+          <Card>
+            <CardHeader>
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">Status</p>
-                <p className="text-sm text-slate-800">{detail.status}</p>
+                <CardTitle>Detalhes da consulta</CardTitle>
+                <CardDescription>
+                  {detail.patient?.name ?? 'Paciente'} • {detail.doctor?.name ?? 'Médico'}
+                </CardDescription>
               </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">Data</p>
-                <p className="text-sm text-slate-800">
-                  {new Date(detail.scheduled_at).toLocaleString('pt-BR', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">Tipo</p>
-                <p className="text-sm text-slate-800">{detail.type}</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">Duração</p>
-                <p className="text-sm text-slate-800">{detail.duration_minutes} minutos</p>
-              </div>
-            </div>
-
-            {detail.notes && (
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">Notas</p>
-                <p className="text-sm text-slate-700">{detail.notes}</p>
-              </div>
-            )}
-
-            <div>
-              <p className="text-xs font-semibold uppercase text-slate-500">Observações clínicas</p>
-              {detail.observations && detail.observations.length > 0 ? (
-                <ul className="mt-2 space-y-3">
-                  {detail.observations.map((obs) => (
-                    <li key={obs.id} className="rounded-md border border-slate-200 p-3">
-                      <p className="text-sm font-medium text-slate-800">
-                        Registrado em {new Date(obs.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">Anamnese</p>
-                      <p className="text-sm text-slate-700">{obs.anamnesis}</p>
-                      {obs.diagnosis && (
-                        <>
-                          <p className="mt-2 text-xs text-slate-500">Diagnóstico</p>
-                          <p className="text-sm text-slate-700">{obs.diagnosis}</p>
-                        </>
-                      )}
-                      {obs.prescription && (
-                        <>
-                          <p className="mt-2 text-xs text-slate-500">Prescrição</p>
-                          <p className="text-sm text-slate-700">{obs.prescription}</p>
-                        </>
-                      )}
-                      {obs.notes && (
-                        <>
-                          <p className="mt-2 text-xs text-slate-500">Notas adicionais</p>
-                          <p className="text-sm text-slate-700">{obs.notes}</p>
-                        </>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm text-slate-500">Nenhuma observação registrada.</p>
+            </CardHeader>
+            <div className="px-6 pb-6">
+              <TabsList className="mb-4">
+                <TabsTrigger value="overview">Resumo</TabsTrigger>
+                <TabsTrigger value="observations">Observações</TabsTrigger>
+                <TabsTrigger value="history">Histórico de status</TabsTrigger>
+                {detail.patient && isDoctor && <TabsTrigger value="patient-history">Histórico do paciente</TabsTrigger>}
+              </TabsList>
+              <TabsContent value="overview" className="mt-0">
+                <div className="grid gap-2 md:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-slate-500">Status</p>
+                    <p className="text-sm text-slate-800">{detail.status}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-slate-500">Data</p>
+                    <p className="text-sm text-slate-800">
+                      {new Date(detail.scheduled_at).toLocaleString('pt-BR', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-slate-500">Tipo</p>
+                    <p className="text-sm text-slate-800">{detail.type}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-slate-500">Duração</p>
+                    <p className="text-sm text-slate-800">{detail.duration_minutes} minutos</p>
+                  </div>
+                </div>
+                {detail.notes && (
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold uppercase text-slate-500">Notas</p>
+                    <p className="text-sm text-slate-700">{detail.notes}</p>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="observations" className="mt-0">
+                {detail.observations && detail.observations.length > 0 ? (
+                  <ul className="space-y-3">
+                    {detail.observations.map((obs) => (
+                      <li key={obs.id} className="rounded-md border border-slate-200 p-3">
+                        <p className="text-sm font-medium text-slate-800">
+                          Registrado em {new Date(obs.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">Anamnese</p>
+                        <p className="text-sm text-slate-700">{obs.anamnesis}</p>
+                        {obs.diagnosis && (
+                          <>
+                            <p className="mt-2 text-xs text-slate-500">Diagnóstico</p>
+                            <p className="text-sm text-slate-700">{obs.diagnosis}</p>
+                          </>
+                        )}
+                        {obs.prescription && (
+                          <>
+                            <p className="mt-2 text-xs text-slate-500">Prescrição</p>
+                            <p className="text-sm text-slate-700">{obs.prescription}</p>
+                          </>
+                        )}
+                        {obs.notes && (
+                          <>
+                            <p className="mt-2 text-xs text-slate-500">Notas adicionais</p>
+                            <p className="text-sm text-slate-700">{obs.notes}</p>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-500">Nenhuma observação registrada.</p>
+                )}
+              </TabsContent>
+              <TabsContent value="history" className="mt-0">
+                {detail.logs && detail.logs.length > 0 ? (
+                  <ul className="space-y-2">
+                    {detail.logs.map((log) => (
+                      <li key={log.id} className="rounded-md border border-slate-200 p-3 text-sm">
+                        <p className="font-medium text-slate-800">
+                          {log.old_status ?? 'N/A'} → {log.new_status}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(log.changed_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                          {log.changed_by ? ` • ${log.changed_by.name}` : ''}
+                        </p>
+                        {log.reason && <p className="mt-1 text-xs text-slate-600">Motivo: {log.reason}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-500">Sem histórico registrado.</p>
+                )}
+              </TabsContent>
+              {detail.patient && isDoctor && (
+                <TabsContent value="patient-history" className="mt-0 space-y-3">
+                  <div className="flex justify-end">
+                    <Button variant="secondary" onClick={() => loadPatientHistory(detail.patient!.id)} disabled={patientHistoryLoading}>
+                      {patientHistoryLoading ? 'Carregando...' : 'Atualizar histórico'}
+                    </Button>
+                  </div>
+                  {patientHistory === null ? (
+                    <p className="text-sm text-slate-500">
+                      Clique em “Atualizar histórico” para carregar todas as observações do paciente.
+                    </p>
+                  ) : patientHistory.length === 0 ? (
+                    <EmptyState className="border-none bg-transparent p-0">
+                      Nenhuma observação registrada para este paciente.
+                    </EmptyState>
+                  ) : (
+                    <ul className="space-y-3 text-sm">
+                      {patientHistory.map((obs) => (
+                        <li key={obs.id} className="rounded-md border border-slate-200 p-3">
+                          <p className="font-medium text-slate-800">
+                            {new Date(obs.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </p>
+                          <p className="text-xs text-slate-500">Responsável: {obs.doctor?.name ?? '---'}</p>
+                          <p className="mt-1 text-xs text-slate-500">Anamnese</p>
+                          <p className="text-sm text-slate-700">{obs.anamnesis}</p>
+                          {obs.diagnosis && (
+                            <>
+                              <p className="mt-2 text-xs text-slate-500">Diagnóstico</p>
+                              <p className="text-sm text-slate-700">{obs.diagnosis}</p>
+                            </>
+                          )}
+                          {obs.prescription && (
+                            <>
+                              <p className="mt-2 text-xs text-slate-500">Prescrição</p>
+                              <p className="text-sm text-slate-700">{obs.prescription}</p>
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </TabsContent>
               )}
             </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase text-slate-500">Histórico de status</p>
-              {detail.logs && detail.logs.length > 0 ? (
-                <ul className="mt-2 space-y-2">
-                  {detail.logs.map((log) => (
-                    <li key={log.id} className="rounded-md border border-slate-200 p-3 text-sm">
-                      <p className="font-medium text-slate-800">
-                        {log.old_status ?? 'N/A'} → {log.new_status}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {new Date(log.changed_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                        {log.changed_by ? ` • ${log.changed_by.name}` : ''}
-                      </p>
-                      {log.reason && <p className="mt-1 text-xs text-slate-600">Motivo: {log.reason}</p>}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm text-slate-500">Sem histórico registrado.</p>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end px-6 pb-6">
               <Button variant="ghost" onClick={() => setDetail(null)}>
                 Fechar
               </Button>
             </div>
-            {detail.patient && isDoctor && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase text-slate-500">Histórico completo</p>
-                  <Button
-                    variant="ghost"
-                    onClick={() => loadPatientHistory(detail.patient!.id)}
-                    disabled={patientHistoryLoading}
-                  >
-                    {patientHistoryLoading ? 'Carregando...' : 'Ver histórico'}
-                  </Button>
-                </div>
-                {patientHistory && (
-                  <div className="max-h-64 overflow-y-auto border border-slate-200 p-3">
-                    {patientHistory.length === 0 ? (
-                      <p className="text-sm text-slate-500">Nenhuma observação registrada para este paciente.</p>
-                    ) : (
-                      <ul className="space-y-3 text-sm">
-                        {patientHistory.map((obs) => (
-                          <li key={obs.id} className="rounded-md border border-slate-200 p-3">
-                            <p className="font-medium text-slate-800">
-                              {new Date(obs.created_at).toLocaleString('pt-BR', {
-                                dateStyle: 'short',
-                                timeStyle: 'short',
-                              })}
-                            </p>
-                            <p className="text-xs text-slate-500">Responsável: {obs.doctor?.name ?? '---'}</p>
-                            <p className="mt-1 text-xs text-slate-500">Anamnese</p>
-                            <p className="text-sm text-slate-700">{obs.anamnesis}</p>
-                            {obs.diagnosis && (
-                              <>
-                                <p className="mt-2 text-xs text-slate-500">Diagnóstico</p>
-                                <p className="text-sm text-slate-700">{obs.diagnosis}</p>
-                              </>
-                            )}
-                            {obs.prescription && (
-                              <>
-                                <p className="mt-2 text-xs text-slate-500">Prescrição</p>
-                                <p className="text-sm text-slate-700">{obs.prescription}</p>
-                              </>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </Card>
+          </Card>
+        </Tabs>
       )}
     </div>
   );
