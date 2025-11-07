@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { handleApiError } from "@/lib/handle-api-error";
 import {
   createHealthInsurance,
@@ -44,6 +45,7 @@ export default function HealthInsurancesPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<HealthInsurance | null>(null);
+  const [filter, setFilter] = useState("");
 
   const {
     register,
@@ -143,9 +145,19 @@ export default function HealthInsurancesPage() {
     }
   };
 
+  const normalizedFilter = filter.trim().toLowerCase();
   const orderedItems = useMemo(
-    () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
-    [items]
+    () =>
+      [...items]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .filter((item) =>
+          normalizedFilter
+            ? [item.name, item.description, item.coverage_percentage?.toString() ?? ""]
+                .filter(Boolean)
+                .some((value) => value!.toLowerCase().includes(normalizedFilter))
+            : true
+        ),
+    [items, normalizedFilter]
   );
 
   if (user?.role !== 'ADMIN') {
@@ -155,9 +167,17 @@ export default function HealthInsurancesPage() {
   return (
     <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
       <Card>
-        <CardHeader>
-          <CardTitle>{editing ? 'Editar convênio' : 'Adicionar convênio'}</CardTitle>
-          <CardDescription>Cadastre ou atualize convênios aceitos na clínica.</CardDescription>
+        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle>{editing ? 'Editar convênio' : 'Adicionar convênio'}</CardTitle>
+            <CardDescription>Cadastre ou atualize convênios aceitos na clínica.</CardDescription>
+          </div>
+          <Input
+            placeholder="Buscar por nome, descrição ou cobertura"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            className="md:max-w-xs"
+          />
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
           <div className="space-y-2">
@@ -217,13 +237,9 @@ export default function HealthInsurancesPage() {
                       <p className="text-xs text-slate-500">Cobertura média: {Number(item.coverage_percentage).toFixed(1)}%</p>
                     )}
                     {item.description && <p className="text-xs text-slate-500">{item.description}</p>}
-                    <span
-                      className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        item.is_active ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'
-                      }`}
-                    >
-                      {item.is_active ? 'Ativo' : 'Inativo'}
-                    </span>
+                    <div className="mt-1">
+                      <StatusBadge status={item.is_active ? 'CONFIRMED' : 'CANCELLED'} />
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     <Button variant="secondary" onClick={() => handleEdit(item)}>
@@ -232,7 +248,14 @@ export default function HealthInsurancesPage() {
                     <Button variant="ghost" onClick={() => handleToggleActive(item)}>
                       {item.is_active ? 'Desativar' : 'Ativar'}
                     </Button>
-                    <Button variant="ghost" onClick={() => handleDelete(item)}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm(`Remover o convênio ${item.name}?`)) {
+                          handleDelete(item);
+                        }
+                      }}
+                    >
                       Remover
                     </Button>
                   </div>
