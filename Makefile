@@ -4,7 +4,7 @@ FRONTEND_CONTAINER=$(COMPOSE) exec frontend
 DB_CONTAINER=$(COMPOSE) exec db
 REDIS_CONTAINER=$(COMPOSE) exec redis
 
-.PHONY: up down stop restart logs ps build rebuild install bootstrap seed key queue-backend queue-stop schedule-run reminders notifications-clean backend-shell frontend-shell db-shell db-root redis-shell frontend-build lint test test-backend test-frontend
+.PHONY: up down stop restart logs ps build rebuild install bootstrap seed key queue-backend queue-stop schedule-run reminders notifications-clean backend-shell frontend-shell db-shell db-root redis-shell frontend-build lint test test-backend test-frontend prod-build
 
 # Start all services in detached mode
 up:
@@ -32,7 +32,7 @@ ps:
 
 # Rebuild images pulling the latest bases and ignoring cache
 build:
-	$(COMPOSE) build --pull --no-cache
+	$(COMPOSE) build --pull
 
 # Fully rebuild the stack and start fresh containers
 rebuild:
@@ -52,7 +52,13 @@ install: build
 	# Database migrations + seeders
 	$(COMPOSE) run --rm backend php artisan migrate --seed
 
-	@echo "\n✅ Environment ready. Run 'make up' to start the stack."
+	@echo ""
+	@echo "✅ Ambiente pronto!"
+	@echo "▶ Para subir os serviços:          make up"
+	@echo "▶ Shell Laravel (container):        make backend-shell"
+	@echo "▶ Shell Next.js (container):        make frontend-shell"
+	@echo "▶ Rodar testes completos:           make test"
+	@echo ""
 
 # Re-run migrations and seeders (idempotent)
 bootstrap:
@@ -124,4 +130,8 @@ test-backend:
 # Execute frontend tests (placeholder if suite is not configured)
 test-frontend:
 	$(COMPOSE) run --rm frontend npm test -- --watch=false || echo "Teste do frontend não configurado"
+
+# Build produção (imagens otimizadas)
+prod-build:
+	docker compose -f deploy/production/docker-compose.yml build
 

@@ -188,10 +188,10 @@
 
 ## 8. DevOps, Deploy e Automação
 - [x] Criar Docker Compose para desenvolvimento (backend, frontend, db, redis, mail).
-- [ ] Criar Dockerfiles multi-stage (prod vs dev).
-- [ ] Configurar ambientes (dev, staging, prod) com variáveis diferenciadas.
-- [ ] CI/CD (GitHub Actions): lint → test → build → deploy (staging/prod).
-- [ ] Definir estratégia de deploy (frontend Vercel ou Static Export, backend Fly.io/Render/DigitalOcean).
+- [x] Criar Dockerfiles multi-stage (prod vs dev).
+- [x] Configurar ambientes (dev, staging, prod) com variáveis diferenciadas.
+- [x] CI/CD (GitHub Actions): lint → test → build → deploy (staging/prod).
+- [x] Definir estratégia de deploy (frontend + backend com Docker/Compose e documentação).
 - [ ] Automatizar migrações e seeders no deploy.
 - [ ] Configurar Infrastructure as Code (Terraform opcional) para produção futura.
 - [ ] Implementar backup automático e restore documentado (scripts + agendamento).

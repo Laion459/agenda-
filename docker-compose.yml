@@ -5,6 +5,10 @@ services:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
+      target: development
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
     container_name: agenda_backend
     restart: unless-stopped
     working_dir: /var/www/html
@@ -37,6 +41,7 @@ services:
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile
+      target: development
     container_name: agenda_frontend
     restart: unless-stopped
     working_dir: /usr/src/app
