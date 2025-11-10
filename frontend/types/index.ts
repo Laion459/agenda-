@@ -47,6 +47,7 @@ export interface Appointment {
   patient?: Patient;
   observations?: Observation[];
   logs?: AppointmentLog[];
+  created_by?: User | null;
 }
 
 export interface PaginatedResponse<T> {

@@ -6,16 +6,20 @@ import { useEffect, useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge, getStatusLabel } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchAppointments } from "@/services/appointment-service";
 import { fetchDoctors } from "@/services/doctor-service";
 import { Appointment, Doctor } from "@/types";
+import { APPOINTMENT_STATUS_OPTIONS } from "@/constants/appointments";
+import { useAuthStore } from "@/store/auth-store";
 
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  const user = useAuthStore((state) => state.user);
+  const role = user?.role;
 
   useEffect(() => {
     async function load() {
@@ -135,18 +139,22 @@ export default function DashboardPage() {
             >
               Ver agenda completa
             </Link>
-            <Link
-              href="/doctor/schedules"
-              className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
-            >
-              Gerenciar horários
-            </Link>
-            <Link
-              href="/admin/health-insurances"
-              className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
-            >
-              Convênios
-            </Link>
+            {role === "DOCTOR" && (
+              <Link
+                href="/doctor/schedules"
+                className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+              >
+                Gerenciar horários
+              </Link>
+            )}
+            {role === "ADMIN" && (
+              <Link
+                href="/admin/health-insurances"
+                className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+              >
+                Convênios
+              </Link>
+            )}
           </div>
         </Card>
         <Card>

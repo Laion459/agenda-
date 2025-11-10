@@ -4,6 +4,7 @@ namespace App\Application\Appointments;
 
 use App\Application\Notifications\NotificationDispatcher;
 use App\Domain\Shared\Enums\AppointmentStatus;
+use App\Domain\Shared\Enums\UserRole;
 use App\Domain\Shared\Enums\NotificationType;
 use App\Models\Appointment;
 use App\Models\AppointmentLog;
@@ -215,7 +216,12 @@ class AppointmentService
         $doctor = $appointment->doctor;
         $patient = $appointment->patient;
 
-        $this->ensureScheduleIsValid($doctor, $newDate, $duration);
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+
+        if ($role !== UserRole::ADMIN) {
+            $this->ensureScheduleIsValid($doctor, $newDate, $duration);
+        }
+
         $this->ensureNoConflicts($doctor, $patient, $newDate, $duration, $appointment->id);
 
         $oldStatus = $appointment->status;

@@ -1,34 +1,37 @@
 import api from "@/lib/api";
 import { Appointment, PaginatedResponse } from "@/types";
 
+type AppointmentResourceResponse = {
+  data: Appointment;
+};
+
 export async function fetchAppointments(params?: Record<string, unknown>) {
-  const { data } = await api.get<PaginatedResponse<Appointment>>('/appointments', { params });
+  const { data } = await api.get<PaginatedResponse<Appointment>>("/appointments", { params });
   return data;
 }
 
 export async function fetchAppointment(id: number) {
-  const { data } = await api.get<Appointment>(`/appointments/${id}`);
-  return data;
+  const { data } = await api.get<AppointmentResourceResponse>(`/appointments/${id}`);
+  return data.data;
 }
 
 export async function createAppointment(payload: Record<string, unknown>) {
-  const { data } = await api.post<Appointment>('/appointments', payload);
-  return data;
+  const { data } = await api.post<AppointmentResourceResponse>("/appointments", payload);
+  return data.data;
 }
 
 export async function confirmAppointment(id: number) {
-  const { data } = await api.post<Appointment>(`/appointments/${id}/confirm`);
-  return data;
+  const { data } = await api.post<AppointmentResourceResponse>(`/appointments/${id}/confirm`);
+  return data.data;
 }
 
 export async function cancelAppointment(id: number, reason?: string) {
-  const { data } = await api.post<Appointment>(`/appointments/${id}/cancel`, { reason });
-  return data;
+  const { data } = await api.post<AppointmentResourceResponse>(`/appointments/${id}/cancel`, { reason });
+  return data.data;
 }
 
 export async function rescheduleAppointment(id: number, payload: Record<string, unknown>) {
-  const { data } = await api.post<Appointment>(`/appointments/${id}/reschedule`, payload);
-  return data;
+  const { data } = await api.post<AppointmentResourceResponse>(`/appointments/${id}/reschedule`, payload);
+  return data.data;
 }
-
 

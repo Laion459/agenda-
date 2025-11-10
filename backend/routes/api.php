@@ -39,11 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('doctor/patients/{patient}/observations', [ObservationController::class, 'historyForDoctor']);
     });
 
-    Route::middleware('role:ADMIN')->group(function () {
-        Route::post('health-insurances', [HealthInsuranceController::class, 'store']);
-        Route::put('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'update']);
-        Route::delete('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'destroy']);
-    });
+    Route::post('health-insurances', [HealthInsuranceController::class, 'store'])->middleware('role:ADMIN');
+    Route::put('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'update'])->middleware('role:ADMIN');
+    Route::delete('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'destroy'])->middleware('role:ADMIN');
 
     Route::get('doctor/schedules', [ScheduleController::class, 'index']);
     Route::post('doctor/schedules', [ScheduleController::class, 'store']);

@@ -29,6 +29,7 @@ import { fetchPatientObservationHistory } from "@/services/patient-observation-s
 import { Appointment, Doctor, Observation } from "@/types";
 import { useAuthStore } from "@/store/auth-store";
 import { handleApiError } from "@/lib/handle-api-error";
+import { APPOINTMENT_STATUS_OPTIONS } from "@/constants/appointments";
 
 const patientSchema = z.object({
   doctor_id: z.coerce.number(),
@@ -55,14 +56,6 @@ const rescheduleSchema = z.object({
 });
 
 type RescheduleForm = z.infer<typeof rescheduleSchema>;
-
-const APPOINTMENT_STATUS_OPTIONS = [
-  { value: "", label: "Todos" },
-  { value: "PENDING", label: "Pendentes" },
-  { value: "CONFIRMED", label: "Confirmadas" },
-  { value: "COMPLETED", label: "Concluídas" },
-  { value: "CANCELLED", label: "Canceladas" },
-];
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);

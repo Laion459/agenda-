@@ -25,11 +25,13 @@ class AppointmentController extends Controller
     {
         $user = $request->user();
 
-        if ($user->role === UserRole::PATIENT->value) {
+        $role = $this->resolveRole($user);
+
+        if ($role === UserRole::PATIENT) {
             $appointments = $this->service->listForPatient($user, $request->all());
-        } elseif ($user->role === UserRole::DOCTOR->value) {
+        } elseif ($role === UserRole::DOCTOR) {
             $appointments = $this->service->listForDoctor($user, $request->all());
-        } elseif ($user->role === UserRole::ADMIN->value) {
+        } elseif ($role === UserRole::ADMIN) {
             $appointments = $this->service->listForAdmin($request->all());
         } else {
             return response()->json(['message' => __('Função não suportada para este usuário.')], 403);
@@ -92,19 +94,36 @@ class AppointmentController extends Controller
 
     protected function authorizeDoctor($user, Appointment $appointment): void
     {
-        if ($user->role !== UserRole::DOCTOR->value || $appointment->doctor_id !== $user->doctor?->id) {
+        $role = $this->resolveRole($user);
+
+        if ($role !== UserRole::DOCTOR && $role !== UserRole::ADMIN) {
+            abort(403, __('Somente o médico responsável pode executar esta ação.'));
+        }
+
+        if ($role === UserRole::DOCTOR && $appointment->doctor_id !== $user->doctor?->id) {
             abort(403, __('Somente o médico responsável pode executar esta ação.'));
         }
     }
 
     protected function authorizeParticipant($user, Appointment $appointment): void
     {
-        $isDoctor = $user->role === UserRole::DOCTOR->value && $appointment->doctor_id === $user->doctor?->id;
-        $isPatient = $user->role === UserRole::PATIENT->value && $appointment->patient_id === $user->patient?->id;
+        $role = $this->resolveRole($user);
+
+        if ($role === UserRole::ADMIN) {
+            return;
+        }
+
+        $isDoctor = $role === UserRole::DOCTOR && $appointment->doctor_id === $user->doctor?->id;
+        $isPatient = $role === UserRole::PATIENT && $appointment->patient_id === $user->patient?->id;
 
         if (! $isDoctor && ! $isPatient) {
             abort(403, __('Você não está autorizado para esta consulta.'));
         }
+    }
+
+    private function resolveRole($user): UserRole
+    {
+        return $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
     }
 }
 
