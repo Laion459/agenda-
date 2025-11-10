@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { logout as logoutRequest } from "@/services/auth-service";
@@ -14,6 +14,7 @@ export function AppHeader() {
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
+  const mountedRef = useRef(false);
 
   const handleLogout = async () => {
     try {
@@ -28,26 +29,36 @@ export function AppHeader() {
 
   useEffect(() => {
     async function loadUnreadCount() {
+      if (!mountedRef.current) return;
       try {
         const response = await fetchNotifications({ per_page: 1 });
-        setUnreadCount(response.meta.unread_count ?? 0);
+        if (mountedRef.current) {
+          setUnreadCount(response.meta.unread_count ?? 0);
+        }
       } catch {
         // ignora erros na contagem inicial
       }
     }
 
-    const handler = (event: Event) => {
-      const { detail } = event as CustomEvent<number>;
-      if (typeof detail === "number") {
-        setUnreadCount(detail);
+    const handler = (event: CustomEvent<number>) => {
+      if (typeof event.detail === "number") {
+        setUnreadCount(event.detail);
       }
     };
 
-    window.addEventListener("notifications:updated", handler as EventListener);
+    mountedRef.current = true;
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("notifications:updated", handler);
+    }
+
     void loadUnreadCount();
 
     return () => {
-      window.removeEventListener("notifications:updated", handler as EventListener);
+      mountedRef.current = false;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("notifications:updated", handler);
+      }
     };
   }, []);
 

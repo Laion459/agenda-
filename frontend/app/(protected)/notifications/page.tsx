@@ -21,20 +21,18 @@ export default function NotificationsPage() {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const broadcastUnreadCount = (value: number) => {
-    setUnreadCount(value);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent<number>("notifications:updated", { detail: value }));
-    }
-  };
-
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent<number>("notifications:updated", { detail: unreadCount }));
+  }, [unreadCount]);
   const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetchNotifications({ per_page: 50 });
       const entries = response.data ?? [];
       setNotifications(entries);
-      broadcastUnreadCount(response.meta.unread_count ?? entries.filter((item) => !item.is_read).length);
+      const unread = response.meta.unread_count ?? entries.filter((item) => !item.is_read).length;
+      setUnreadCount(unread);
     } catch (error) {
       handleApiError(error, "Não foi possível carregar as notificações");
     } finally {
@@ -54,12 +52,9 @@ export default function NotificationsPage() {
     try {
       setProcessingId(notification.id);
       const updated = await markNotificationAsRead(notification.id);
-      setNotifications((current) => {
-        const next = current.map((item) => (item.id === updated.id ? updated : item));
-        const unread = next.filter((item) => !item.is_read).length;
-        broadcastUnreadCount(unread);
-        return next;
-      });
+      const next = notifications.map((item) => (item.id === updated.id ? updated : item));
+      setNotifications(next);
+      setUnreadCount(next.filter((item) => !item.is_read).length);
     } catch (error) {
       handleApiError(error, "Não foi possível marcar como lida");
     } finally {
