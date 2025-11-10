@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Domain\Shared\Enums\AppointmentStatus;
+use App\Domain\Shared\Enums\NotificationChannel;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\AppointmentLog;
@@ -162,6 +163,8 @@ class DatabaseSeeder extends Seeder
         User::all()->each(function (User $user) {
             Notification::factory()->count(2)->create([
                 'user_id' => $user->id,
+                'channel' => NotificationChannel::IN_APP->value,
+                'metadata' => ['trigger' => 'seed'],
             ]);
         });
     }

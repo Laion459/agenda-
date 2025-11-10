@@ -70,7 +70,7 @@
 - [x] Observações médicas e prontuário.
 - [ ] Relatórios administrativos (consulta, pacientes, médicos, faturamento, ocupação).
 - [x] Gestão de convênios (CRUD, vinculação com pacientes/médicos).
-- [ ] Notificações (fila de envio, templates).
+- [x] Notificações (fila de envio, templates).
 - [ ] Logs de auditoria e histórico.
 
 ### 2.5 Regras de Negócio e Validações
@@ -141,7 +141,7 @@
 - [x] Servidor SMTP gratuito (Mailhog/Mailpit) para desenvolvimento; definir provedor gratuito em produção (SendGrid/Resend).
 - [x] Configurar Redis para cache e filas (horizon/workers).
 - [ ] Implementar scheduler (Laravel Scheduler + Supervisor).
-- [ ] Definir camada de notificações (template engine, fila, retries).
+- [x] Definir camada de notificações (template engine, fila, retries).
 - [ ] Preparar integrações futuras (ex: SMS, Telemedicina) com abstrações.
 
 ---

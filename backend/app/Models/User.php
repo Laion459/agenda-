@@ -72,6 +72,11 @@ class User extends Authenticatable
         return $this->hasMany(Appointment::class, 'created_by');
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === UserRole::ADMIN;

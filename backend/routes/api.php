@@ -6,6 +6,7 @@ use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\DoctorController;
 use App\Http\Controllers\API\HealthInsuranceController;
+use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\ObservationController;
 use App\Http\Controllers\API\ScheduleController;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
     Route::post('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::post('appointments/{appointment}/observations', [ObservationController::class, 'store']);
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     Route::middleware('role:PATIENT')->group(function () {
         Route::get('patient/observations', [ObservationController::class, 'index']);

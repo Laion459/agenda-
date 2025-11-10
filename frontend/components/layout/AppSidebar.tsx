@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   NotebookText,
   ShieldCheck,
+  Bell,
   UserCog,
   Users,
 } from "lucide-react";
@@ -30,6 +31,7 @@ export function AppSidebar() {
   const links: SidebarLink[] = [
     { href: "/dashboard", label: "Visão geral", icon: LayoutDashboard },
     { href: "/appointments", label: "Consultas", icon: CalendarDays },
+    { href: "/notifications", label: "Notificações", icon: Bell },
   ];
 
   if (user?.role !== "DOCTOR") {

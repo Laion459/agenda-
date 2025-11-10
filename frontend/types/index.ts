@@ -67,6 +67,7 @@ export interface PaginatedResponse<T> {
     last_page: number;
     per_page: number;
     total: number;
+    unread_count?: number;
   };
 }
 
@@ -99,6 +100,18 @@ export interface AppointmentLog {
   metadata?: Record<string, unknown> | null;
   changed_at: string;
   changed_by?: User;
+}
+
+export interface Notification {
+  id: number;
+  type: string;
+  subject: string;
+  message: string;
+  channel: string;
+  is_read: boolean;
+  sent_at: string;
+  read_at?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 

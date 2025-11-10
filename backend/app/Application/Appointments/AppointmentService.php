@@ -5,7 +5,6 @@ namespace App\Application\Appointments;
 use App\Application\Notifications\NotificationDispatcher;
 use App\Domain\Shared\Enums\AppointmentStatus;
 use App\Domain\Shared\Enums\UserRole;
-use App\Domain\Shared\Enums\NotificationType;
 use App\Models\Appointment;
 use App\Models\AppointmentLog;
 use App\Models\Doctor;
@@ -34,6 +33,7 @@ class AppointmentService
     {
         /** @var Patient $patient */
         $patient = $user->patient;
+        $patient?->loadMissing('user');
 
         $query = Appointment::query()
             ->with(['doctor.user', 'patient.user'])
@@ -118,19 +118,24 @@ class AppointmentService
                 'changed_at' => now(),
             ]);
 
-            $this->notifications->dispatch(
+            $context = [
+                'patient' => $patient->user->name,
+                'doctor' => $doctor->user->name,
+                'date' => $scheduledAt->translatedFormat('d/m/Y'),
+                'time' => $scheduledAt->translatedFormat('H:i'),
+            ];
+
+            $this->notifications->dispatchFromTemplate(
                 $doctor->user,
-                NotificationType::REMINDER,
-                __('Nova consulta agendada'),
-                __('Uma nova consulta foi agendada para :date', ['date' => $scheduledAt->translatedFormat('d/m/Y H:i')]),
+                'appointment.created.doctor',
+                $context,
                 metadata: ['appointment_id' => $appointment->id]
             );
 
-            $this->notifications->dispatch(
+            $this->notifications->dispatchFromTemplate(
                 $patient->user,
-                NotificationType::CONFIRMATION,
-                __('Consulta registrada'),
-                __('Sua consulta foi registrada e aguarda confirmação do médico.'),
+                'appointment.created.patient',
+                $context,
                 metadata: ['appointment_id' => $appointment->id]
             );
 
@@ -162,14 +167,14 @@ class AppointmentService
             'changed_at' => now(),
         ]);
 
-        $this->notifications->dispatch(
+        $this->notifications->dispatchFromTemplate(
             $appointment->patient->user,
-            NotificationType::CONFIRMATION,
-            __('Consulta confirmada'),
-            __('Sua consulta com :doctor foi confirmada para :date', [
+            'appointment.confirmed.patient',
+            [
                 'doctor' => $appointment->doctor->user->name,
-                'date' => $appointment->scheduled_at->translatedFormat('d/m/Y H:i'),
-            ]),
+                'date' => $appointment->scheduled_at->translatedFormat('d/m/Y'),
+                'time' => $appointment->scheduled_at->translatedFormat('H:i'),
+            ],
             metadata: ['appointment_id' => $appointment->id]
         );
 
@@ -197,11 +202,13 @@ class AppointmentService
             'changed_at' => now(),
         ]);
 
-        $this->notifications->dispatch(
+        $this->notifications->dispatchFromTemplate(
             $appointment->patient->user,
-            NotificationType::CANCELLATION,
-            __('Consulta cancelada'),
-            __('Sua consulta com :doctor foi cancelada.', ['doctor' => $appointment->doctor->user->name]),
+            'appointment.cancelled.patient',
+            [
+                'doctor' => $appointment->doctor->user->name,
+                'reason' => $reason ? $reason : __('Não informado'),
+            ],
             metadata: ['appointment_id' => $appointment->id, 'reason' => $reason]
         );
 
@@ -243,19 +250,24 @@ class AppointmentService
             'changed_at' => now(),
         ]);
 
-        $this->notifications->dispatch(
+        $rescheduleContext = [
+            'patient' => $appointment->patient->user->name,
+            'doctor' => $appointment->doctor->user->name,
+            'date' => $newDate->translatedFormat('d/m/Y'),
+            'time' => $newDate->translatedFormat('H:i'),
+        ];
+
+        $this->notifications->dispatchFromTemplate(
             $appointment->patient->user,
-            NotificationType::RESCHEDULING,
-            __('Remarcação pendente de confirmação'),
-            __('Sua consulta foi remarcada para :date e aguarda confirmação do médico.', ['date' => $newDate->translatedFormat('d/m/Y H:i')]),
+            'appointment.rescheduled.patient',
+            $rescheduleContext,
             metadata: ['appointment_id' => $appointment->id]
         );
 
-        $this->notifications->dispatch(
+        $this->notifications->dispatchFromTemplate(
             $appointment->doctor->user,
-            NotificationType::RESCHEDULING,
-            __('Paciente solicitou remarcação'),
-            __('Consulta remarcada para :date. Confirme a nova data em sua agenda.', ['date' => $newDate->translatedFormat('d/m/Y H:i')]),
+            'appointment.rescheduled.doctor',
+            $rescheduleContext,
             metadata: ['appointment_id' => $appointment->id]
         );
 
