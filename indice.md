@@ -200,7 +200,9 @@
 
 ### Fase 2 – Núcleo do Produto
 - [x] Implementação completa de agendamento e agenda médica.
-- [ ] Gestão de usuários, convênios e notificações.
+- [x] Gestão de convênios (CRUD completo via painel admin).
+- [ ] Gestão de usuários (administra médicos/pacientes, CRUD e perfis).
+- [ ] Sistema de notificações (fila, templates, canais).
 - [x] Observações clínicas e relatórios administrativos.
 
 ### Fase 3 – Qualidade e Observabilidade
