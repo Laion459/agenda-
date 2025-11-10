@@ -145,6 +145,12 @@ export default function DashboardPage() {
             >
               Notificações
             </Link>
+            <Link
+              href="/profile"
+              className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+            >
+              Meu perfil
+            </Link>
             {role === "DOCTOR" && (
               <Link
                 href="/doctor/schedules"

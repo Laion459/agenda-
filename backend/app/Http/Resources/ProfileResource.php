@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /** @mixin \App\Models\User */
-class UserResource extends JsonResource
+class ProfileResource extends JsonResource
 {
     public function toArray($request): array
     {
@@ -16,10 +16,8 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'role' => $this->role,
             'is_active' => $this->is_active,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'doctor' => new DoctorSummaryResource($this->whenLoaded('doctor')),
-            'patient' => new PatientSummaryResource($this->whenLoaded('patient')),
+            'patient' => new PatientResource($this->whenLoaded('patient')),
+            'doctor' => new DoctorResource($this->whenLoaded('doctor')),
         ];
     }
 }

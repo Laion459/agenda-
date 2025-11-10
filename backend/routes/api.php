@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\API\Admin\PatientController as AdminPatientController;
+use App\Http\Controllers\API\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\DoctorController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\API\HealthInsuranceController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\ObservationController;
 use App\Http\Controllers\API\ScheduleController;
+use App\Http\Controllers\API\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -36,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::get('profile', [ProfileController::class, 'show']);
+    Route::put('profile', [ProfileController::class, 'update']);
 
     Route::middleware('role:PATIENT')->group(function () {
         Route::get('patient/observations', [ObservationController::class, 'index']);
@@ -51,6 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'destroy']);
         Route::apiResource('admin/doctors', AdminDoctorController::class);
         Route::apiResource('admin/patients', AdminPatientController::class);
+        Route::get('admin/users', [AdminUserController::class, 'index']);
+        Route::get('admin/users/export', [AdminUserController::class, 'export']);
     });
 
     Route::get('doctor/schedules', [ScheduleController::class, 'index']);

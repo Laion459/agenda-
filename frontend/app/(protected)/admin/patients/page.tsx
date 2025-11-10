@@ -31,6 +31,7 @@ const patientSchema = z.object({
   birth_date: z.string().min(1, "Informe a data de nascimento"),
   gender: z.enum(["M", "F", "OTHER"]).optional(),
   address: z.string().optional(),
+  is_active: z.boolean().optional(),
 });
 
 type PatientForm = z.infer<typeof patientSchema>;
@@ -69,6 +70,7 @@ export default function AdminPatientsPage() {
       birth_date: "",
       gender: undefined,
       address: "",
+      is_active: true,
     },
   });
 
@@ -135,6 +137,7 @@ export default function AdminPatientsPage() {
       birth_date: "",
       gender: undefined,
       address: "",
+      is_active: true,
     });
     setPlans({});
   };
@@ -193,25 +196,29 @@ export default function AdminPatientsPage() {
       birth_date: patient.birth_date ?? "",
       gender: patient.gender ?? undefined,
       address: patient.address ?? "",
+      is_active: patient.user?.is_active ?? true,
     });
     resetPlans(patient);
   };
 
-  const handleDelete = async (patient: Patient) => {
-    if (!confirm(`Deseja realmente remover ${patient.name}? Essa ação é irreversível.`)) {
-      return;
-    }
+  const handleToggleActive = async (patient: Patient) => {
+    const active = patient.user?.is_active ?? true;
 
     try {
       setLoadingForm(true);
-      await deletePatient(patient.id);
-      toast.success("Paciente removido");
+      if (active) {
+        await deletePatient(patient.id);
+        toast.success("Paciente desativado");
+      } else {
+        await updatePatient(patient.id, { is_active: true });
+        toast.success("Paciente reativado");
+      }
       if (editing?.id === patient.id) {
         resetForm();
       }
       await reloadPatients();
     } catch (error) {
-      handleApiError(error, "Não foi possível remover o paciente");
+      handleApiError(error, "Não foi possível alterar o status");
     } finally {
       setLoadingForm(false);
     }
@@ -353,6 +360,12 @@ export default function AdminPatientsPage() {
               })}
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="is_active" {...register("is_active")} className="h-4 w-4" />
+            <Label htmlFor="is_active" className="text-sm font-medium">
+              Perfil ativo
+            </Label>
+          </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={loadingForm}>
               {loadingForm ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar paciente"}
@@ -369,7 +382,7 @@ export default function AdminPatientsPage() {
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Pacientes cadastrados</CardTitle>
-          <CardDescription>Administre os pacientes ativos no sistema.</CardDescription>
+          <CardDescription>Administre os pacientes ativos e inativos no sistema.</CardDescription>
         </CardHeader>
         <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
           {loading ? (
@@ -382,59 +395,66 @@ export default function AdminPatientsPage() {
             <EmptyState className="m-4">Nenhum paciente encontrado.</EmptyState>
           ) : (
             <ul className="divide-y divide-slate-200">
-              {filteredPatients.map((patient) => (
-                <li key={patient.id} className="flex flex-col gap-2 px-6 py-4 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-slate-900">{patient.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {patient.user?.email ?? "Sem e-mail informado"}
+              {filteredPatients.map((patient) => {
+                const active = patient.user?.is_active ?? true;
+                return (
+                  <li key={patient.id} className="flex flex-col gap-2 px-6 py-4 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-900">{patient.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {patient.user?.email ?? "Sem e-mail informado"}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {active ? "Ativo" : "Inativo"}
+                      </span>
+                    </div>
+                    <div className="grid gap-1 text-xs text-slate-600 md:grid-cols-2">
+                      <p>
+                        <span className="font-medium">Telefone:</span>{" "}
+                        {patient.user?.phone ?? "Não informado"}
+                      </p>
+                      <p>
+                        <span className="font-medium">Nascimento:</span>{" "}
+                        {patient.birth_date
+                          ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
+                          : "Não informado"}
+                      </p>
+                      <p className="md:col-span-2">
+                        <span className="font-medium">Convênios:</span>{" "}
+                        {patient.health_insurances && patient.health_insurances.length > 0
+                          ? patient.health_insurances
+                              .map((plan) => {
+                                const policy = plan.pivot?.policy_number
+                                  ? ` (${plan.pivot.policy_number})`
+                                  : "";
+                                return `${plan.name}${policy}`;
+                              })
+                              .join(", ")
+                          : "Nenhum convênio"}
                       </p>
                     </div>
-                    <p className="text-xs text-slate-500">
-                      CPF: <span className="font-medium">{patient.cpf}</span>
-                    </p>
-                  </div>
-                  <div className="grid gap-1 text-xs text-slate-600 md:grid-cols-2">
-                    <p>
-                      <span className="font-medium">Telefone:</span>{" "}
-                      {patient.user?.phone ?? "Não informado"}
-                    </p>
-                    <p>
-                      <span className="font-medium">Nascimento:</span>{" "}
-                      {patient.birth_date
-                        ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
-                        : "Não informado"}
-                    </p>
-                    <p className="md:col-span-2">
-                      <span className="font-medium">Convênios:</span>{" "}
-                      {patient.health_insurances && patient.health_insurances.length > 0
-                        ? patient.health_insurances
-                            .map((plan) => {
-                              const policy = plan.pivot?.policy_number
-                                ? ` (${plan.pivot.policy_number})`
-                                : "";
-                              return `${plan.name}${policy}`;
-                            })
-                            .join(", ")
-                        : "Nenhum convênio"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => handleEdit(patient)}>
-                      Editar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(patient)}
-                      disabled={loadingForm}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                </li>
-              ))}
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => handleEdit(patient)}>
+                        Editar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleActive(patient)}
+                        disabled={loadingForm}
+                      >
+                        {active ? "Desativar" : "Reativar"}
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

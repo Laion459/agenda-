@@ -40,7 +40,9 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        return response()->json(Auth::user()->load(['patient', 'doctor']));
+        return response()->json(
+            Auth::user()->load(['patient.healthInsurances', 'doctor.healthInsurances'])
+        );
     }
 
     public function logout(): JsonResponse

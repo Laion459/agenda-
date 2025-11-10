@@ -23,6 +23,10 @@ class AuthService
             throw new AuthenticationException(__('auth.failed'));
         }
 
+        if (! $user->is_active) {
+            throw new AuthenticationException(__('Sua conta está desativada. Entre em contato com o suporte.'));
+        }
+
         $token = $user->createToken('agenda-plus-token')->plainTextToken;
 
         return [

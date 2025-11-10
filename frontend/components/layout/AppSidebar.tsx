@@ -32,6 +32,7 @@ export function AppSidebar() {
     { href: "/dashboard", label: "Visão geral", icon: LayoutDashboard },
     { href: "/appointments", label: "Consultas", icon: CalendarDays },
     { href: "/notifications", label: "Notificações", icon: Bell },
+    { href: "/profile", label: "Meu perfil", icon: NotebookText },
   ];
 
   if (user?.role !== "DOCTOR") {
@@ -46,6 +47,7 @@ export function AppSidebar() {
     links.push(
       { href: "/admin/doctors", label: "Gerenciar médicos", icon: UserCog },
       { href: "/admin/patients", label: "Gerenciar pacientes", icon: Users },
+      { href: "/admin/users", label: "Todos os usuários", icon: Users },
       { href: "/admin/health-insurances", label: "Convênios", icon: ShieldCheck },
     );
   }

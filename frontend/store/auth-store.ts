@@ -11,6 +11,7 @@ interface AuthState {
   token: string | null;
   initializing: boolean;
   setAuth: (payload: { token: string; user: User }) => void;
+  setUser: (user: User) => void;
   logout: () => void;
   initialize: () => Promise<void>;
 }
@@ -23,6 +24,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     storeToken(token);
     set({ token, user });
   },
+  setUser: (user) => set({ user }),
   logout: () => {
     clearToken();
     set({ token: null, user: null });

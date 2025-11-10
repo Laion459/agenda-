@@ -32,6 +32,25 @@ class AdminPatientService
                             ->orWhereRaw('LOWER(phone) LIKE ?', [$like]);
                     });
             });
+
+        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $value = filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($value !== null) {
+                $query->whereHas('user', fn ($relation) => $relation->where('is_active', $value));
+            }
+        }
+
+        if (! empty($filters['created_from'])) {
+            $query->whereDate('created_at', '>=', $filters['created_from']);
+        }
+
+        if (! empty($filters['created_to'])) {
+            $query->whereDate('created_at', '<=', $filters['created_to']);
+        }
+
+        if (! empty($filters['health_insurance_id'])) {
+            $query->whereHas('healthInsurances', fn ($relation) => $relation->where('health_insurances.id', $filters['health_insurance_id']));
+        }
         }
 
         $perPage = (int) ($filters['per_page'] ?? 15);
@@ -47,6 +66,7 @@ class AdminPatientService
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'phone' => Arr::get($data, 'phone'),
+                'is_active' => Arr::get($data, 'is_active', true),
                 'role' => UserRole::PATIENT,
                 'password' => Hash::make($data['password']),
             ]);
@@ -87,6 +107,10 @@ class AdminPatientService
 
             $patient->update(Arr::only($data, ['cpf', 'birth_date', 'gender', 'address']));
 
+            if (array_key_exists('is_active', $data)) {
+                $patient->user->update(['is_active' => (bool) $data['is_active']]);
+            }
+
             if (array_key_exists('health_insurances', $data)) {
                 $patient->healthInsurances()->sync(
                     $this->preparePatientPivot($data['health_insurances'] ?? [])
@@ -97,14 +121,9 @@ class AdminPatientService
         });
     }
 
-    public function delete(Patient $patient): void
+    public function deactivate(Patient $patient): void
     {
-        $this->db->transaction(function () use ($patient) {
-            $user = $patient->user;
-            $patient->healthInsurances()->detach();
-            $patient->delete();
-            $user?->delete();
-        });
+        $patient->user?->update(['is_active' => false]);
     }
 
     /**

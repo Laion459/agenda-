@@ -25,6 +25,7 @@ class AdminDoctorService
 
                 if ($value !== null) {
                     $builder->where('is_active', $value);
+                    $builder->whereHas('user', fn ($relation) => $relation->where('is_active', $value));
                 }
             });
 
@@ -40,6 +41,14 @@ class AdminDoctorService
                             ->orWhereRaw('LOWER(phone) LIKE ?', [$like]);
                     });
             });
+
+        if (! empty($filters['created_from'])) {
+            $query->whereDate('created_at', '>=', $filters['created_from']);
+        }
+
+        if (! empty($filters['created_to'])) {
+            $query->whereDate('created_at', '<=', $filters['created_to']);
+        }
         }
 
         $perPage = (int) ($filters['per_page'] ?? 15);
@@ -55,6 +64,7 @@ class AdminDoctorService
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'phone' => Arr::get($data, 'phone'),
+                'is_active' => Arr::get($data, 'is_active', true),
                 'role' => UserRole::DOCTOR,
                 'password' => Hash::make($data['password']),
             ]);
@@ -94,6 +104,10 @@ class AdminDoctorService
 
             $doctor->update(Arr::only($data, ['crm', 'specialty', 'qualification', 'is_active']));
 
+            if (array_key_exists('is_active', $data)) {
+                $doctor->user->update(['is_active' => (bool) $data['is_active']]);
+            }
+
             if (array_key_exists('health_insurance_ids', $data)) {
                 $doctor->healthInsurances()->sync(
                     $this->prepareDoctorPivot($data['health_insurance_ids'] ?? [])
@@ -107,6 +121,7 @@ class AdminDoctorService
     public function deactivate(Doctor $doctor): void
     {
         $doctor->update(['is_active' => false]);
+        $doctor->user?->update(['is_active' => false]);
     }
 
     /**

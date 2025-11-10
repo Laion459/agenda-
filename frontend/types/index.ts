@@ -6,6 +6,22 @@ export interface User {
   email: string;
   phone: string;
   role: UserRole;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+  doctor?: {
+    id: number;
+    crm: string;
+    specialty: string;
+    is_active: boolean;
+    qualification?: string | null;
+  } | null;
+  patient?: {
+    id: number;
+    cpf: string;
+    birth_date: string;
+    gender?: string | null;
+  } | null;
 }
 
 export interface HealthInsurance {

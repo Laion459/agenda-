@@ -23,6 +23,7 @@ class StorePatientRequest extends FormRequest
             'birth_date' => ['required', 'date'],
             'gender' => ['nullable', Rule::in(['M', 'F', 'OTHER'])],
             'address' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
             'health_insurances' => ['nullable', 'array'],
             'health_insurances.*.id' => ['required', 'integer', Rule::exists('health_insurances', 'id')],
             'health_insurances.*.policy_number' => ['nullable', 'string', 'max:100'],

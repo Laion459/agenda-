@@ -171,7 +171,7 @@ export default function AdminDoctorsPage() {
       crm: doctor.crm,
       specialty: doctor.specialty,
       qualification: doctor.qualification ?? "",
-      is_active: doctor.is_active,
+      is_active: doctor.user?.is_active ?? doctor.is_active,
       health_insurance_ids: doctor.health_insurances?.map((plan) => plan.id) ?? [],
     });
   };
@@ -179,7 +179,8 @@ export default function AdminDoctorsPage() {
   const handleToggleActive = async (doctor: Doctor) => {
     try {
       setLoadingForm(true);
-      if (doctor.is_active) {
+      const active = doctor.user?.is_active ?? doctor.is_active;
+      if (active) {
         await deactivateDoctor(doctor.id);
         toast.success("Médico desativado");
       } else {
@@ -313,50 +314,53 @@ export default function AdminDoctorsPage() {
             <EmptyState className="m-4">Nenhum médico encontrado.</EmptyState>
           ) : (
             <ul className="divide-y divide-slate-200">
-              {filteredDoctors.map((doctor) => (
-                <li key={doctor.id} className="flex flex-col gap-2 px-6 py-4 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-slate-900">{doctor.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {doctor.user?.email ?? "Sem e-mail informado"}
+              {filteredDoctors.map((doctor) => {
+                const active = doctor.user?.is_active ?? doctor.is_active;
+                return (
+                  <li key={doctor.id} className="flex flex-col gap-2 px-6 py-4 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-900">{doctor.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {doctor.user?.email ?? "Sem e-mail informado"}
+                        </p>
+                      </div>
+                      <StatusBadge status={active ? "CONFIRMED" : "CANCELLED"} />
+                    </div>
+                    <div className="grid gap-1 text-xs text-slate-600 md:grid-cols-2">
+                      <p>
+                        <span className="font-medium">CRM:</span> {doctor.crm}
+                      </p>
+                      <p>
+                        <span className="font-medium">Especialidade:</span> {doctor.specialty}
+                      </p>
+                      <p>
+                        <span className="font-medium">Telefone:</span>{" "}
+                        {doctor.user?.phone ?? "Não informado"}
+                      </p>
+                      <p className="md:col-span-2">
+                        <span className="font-medium">Convênios:</span>{" "}
+                        {doctor.health_insurances && doctor.health_insurances.length > 0
+                          ? doctor.health_insurances.map((plan) => plan.name).join(", ")
+                          : "Nenhum convênio"}
                       </p>
                     </div>
-                    <StatusBadge status={doctor.is_active ? "CONFIRMED" : "CANCELLED"} />
-                  </div>
-                  <div className="grid gap-1 text-xs text-slate-600 md:grid-cols-2">
-                    <p>
-                      <span className="font-medium">CRM:</span> {doctor.crm}
-                    </p>
-                    <p>
-                      <span className="font-medium">Especialidade:</span> {doctor.specialty}
-                    </p>
-                    <p>
-                      <span className="font-medium">Telefone:</span>{" "}
-                      {doctor.user?.phone ?? "Não informado"}
-                    </p>
-                    <p className="md:col-span-2">
-                      <span className="font-medium">Convênios:</span>{" "}
-                      {doctor.health_insurances && doctor.health_insurances.length > 0
-                        ? doctor.health_insurances.map((plan) => plan.name).join(", ")
-                        : "Nenhum convênio"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => handleEdit(doctor)}>
-                      Editar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleToggleActive(doctor)}
-                      disabled={loadingForm}
-                    >
-                      {doctor.is_active ? "Desativar" : "Reativar"}
-                    </Button>
-                  </div>
-                </li>
-              ))}
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => handleEdit(doctor)}>
+                        Editar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleActive(doctor)}
+                        disabled={loadingForm}
+                      >
+                        {active ? "Desativar" : "Reativar"}
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

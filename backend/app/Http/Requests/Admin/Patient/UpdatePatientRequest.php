@@ -39,6 +39,7 @@ class UpdatePatientRequest extends FormRequest
             'birth_date' => ['sometimes', 'required', 'date'],
             'gender' => ['sometimes', 'nullable', Rule::in(['M', 'F', 'OTHER'])],
             'address' => ['sometimes', 'nullable', 'string'],
+            'is_active' => ['sometimes', 'boolean'],
             'health_insurances' => ['nullable', 'array'],
             'health_insurances.*.id' => ['required', 'integer', Rule::exists('health_insurances', 'id')],
             'health_insurances.*.policy_number' => ['nullable', 'string', 'max:100'],

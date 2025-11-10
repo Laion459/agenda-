@@ -47,7 +47,7 @@ class PatientController extends Controller
 
     public function destroy(Patient $patient): JsonResponse
     {
-        $this->service->delete($patient);
+        $this->service->deactivate($patient);
 
         return response()->json(null, 204);
     }
