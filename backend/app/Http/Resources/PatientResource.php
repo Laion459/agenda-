@@ -16,6 +16,8 @@ class PatientResource extends JsonResource
             'birth_date' => $this->birth_date,
             'gender' => $this->gender,
             'address' => $this->address,
+            'profile_completed_at' => $this->profile_completed_at,
+            'user' => new UserResource($this->whenLoaded('user')),
             'health_insurances' => HealthInsuranceResource::collection($this->whenLoaded('healthInsurances')),
         ];
     }

@@ -16,6 +16,7 @@ class DoctorResource extends JsonResource
             'specialty' => $this->specialty,
             'qualification' => $this->qualification,
             'is_active' => $this->is_active,
+            'user' => new UserResource($this->whenLoaded('user')),
             'health_insurances' => HealthInsuranceResource::collection($this->whenLoaded('healthInsurances')),
             'schedules' => ScheduleResource::collection($this->whenLoaded('schedules')),
         ];

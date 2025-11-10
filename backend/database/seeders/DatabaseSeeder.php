@@ -60,6 +60,65 @@ class DatabaseSeeder extends Seeder
             });
         });
 
+        // Reference doctor and patient for administration flows
+        $primaryDoctorUser = User::query()->firstOrCreate(
+            ['email' => 'dr.responsavel@agendaplus.test'],
+            [
+                'name' => 'Dra. Responsável',
+                'phone' => '+5511988880001',
+                'password' => Hash::make('password'),
+                'role' => UserRole::DOCTOR->value,
+            ]
+        );
+        $primaryDoctorUser->syncRoles([UserRole::DOCTOR->value]);
+
+        $primaryDoctor = Doctor::query()->updateOrCreate(
+            ['user_id' => $primaryDoctorUser->id],
+            [
+                'crm' => 'CRM-SP-0001',
+                'specialty' => 'Clínica Geral',
+                'qualification' => 'Responsável técnica pela equipe',
+                'is_active' => true,
+            ]
+        );
+
+        $primaryDoctor->healthInsurances()->sync(
+            $healthInsurances->take(2)->pluck('id')->mapWithKeys(
+                fn ($id) => [$id => ['is_active' => true]]
+            )->toArray()
+        );
+
+        $primaryPatientUser = User::query()->firstOrCreate(
+            ['email' => 'paciente.demo@agendaplus.test'],
+            [
+                'name' => 'Paciente Demonstração',
+                'phone' => '+5511977770002',
+                'password' => Hash::make('password'),
+                'role' => UserRole::PATIENT->value,
+            ]
+        );
+        $primaryPatientUser->syncRoles([UserRole::PATIENT->value]);
+
+        $primaryPatient = Patient::query()->updateOrCreate(
+            ['user_id' => $primaryPatientUser->id],
+            [
+                'cpf' => '12345678901',
+                'birth_date' => now()->subYears(28)->toDateString(),
+                'gender' => 'F',
+                'address' => 'Rua Exemplo, 123 - São Paulo/SP',
+                'profile_completed_at' => now(),
+            ]
+        );
+
+        $primaryPatient->healthInsurances()->sync(
+            $healthInsurances->take(2)->pluck('id')->mapWithKeys(
+                fn ($id, $index) => [$id => [
+                    'policy_number' => sprintf('POL%04d', $index + 1),
+                    'is_active' => true,
+                ]]
+            )->toArray()
+        );
+
         $appointments = collect();
 
         foreach ($patients as $patient) {

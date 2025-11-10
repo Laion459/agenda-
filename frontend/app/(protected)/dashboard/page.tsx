@@ -148,12 +148,26 @@ export default function DashboardPage() {
               </Link>
             )}
             {role === "ADMIN" && (
-              <Link
-                href="/admin/health-insurances"
-                className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
-              >
-                Convênios
-              </Link>
+              <>
+                <Link
+                  href="/admin/doctors"
+                  className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+                >
+                  Gerenciar médicos
+                </Link>
+                <Link
+                  href="/admin/patients"
+                  className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+                >
+                  Gerenciar pacientes
+                </Link>
+                <Link
+                  href="/admin/health-insurances"
+                  className="flex-1 min-w-[140px] rounded-md border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-600"
+                >
+                  Convênios
+                </Link>
+              </>
             )}
           </div>
         </Card>

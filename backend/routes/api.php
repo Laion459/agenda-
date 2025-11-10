@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\API\Admin\DoctorController as AdminDoctorController;
+use App\Http\Controllers\API\Admin\PatientController as AdminPatientController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\DoctorController;
@@ -39,9 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('doctor/patients/{patient}/observations', [ObservationController::class, 'historyForDoctor']);
     });
 
-    Route::post('health-insurances', [HealthInsuranceController::class, 'store'])->middleware('role:ADMIN');
-    Route::put('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'update'])->middleware('role:ADMIN');
-    Route::delete('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'destroy'])->middleware('role:ADMIN');
+    Route::middleware('role:ADMIN')->group(function () {
+        Route::post('health-insurances', [HealthInsuranceController::class, 'store']);
+        Route::put('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'update']);
+        Route::delete('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'destroy']);
+        Route::apiResource('admin/doctors', AdminDoctorController::class);
+        Route::apiResource('admin/patients', AdminPatientController::class);
+    });
 
     Route::get('doctor/schedules', [ScheduleController::class, 'index']);
     Route::post('doctor/schedules', [ScheduleController::class, 'store']);

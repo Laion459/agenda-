@@ -13,6 +13,13 @@ export interface HealthInsurance {
   name: string;
   coverage_percentage: number | string | null;
   is_active: boolean;
+  pivot?: {
+    policy_number?: string | null;
+    is_active?: boolean;
+  };
+  pivot_doctor?: {
+    is_active?: boolean;
+  };
 }
 
 export interface Doctor {
@@ -23,6 +30,7 @@ export interface Doctor {
   qualification?: string | null;
   is_active: boolean;
   health_insurances?: HealthInsurance[];
+  user?: User;
 }
 
 export interface Patient {
@@ -33,6 +41,8 @@ export interface Patient {
   gender?: string | null;
   address?: string | null;
   health_insurances?: HealthInsurance[];
+  profile_completed_at?: string | null;
+  user?: User;
 }
 
 export interface Appointment {

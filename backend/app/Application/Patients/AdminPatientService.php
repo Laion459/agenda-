@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Application\Patients;
+
+use App\Domain\Shared\Enums\UserRole;
+use App\Models\Patient;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Hash;
+
+class AdminPatientService
+{
+    public function __construct(private DatabaseManager $db)
+    {
+    }
+
+    public function list(array $filters = []): LengthAwarePaginator
+    {
+        $query = Patient::query()
+            ->with(['user', 'healthInsurances']);
+
+        if (! empty($filters['search'])) {
+            $search = mb_strtolower($filters['search']);
+            $like = "%{$search}%";
+            $query->where(function ($builder) use ($like) {
+                $builder->whereRaw('LOWER(cpf) LIKE ?', [$like])
+                    ->orWhereHas('user', function ($relation) use ($like) {
+                        $relation->whereRaw('LOWER(name) LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(email) LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(phone) LIKE ?', [$like]);
+                    });
+            });
+        }
+
+        $perPage = (int) ($filters['per_page'] ?? 15);
+
+        return $query->orderByDesc('created_at')->paginate(max($perPage, 1))->appends($filters);
+    }
+
+    public function create(array $data): Patient
+    {
+        return $this->db->transaction(function () use ($data) {
+            /** @var \App\Models\User $user */
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => Arr::get($data, 'phone'),
+                'role' => UserRole::PATIENT,
+                'password' => Hash::make($data['password']),
+            ]);
+            $user->assignRole(UserRole::PATIENT->value);
+
+            /** @var \App\Models\Patient $patient */
+            $patient = Patient::create([
+                'user_id' => $user->id,
+                'cpf' => $data['cpf'],
+                'birth_date' => $data['birth_date'],
+                'gender' => Arr::get($data, 'gender'),
+                'address' => Arr::get($data, 'address'),
+                'profile_completed_at' => now(),
+            ]);
+
+            if (! empty($data['health_insurances'])) {
+                $patient->healthInsurances()->sync(
+                    $this->preparePatientPivot($data['health_insurances'])
+                );
+            }
+
+            return $patient->load(['user', 'healthInsurances']);
+        });
+    }
+
+    public function update(Patient $patient, array $data): Patient
+    {
+        return $this->db->transaction(function () use ($patient, $data) {
+            $userUpdates = Arr::only($data, ['name', 'email', 'phone']);
+
+            if (! empty($data['password'])) {
+                $userUpdates['password'] = Hash::make($data['password']);
+            }
+
+            if (! empty($userUpdates)) {
+                $patient->user->update($userUpdates);
+            }
+
+            $patient->update(Arr::only($data, ['cpf', 'birth_date', 'gender', 'address']));
+
+            if (array_key_exists('health_insurances', $data)) {
+                $patient->healthInsurances()->sync(
+                    $this->preparePatientPivot($data['health_insurances'] ?? [])
+                );
+            }
+
+            return $patient->load(['user', 'healthInsurances']);
+        });
+    }
+
+    public function delete(Patient $patient): void
+    {
+        $this->db->transaction(function () use ($patient) {
+            $user = $patient->user;
+            $patient->healthInsurances()->detach();
+            $patient->delete();
+            $user?->delete();
+        });
+    }
+
+    /**
+     * @param  array<int, array{id:int, policy_number?:string|null, is_active?:bool}>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function preparePatientPivot(array $items): array
+    {
+        return collect($items)
+            ->filter(fn ($item) => ! empty($item['id']))
+            ->mapWithKeys(fn ($item) => [
+                $item['id'] => [
+                    'policy_number' => $item['policy_number'] ?? null,
+                    'is_active' => $item['is_active'] ?? true,
+                ],
+            ])
+            ->toArray();
+    }
+}
+
+
