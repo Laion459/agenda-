@@ -7,6 +7,11 @@ export interface User {
   phone: string;
   role: UserRole;
   is_active: boolean;
+  failed_login_attempts?: number;
+  locked_until?: string | null;
+  privacy_policy_accepted_at?: string | null;
+  privacy_policy_version?: string | null;
+  data_erasure_requested_at?: string | null;
   created_at?: string;
   updated_at?: string;
   doctor?: {
@@ -124,10 +129,28 @@ export interface Notification {
   subject: string;
   message: string;
   channel: string;
+  is_suppressed: boolean;
   is_read: boolean;
-  sent_at: string;
+  sent_at: string | null;
   read_at?: string | null;
+  sent_attempts: number;
+  last_attempt_at?: string | null;
+  error_message?: string | null;
   metadata?: Record<string, unknown> | null;
+}
+
+export type NotificationPreferenceMap = Record<string, Record<string, boolean>>;
+
+export interface ActivityLog {
+  id: number;
+  action: string;
+  route: string | null;
+  method: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  context?: Record<string, unknown> | null;
+  created_at: string;
+  user?: User | null;
 }
 
 

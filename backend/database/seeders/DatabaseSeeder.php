@@ -7,6 +7,7 @@ use App\Domain\Shared\Enums\NotificationChannel;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\AppointmentLog;
+use App\Models\DataRetentionPolicy;
 use App\Models\Doctor;
 use App\Models\HealthInsurance;
 use App\Models\Notification;
@@ -16,6 +17,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 
 class DatabaseSeeder extends Seeder
 {
@@ -42,7 +44,16 @@ class DatabaseSeeder extends Seeder
         $healthInsurances = HealthInsurance::factory(5)->create();
 
         $doctors = Doctor::factory(8)
-            ->has(Schedule::factory()->count(3), 'schedules')
+            ->has(
+                Schedule::factory()
+                    ->count(3)
+                    ->state(new Sequence(
+                        ['day_of_week' => 1, 'start_time' => '08:00', 'end_time' => '12:00', 'slot_duration_minutes' => 30],
+                        ['day_of_week' => 3, 'start_time' => '08:00', 'end_time' => '12:00', 'slot_duration_minutes' => 30],
+                        ['day_of_week' => 5, 'start_time' => '13:00', 'end_time' => '17:00', 'slot_duration_minutes' => 30],
+                    )),
+                'schedules'
+            )
             ->create()
             ->each(function (Doctor $doctor) use ($healthInsurances) {
                 $doctor->user->assignRole(UserRole::DOCTOR->value);
@@ -167,5 +178,7 @@ class DatabaseSeeder extends Seeder
                 'metadata' => ['trigger' => 'seed'],
             ]);
         });
+
+        $this->call(DataRetentionPolicySeeder::class);
     }
 }

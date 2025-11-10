@@ -14,7 +14,7 @@ class RescheduleAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'scheduled_at' => ['required', 'date'],
+            'scheduled_at' => ['required', 'date', 'after:now'],
             'duration_minutes' => ['nullable', 'integer', 'min:15', 'max:240'],
         ];
     }

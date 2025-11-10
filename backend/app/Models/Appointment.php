@@ -23,6 +23,7 @@ class Appointment extends Model
         'confirmed_at',
         'cancelled_at',
         'completed_at',
+        'reminder_sent_at',
         'created_by',
     ];
 
@@ -35,6 +36,7 @@ class Appointment extends Model
         'confirmed_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'completed_at' => 'datetime',
+        'reminder_sent_at' => 'datetime',
     ];
 
     public function patient()

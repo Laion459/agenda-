@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import toast from "react-hot-toast";
@@ -13,7 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { handleApiError } from "@/lib/handle-api-error";
-import { fetchProfile, updateProfile } from "@/services/profile-service";
+import {
+  fetchProfile,
+  updateProfile,
+  acceptPrivacyPolicy,
+  requestDataErasure,
+  exportUserData,
+} from "@/services/profile-service";
 import { useAuthStore } from "@/store/auth-store";
 
 const profileSchema = z.object({
@@ -35,6 +41,8 @@ export default function ProfilePage() {
   const setUser = useAuthStore((state) => state.setUser);
   const authUser = useAuthStore((state) => state.user);
   const [loading, setLoading] = useState(true);
+  const [privacyLoading, setPrivacyLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const {
     register,
@@ -57,32 +65,33 @@ export default function ProfilePage() {
     },
   });
 
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        const profile = await fetchProfile();
-        reset({
-          name: profile.name,
-          email: profile.email,
-          phone: profile.phone ?? "",
-          password: "",
-          birth_date: profile.patient?.birth_date ?? "",
-          gender: profile.patient?.gender ?? "",
-          address: profile.patient?.address ?? "",
-          specialty: profile.doctor?.specialty ?? "",
-          qualification: profile.doctor?.qualification ?? "",
-          crm: profile.doctor?.crm ?? "",
-        });
-      } catch (error) {
-        handleApiError(error, "Não foi possível carregar seu perfil");
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      const profile = await fetchProfile();
+      setUser(profile);
+      reset({
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone ?? "",
+        password: "",
+        birth_date: profile.patient?.birth_date ?? "",
+        gender: profile.patient?.gender ?? "",
+        address: profile.patient?.address ?? "",
+        specialty: profile.doctor?.specialty ?? "",
+        qualification: profile.doctor?.qualification ?? "",
+        crm: profile.doctor?.crm ?? "",
+      });
+    } catch (error) {
+      handleApiError(error, "Não foi possível carregar seu perfil");
+    } finally {
+      setLoading(false);
     }
+  }, [reset, setUser]);
 
+  useEffect(() => {
     void load();
-  }, [authUser?.role, reset]);
+  }, [load]);
 
   const onSubmit = async (values: ProfileForm) => {
     const payload: Record<string, unknown> = {
@@ -118,6 +127,61 @@ export default function ProfilePage() {
       reset({ ...values, password: "" });
     } catch (error) {
       handleApiError(error, "Não foi possível atualizar seu perfil");
+    }
+  };
+
+  const handleAcceptPrivacy = async () => {
+    try {
+      setPrivacyLoading(true);
+      await acceptPrivacyPolicy();
+      toast.success("Termos de privacidade aceitos.");
+      await load();
+    } catch (error) {
+      handleApiError(error, "Não foi possível registrar sua aceitação");
+    } finally {
+      setPrivacyLoading(false);
+    }
+  };
+
+  const handleRequestErasure = async () => {
+    if (
+      !window.confirm(
+        "Confirmar solicitação de exclusão? Sua conta será anonimizada e você perderá acesso.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setPrivacyLoading(true);
+      await requestDataErasure();
+      toast.success("Solicitação registrada. Nossa equipe entrará em contato.");
+      await load();
+    } catch (error) {
+      handleApiError(error, "Não foi possível registrar a solicitação");
+    } finally {
+      setPrivacyLoading(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      setExporting(true);
+      const data = await exportUserData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `meus-dados-${Date.now()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Exportação gerada com sucesso.");
+    } catch (error) {
+      handleApiError(error, "Não foi possível exportar seus dados");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -207,6 +271,59 @@ export default function ProfilePage() {
             </Button>
           </div>
         </form>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Privacidade e dados</CardTitle>
+          <CardDescription>
+            Controle sua aceitação dos termos e solicite a exclusão dos seus dados pessoais.
+          </CardDescription>
+        </CardHeader>
+        <div className="space-y-4 p-6 pt-0">
+          <div>
+            <p className="text-sm text-slate-600">
+              {authUser?.privacy_policy_accepted_at
+                ? `Termos aceitos em ${new Date(
+                    authUser.privacy_policy_accepted_at,
+                  ).toLocaleDateString("pt-BR")}.`
+                : "Você ainda não aceitou os termos de privacidade vigentes."}
+            </p>
+            <Button
+              variant="secondary"
+              className="mt-2"
+              onClick={handleAcceptPrivacy}
+              disabled={privacyLoading}
+            >
+              Aceitar termos de privacidade
+            </Button>
+          </div>
+          <div>
+            <p className="text-sm text-slate-600">
+              {authUser?.data_erasure_requested_at
+                ? `Solicitação de exclusão registrada em ${new Date(
+                    authUser.data_erasure_requested_at,
+                  ).toLocaleDateString("pt-BR")}.`
+                : "Caso deseje remover seus dados, solicite a exclusão abaixo."}
+            </p>
+            <Button
+              variant="outline"
+              className="mt-2"
+              onClick={handleRequestErasure}
+              disabled={privacyLoading || !!authUser?.data_erasure_requested_at}
+            >
+              Solicitar exclusão de dados
+            </Button>
+          </div>
+          <div>
+            <p className="text-sm text-slate-600">
+              Baixe uma cópia dos seus dados pessoais em formato JSON.
+            </p>
+            <Button className="mt-2" variant="outline" onClick={handleExportData} disabled={exporting}>
+              {exporting ? "Gerando..." : "Exportar meus dados"}
+            </Button>
+          </div>
+        </div>
       </Card>
     </div>
   );

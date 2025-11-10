@@ -4,9 +4,9 @@ namespace App\Application\Auth;
 
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\User;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
@@ -17,17 +17,46 @@ class AuthService
 
     public function login(string $email, string $password): array
     {
+        /** @var User|null $user */
         $user = User::where('email', $email)->first();
 
+        if ($user?->locked_until && now()->lessThan($user->locked_until)) {
+            throw ValidationException::withMessages([
+                'email' => __('Sua conta está temporariamente bloqueada. Tente novamente mais tarde.'),
+            ]);
+        }
+
         if (! $user || ! $this->hasher->check($password, $user->password)) {
-            throw new AuthenticationException(__('auth.failed'));
+            if ($user) {
+                $user->increment('failed_login_attempts');
+
+                if ($user->failed_login_attempts >= 3) {
+                    $user->forceFill([
+                        'locked_until' => now()->addMinutes(30),
+                        'failed_login_attempts' => 0,
+                    ])->save();
+                }
+            }
+
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
         }
 
         if (! $user->is_active) {
-            throw new AuthenticationException(__('Sua conta está desativada. Entre em contato com o suporte.'));
+            throw ValidationException::withMessages([
+                'email' => __('Sua conta está desativada. Entre em contato com o suporte.'),
+            ]);
         }
 
-        $token = $user->createToken('agenda-plus-token')->plainTextToken;
+        $user->forceFill([
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+            'privacy_policy_accepted_at' => $user->privacy_policy_accepted_at ?? now(),
+            'privacy_policy_version' => $user->privacy_policy_version ?? config('privacy.policy_version'),
+        ])->save();
+
+        $token = $user->createToken('agenda-plus-token', ['*'], now()->addHours(2))->plainTextToken;
 
         return [
             'token' => $token,
@@ -50,6 +79,8 @@ class AuthService
             'phone' => $data['phone'],
             'role' => UserRole::PATIENT,
             'password' => $data['password'],
+            'privacy_policy_accepted_at' => now(),
+            'privacy_policy_version' => config('privacy.policy_version'),
         ]);
 
         $user->assignRole(UserRole::PATIENT->value);

@@ -88,6 +88,10 @@ class AppointmentService
         }
 
         $doctor = Doctor::with('user')->findOrFail($data['doctor_id']);
+
+        $this->ensureProfilesAreActive($doctor, $patient);
+        $this->ensureDoctorAllowsScheduling($doctor);
+        $this->ensurePatientProfileCompleted($patient);
         $scheduledAt = Carbon::parse($data['scheduled_at']);
         $duration = $data['duration_minutes'] ?? 30;
 
@@ -187,6 +191,8 @@ class AppointmentService
             return $appointment;
         }
 
+        $this->ensureCancellationAllowed($appointment, $user);
+
         $appointment->update([
             'status' => AppointmentStatus::CANCELLED,
             'cancelled_at' => now(),
@@ -229,6 +235,7 @@ class AppointmentService
             $this->ensureScheduleIsValid($doctor, $newDate, $duration);
         }
 
+        $this->ensureRescheduleAllowed($appointment, $user);
         $this->ensureNoConflicts($doctor, $patient, $newDate, $duration, $appointment->id);
 
         $oldStatus = $appointment->status;
@@ -272,6 +279,95 @@ class AppointmentService
         );
 
         return $appointment->refresh();
+    }
+
+    protected function ensureProfilesAreActive(Doctor $doctor, Patient $patient): void
+    {
+        if (! $doctor->is_active || ! $doctor->user?->is_active) {
+            throw ValidationException::withMessages([
+                'doctor_id' => __('Este médico está inativo e não pode receber novos agendamentos.'),
+            ]);
+        }
+
+        if (! $patient->user?->is_active) {
+            throw ValidationException::withMessages([
+                'patient' => __('Sua conta está inativa. Entre em contato com o suporte.'),
+            ]);
+        }
+    }
+
+    protected function ensureDoctorAllowsScheduling(Doctor $doctor): void
+    {
+        if ($doctor->schedules()->where('is_blocked', true)->count() === $doctor->schedules()->count()) {
+            throw ValidationException::withMessages([
+                'doctor_id' => __('O médico não possui agenda liberada para novos agendamentos.'),
+            ]);
+        }
+    }
+
+    protected function ensurePatientProfileCompleted(Patient $patient): void
+    {
+        if (! $patient->profile_completed_at) {
+            throw ValidationException::withMessages([
+                'patient' => __('Complete seu perfil antes de agendar uma consulta.'),
+            ]);
+        }
+    }
+
+    protected function ensureCancellationAllowed(Appointment $appointment, User $user): void
+    {
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+
+        if ($role === UserRole::ADMIN) {
+            return;
+        }
+
+        $scheduledAt = $appointment->scheduled_at;
+
+        if (! $scheduledAt) {
+            return;
+        }
+
+        if ($scheduledAt->diffInHours(now(), false) >= -12) {
+            throw ValidationException::withMessages([
+                'scheduled_at' => __('Cancelamentos só são permitidos com antecedência mínima de 12 horas.'),
+            ]);
+        }
+    }
+
+    protected function ensureRescheduleAllowed(Appointment $appointment, User $user): void
+    {
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+
+        if ($role !== UserRole::ADMIN) {
+            $countReschedules = $appointment->logs()
+                ->where('metadata->action', 'rescheduled')
+                ->count();
+
+            if ($countReschedules >= 2) {
+                throw ValidationException::withMessages([
+                    'scheduled_at' => __('Limite de remarcações atingido para esta consulta.'),
+                ]);
+            }
+
+            if ($appointment->scheduled_at->diffInHours(now(), false) >= -12) {
+                throw ValidationException::withMessages([
+                    'scheduled_at' => __('Remarcações só são permitidas com antecedência mínima de 12 horas.'),
+                ]);
+            }
+        }
+
+        if ($role === UserRole::DOCTOR && ! $appointment->doctor->user?->is_active) {
+            throw ValidationException::withMessages([
+                'doctor_id' => __('Perfil do médico inativo.'),
+            ]);
+        }
+
+        if ($role === UserRole::PATIENT && ! $appointment->patient->user?->is_active) {
+            throw ValidationException::withMessages([
+                'patient_id' => __('Perfil de paciente inativo.'),
+            ]);
+        }
     }
 
     protected function ensureScheduleIsValid(Doctor $doctor, CarbonInterface $scheduledAt, int $duration): void

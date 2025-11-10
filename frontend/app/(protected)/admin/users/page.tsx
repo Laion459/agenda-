@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Download, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import toast from "react-hot-toast";
@@ -30,6 +30,7 @@ type FilterForm = z.infer<typeof filterSchema>;
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   const {
     register,
@@ -48,7 +49,7 @@ export default function AdminUsersPage() {
     },
   });
 
-  const loadUsers = async (payload?: FilterForm) => {
+  const loadUsers = useCallback(async (payload?: FilterForm) => {
     try {
       setLoading(true);
       const response = await fetchAdminUsers(payload);
@@ -58,25 +59,28 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadUsers();
-  }, []);
+  }, [loadUsers]);
 
   const onSubmit = async (values: FilterForm) => {
-    const payload = {
-      ...values,
+    const sanitized: FilterForm = {
+      search: values.search?.trim() || undefined,
+      role: values.role || undefined,
+      is_active: values.is_active || undefined,
+      created_from: values.created_from || undefined,
+      created_to: values.created_to || undefined,
     };
-    if (payload.role === "") delete payload.role;
-    if (payload.is_active === "") delete payload.is_active;
-    void loadUsers(payload);
+
+    void loadUsers(sanitized);
   };
 
   const onExport = async () => {
     const values = watch();
     const params: Record<string, string | undefined> = {
-      search: values.search || undefined,
+      search: values.search?.trim() || undefined,
       role: values.role || undefined,
       is_active: values.is_active || undefined,
       created_from: values.created_from || undefined,
@@ -84,6 +88,7 @@ export default function AdminUsersPage() {
     };
 
     try {
+      setExporting(true);
       const response = await exportAdminUsers(params);
       const blob = new Blob([response.data], { type: "text/csv;charset=utf-8" });
       const url = window.URL.createObjectURL(blob);
@@ -95,6 +100,8 @@ export default function AdminUsersPage() {
       toast.success("Exportação iniciada com sucesso");
     } catch (error) {
       handleApiError(error, "Falha ao exportar usuários");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -107,6 +114,28 @@ export default function AdminUsersPage() {
       created_to: "",
     });
     void loadUsers();
+  };
+
+  const summary = useMemo(() => {
+    const total = users.length;
+    const active = users.filter((user) => user.is_active).length;
+    const byRole = users.reduce<Record<string, number>>((acc, user) => {
+      acc[user.role] = (acc[user.role] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      total,
+      active,
+      inactive: total - active,
+      byRole,
+    };
+  }, [users]);
+
+  const roleLabels: Record<string, string> = {
+    ADMIN: "Administradores",
+    DOCTOR: "Médicos",
+    PATIENT: "Pacientes",
   };
 
   return (
@@ -168,13 +197,47 @@ export default function AdminUsersPage() {
             <Button type="button" variant="ghost" onClick={resetFilters}>
               Limpar
             </Button>
-            <Button type="button" variant="secondary" onClick={onExport}>
+            <Button type="button" variant="secondary" onClick={onExport} disabled={exporting}>
               <Download className="mr-2 h-4 w-4" />
-              Exportar CSV
+              {exporting ? "Exportando..." : "Exportar CSV"}
             </Button>
           </div>
         </form>
       </Card>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="border-blue-200 bg-blue-50/60">
+          <div className="space-y-1 p-4">
+            <p className="text-xs font-semibold uppercase text-blue-700">Total de usuários</p>
+            <p className="text-2xl font-bold text-blue-900">{summary.total}</p>
+          </div>
+        </Card>
+        <Card>
+          <div className="space-y-1 p-4">
+            <p className="text-xs font-semibold uppercase text-slate-500">Ativos</p>
+            <p className="text-2xl font-bold text-slate-900">{summary.active}</p>
+          </div>
+        </Card>
+        <Card>
+          <div className="space-y-1 p-4">
+            <p className="text-xs font-semibold uppercase text-slate-500">Inativos</p>
+            <p className="text-2xl font-bold text-slate-900">{summary.inactive}</p>
+          </div>
+        </Card>
+        <Card>
+          <div className="space-y-2 p-4">
+            <p className="text-xs font-semibold uppercase text-slate-500">Distribuição por perfil</p>
+            <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+              {["ADMIN", "DOCTOR", "PATIENT"].map((role) => (
+                <span key={role} className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1">
+                  <strong className="mr-1 text-slate-800">{roleLabels[role] ?? role}:</strong>
+                  {summary.byRole[role] ?? 0}
+                </span>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
 
       <Card className="overflow-hidden">
         <CardHeader>

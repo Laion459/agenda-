@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import toast from "react-hot-toast";
@@ -12,13 +12,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import {
   createDoctor,
-  deactivateDoctor,
   fetchAdminDoctors,
+  toggleDoctorStatus,
   updateDoctor,
 } from "@/services/admin-doctor-service";
 import { Doctor, HealthInsurance } from "@/types";
@@ -44,6 +43,8 @@ export default function AdminDoctorsPage() {
   const [loadingForm, setLoadingForm] = useState(false);
   const [editing, setEditing] = useState<Doctor | null>(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [planFilter, setPlanFilter] = useState<number | "all">("all");
 
   const {
     register,
@@ -85,20 +86,31 @@ export default function AdminDoctorsPage() {
   }, []);
 
   const filteredDoctors = useMemo(() => {
-    if (!search.trim()) {
-      return doctors;
-    }
+    const lower = search.trim().toLowerCase();
 
-    const lower = search.toLowerCase();
     return doctors.filter((doctor) => {
+      const active = doctor.user?.is_active ?? doctor.is_active;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && active) ||
+        (statusFilter === "inactive" && !active);
+
+      const matchesPlan =
+        planFilter === "all" ||
+        !!doctor.health_insurances?.some((plan) => plan.id === planFilter);
+
+      if (!lower) {
+        return matchesStatus && matchesPlan;
+      }
+
       const matchesName = doctor.name.toLowerCase().includes(lower);
       const matchesEmail = doctor.user?.email?.toLowerCase().includes(lower);
       const matchesCrm = doctor.crm.toLowerCase().includes(lower);
       const matchesSpecialty = doctor.specialty.toLowerCase().includes(lower);
 
-      return matchesName || matchesEmail || matchesCrm || matchesSpecialty;
+      return matchesStatus && matchesPlan && (matchesName || matchesEmail || matchesCrm || matchesSpecialty);
     });
-  }, [doctors, search]);
+  }, [doctors, planFilter, search, statusFilter]);
 
   const togglePlan = (id: number) => {
     const current = new Set(selectedPlans);
@@ -125,10 +137,10 @@ export default function AdminDoctorsPage() {
     });
   };
 
-  const reloadDoctors = async () => {
-    const response = await fetchAdminDoctors({ per_page: 50 });
+  const reloadDoctors = useCallback(async () => {
+    const response = await fetchAdminDoctors({ per_page: 100 });
     setDoctors(response.data ?? []);
-  };
+  }, []);
 
   const onSubmit = async (values: DoctorForm) => {
     if (!editing && !values.password) {
@@ -177,15 +189,22 @@ export default function AdminDoctorsPage() {
   };
 
   const handleToggleActive = async (doctor: Doctor) => {
+    const active = doctor.user?.is_active ?? doctor.is_active;
+    const question = active
+      ? "Deseja realmente desativar este médico? Pacientes não poderão agendar novas consultas."
+      : "Deseja reativar este médico e liberá-lo para novos agendamentos?";
+
+    if (typeof window !== "undefined" && !window.confirm(question)) {
+      return;
+    }
+
     try {
       setLoadingForm(true);
-      const active = doctor.user?.is_active ?? doctor.is_active;
-      if (active) {
-        await deactivateDoctor(doctor.id);
-        toast.success("Médico desativado");
-      } else {
-        await updateDoctor(doctor.id, { is_active: true });
-        toast.success("Médico reativado");
+      await toggleDoctorStatus(doctor.id);
+      toast.success(active ? "Médico desativado" : "Médico reativado");
+      if (editing?.id === doctor.id && !active) {
+        // garante que manutenção reflita status atualizado
+        resetForm();
       }
       await reloadDoctors();
     } catch (error) {
@@ -203,12 +222,37 @@ export default function AdminDoctorsPage() {
             <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
             <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
           </div>
-          <Input
-            placeholder="Buscar por nome, CRM ou e-mail"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="md:max-w-xs"
-          />
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <Input
+              placeholder="Buscar por nome, CRM ou e-mail"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="md:max-w-xs"
+            />
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-36"
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+            <select
+              value={planFilter === "all" ? "all" : String(planFilter)}
+              onChange={(event) =>
+                setPlanFilter(event.target.value === "all" ? "all" : Number(event.target.value))
+              }
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-44"
+            >
+              <option value="all">Todos os convênios</option>
+              {healthInsurances.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
           <div className="grid gap-3 md:grid-cols-2">
@@ -325,7 +369,13 @@ export default function AdminDoctorsPage() {
                           {doctor.user?.email ?? "Sem e-mail informado"}
                         </p>
                       </div>
-                      <StatusBadge status={active ? "CONFIRMED" : "CANCELLED"} />
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                          active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {active ? "Ativo" : "Inativo"}
+                      </span>
                     </div>
                     <div className="grid gap-1 text-xs text-slate-600 md:grid-cols-2">
                       <p>
@@ -350,7 +400,7 @@ export default function AdminDoctorsPage() {
                         Editar
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant={active ? "outline" : "secondary"}
                         size="sm"
                         onClick={() => handleToggleActive(doctor)}
                         disabled={loadingForm}

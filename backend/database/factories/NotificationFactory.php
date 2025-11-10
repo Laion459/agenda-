@@ -31,7 +31,11 @@ class NotificationFactory extends Factory
             'message' => fake()->sentence(12),
             'channel' => fake()->randomElement(NotificationChannel::cases())->value,
             'is_read' => false,
+            'is_suppressed' => false,
+            'sent_attempts' => 0,
             'sent_at' => now(),
+            'last_attempt_at' => null,
+            'error_message' => null,
             'metadata' => ['trigger' => 'factory'],
         ];
     }

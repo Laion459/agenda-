@@ -64,20 +64,30 @@
 
 ### 2.4 Casos de Uso e Endpoints
 - [x] Autenticação e gestão de sessão (login, refresh, logout, bloqueio por tentativas).
+- [x] Completar fluxo de login conforme requisito (expiração 2h, recuperação de senha, máximo 3 tentativas).
 - [x] Cadastro e gestão de usuários (admin, médico, paciente).
+- [ ] Restringir auto-registro de pacientes e emissão automática de credenciais/e-mail de boas-vindas.
 - [x] Gestão de agenda médica (CRUD de schedules, bloqueios).
+- [ ] Garantir regra de no mínimo 4h semanais e impedir alteração de horários com consultas agendadas.
 - [x] Agendamento, cancelamento e remarcação de consultas.
+- [ ] Implementar filtros por período (futuras / passadas / todas) nas consultas.
 - [x] Observações médicas e prontuário.
-- [ ] Relatórios administrativos (consulta, pacientes, médicos, faturamento, ocupação).
+- [ ] Restringir visualização de observações ao médico/admin e versionar histórico de alterações.
+- [x] Relatórios administrativos (consulta, pacientes, médicos, ocupação, exportações CSV/JSON).
+- [ ] Gerar relatórios em PDF incluindo faturamento e arquivamento automático.
 - [x] Gestão de convênios (CRUD, vinculação com pacientes/médicos).
-- [x] Notificações (fila de envio, templates).
-- [ ] Logs de auditoria e histórico.
+- [ ] Inativação lógica de convênios e salvaguardas adicionais (impedir agendamentos com convênios inativos).
+- [x] Notificações (fila de envio, templates, preferências).
+- [x] Logs de auditoria e histórico.
 
 ### 2.5 Regras de Negócio e Validações
 - [ ] Implementar validações server-side (Form Requests, Value Objects).
 - [ ] Garantir workflow de status de consultas.
 - [ ] Aplicar políticas de RBAC (gates/policies) para perfis.
-- [ ] Configurar rate limiting, throttling e proteção contra brute force.
+- [x] Configurar rate limiting, throttling e proteção contra brute force.
+- [ ] Formalizar camadas Domain/Application/Infrastructure conforme arquitetura proposta.
+- [ ] Implementar geração automática de credenciais e envio de e-mail para novos pacientes/médicos.
+- [ ] Ajustar regras de remarcação/cancelamento especiais (autorização clínica <12h).
 
 ### 2.6 Testes Backend
 - [ ] Testes unitários (PHPUnit/Pest) para serviços e regras de negócio.
@@ -106,17 +116,19 @@
 ### 3.3 Funcionalidades
 - [ ] Autenticação com SSR + persistência de sessão (cookies HttpOnly).
 - [ ] Dashboards específicos (admin, médico, paciente).
+- [ ] Implementar React Query / TanStack Query para cache de dados e sincronização.
 - [x] Fluxos completos de agendamento, remarcação e cancelamento.
 - [x] Gestão de agendas para médicos (calendário interativo).
 - [x] Visualização de histórico e prontuário para perfis autorizados.
-- [~] Gestão administrativa (relatórios, convênios, usuários). *(convênios e usuários completos, relatórios pendentes)*
+- [x] Gestão administrativa (relatórios, convênios, usuários) com filtros, feedbacks e exportações.
 - [x] Notificações e alertas (toast, e-mail opt-in/out).
 - [ ] Acessibilidade (WCAG AA) e responsividade (mobile-first).
+- [ ] Geração de PDF/relatórios formais no frontend quando aplicável.
 
 ### 3.4 Comunicação com API
 - [x] Configurar Axios (ou Fetch API) com interceptors (tokens, erros).
 - [x] Criar camada de serviços tipados com Zod/Yup para validar payloads.
-- [ ] Implementar React Query para cache de dados e sincronização em tempo real (refetch).
+- [ ] Implementar mecanismos de cache/sincronização em tempo real (React Query, websockets) conforme arquitetura.
 - [ ] Aplicar optimistic updates quando apropriado.
 
 ### 3.5 Testes Frontend
@@ -132,36 +144,45 @@
 - [ ] Implementar enums nativos, índices, views/materialized views para relatórios.
 - [ ] Configurar migrações roll-forward/roll-back e versionamento (Liquibase opcional).
 - [ ] Preparar backups automáticos (pg_dump scripts) e restore documentado.
-- [ ] Garantir políticas de retenção de dados e anonimização (LGPD).
+- [x] Garantir políticas de retenção de dados e anonimização (LGPD).
 - [ ] Implementar testes de performance (explain analyze) para consultas críticas.
+- [ ] Atualizar MER com novas entidades/campos (privacy, notification_preferences, logs).
+- [ ] Implementar triggers/stored procedures previstos na documentação.
 
 ---
 
 ## 5. Integrações e Serviços de Suporte
 - [x] Servidor SMTP gratuito (Mailhog/Mailpit) para desenvolvimento; definir provedor gratuito em produção (SendGrid/Resend).
 - [x] Configurar Redis para cache e filas (horizon/workers).
-- [ ] Implementar scheduler (Laravel Scheduler + Supervisor).
+- [x] Implementar scheduler (Laravel Scheduler + Supervisor). *(jobs de lembrete e limpeza configurados via `php artisan schedule:run` e Makefile)*
 - [x] Definir camada de notificações (template engine, fila, retries).
-- [ ] Preparar integrações futuras (ex: SMS, Telemedicina) com abstrações.
+- [x] Preparar integrações futuras (ex: SMS, Telemedicina) com abstrações. *(provedor SMS stub + bindings)*
+- [ ] Implementar cache Redis real, health checks e monitoramento de filas conforme arquitetura.
+- [ ] Configurar CDN/serving de assets estáticos conforme documento de arquitetura.
 
 ---
 
 ## 6. Qualidade, Testes e Observabilidade
 - [ ] Configurar pipeline de testes automatizados (backend + frontend).
 - [ ] Integrar ferramentas de análise de cobertura (Coveralls/Codecov).
-- [ ] Instrumentar métricas (Prometheus/OpenTelemetry) e logs estruturados.
+- [x] Instrumentar métricas (Prometheus/OpenTelemetry) e logs estruturados. *(middleware de métricas + canal dedicado)*
 - [ ] Configurar monitoramento de erros (Sentry/ErrorBoundary).
 - [ ] Implementar feature flags básicos para lançamentos graduais.
+- [ ] Implementar health-checks automáticos e alertas de SLA.
+- [ ] Criar suíte de testes de carga/performance conforme arquitetura.
 
 ---
 
 ## 7. Segurança e Conformidade
 - [ ] Aplicar OWASP Top 10 (input sanitization, CSRF, XSS, SSRF, segurança de sessão).
-- [ ] Implementar LGPD: consentimento, opt-in/out, logs de auditoria, anonimização.
+- [x] Implementar LGPD: consentimento, opt-in/out, logs de auditoria, anonimização.
 - [ ] Gerenciar segredos (dotenv + instruções para Vault/Secret Manager).
-- [ ] Configurar políticas de senha, MFA opcional, bloqueio automático.
+- [x] Configurar políticas de senha, MFA opcional, bloqueio automático. *(senha forte + bloqueio temporário por falhas)*
 - [ ] Documentar política de retenção de dados e descarte seguro.
 - [ ] Rodar testes SAST/DAST antes de releases (laravel-security-checker, npm audit, trivy).
+- [x] Implementar recuperação de senha e expiração de sessão conforme requisito.
+- [ ] Adequar CSP e monitoramento de sessão às recomendações OWASP (front e back).
+- [ ] Formalizar consentimento LGPD por versão e trilha de revisão (documentação + UI).
 
 ---
 
@@ -173,6 +194,8 @@
 - [ ] Definir estratégia de deploy (frontend Vercel ou Static Export, backend Fly.io/Render/DigitalOcean).
 - [ ] Automatizar migrações e seeders no deploy.
 - [ ] Configurar Infrastructure as Code (Terraform opcional) para produção futura.
+- [ ] Implementar backup automático e restore documentado (scripts + agendamento).
+- [ ] Configurar balanceamento/monitoramento de disponibilidade conforme arquitetura.
 
 ---
 
@@ -201,8 +224,8 @@
 ### Fase 2 – Núcleo do Produto
 - [x] Implementação completa de agendamento e agenda médica.
 - [x] Gestão de convênios (CRUD completo via painel admin).
-- [ ] Gestão de usuários (administra médicos/pacientes, CRUD e perfis).
-- [ ] Sistema de notificações (fila, templates, canais).
+- [x] Gestão de usuários (administra médicos/pacientes, CRUD e perfis).
+- [x] Sistema de notificações (fila, templates, canais).
 - [x] Observações clínicas e relatórios administrativos.
 
 ### Fase 3 – Qualidade e Observabilidade

@@ -1,12 +1,6 @@
 import api from "@/lib/api";
 import { Patient, PaginatedResponse } from "@/types";
 
-type PatientHealthInsurancePayload = {
-  id: number;
-  policy_number?: string | null;
-  is_active?: boolean;
-};
-
 type PatientPayload = {
   name?: string;
   email?: string;
@@ -16,7 +10,9 @@ type PatientPayload = {
   birth_date?: string;
   gender?: string | null;
   address?: string | null;
-  health_insurances?: PatientHealthInsurancePayload[];
+  is_active?: boolean;
+  health_insurance_ids?: number[];
+  health_insurance_policy_numbers?: Record<number, string | null | undefined>;
 };
 
 type PatientResourceResponse = {
@@ -38,8 +34,9 @@ export async function updatePatient(id: number, payload: PatientPayload) {
   return data.data;
 }
 
-export async function deletePatient(id: number) {
-  await api.delete(`/admin/patients/${id}`);
+export async function togglePatientStatus(id: number) {
+  const { data } = await api.post<PatientResourceResponse>(`/admin/patients/${id}/toggle-active`);
+  return data.data;
 }
 
 

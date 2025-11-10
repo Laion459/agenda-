@@ -4,11 +4,15 @@ use App\Http\Controllers\API\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\API\Admin\PatientController as AdminPatientController;
 use App\Http\Controllers\API\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\API\Admin\UserController as AdminUserController;
+use App\Http\Controllers\API\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\Auth\PasswordResetController;
 use App\Http\Controllers\API\DoctorController;
 use App\Http\Controllers\API\HealthInsuranceController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\NotificationPreferenceController;
+use App\Http\Controllers\API\PrivacyController;
 use App\Http\Controllers\API\ObservationController;
 use App\Http\Controllers\API\ScheduleController;
 use App\Http\Controllers\API\ProfileController;
@@ -17,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('password/forgot', [PasswordResetController::class, 'sendResetLink']);
+    Route::post('password/reset', [PasswordResetController::class, 'reset']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
@@ -28,7 +34,7 @@ Route::get('doctors', [DoctorController::class, 'index']);
 Route::get('doctors/{doctor}', [DoctorController::class, 'show']);
 Route::get('health-insurances', [HealthInsuranceController::class, 'index']);
 
-Route::middleware(['auth:sanctum', 'active'])->group(function () {
+Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(function () {
     Route::get('appointments', [AppointmentController::class, 'index']);
     Route::post('appointments', [AppointmentController::class, 'store']);
     Route::get('appointments/{appointment}', [AppointmentController::class, 'show']);
@@ -39,6 +45,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::get('notifications/preferences', [NotificationPreferenceController::class, 'index']);
+    Route::put('notifications/preferences', [NotificationPreferenceController::class, 'update']);
+    Route::post('privacy/accept', [PrivacyController::class, 'accept']);
+    Route::post('privacy/request-erasure', [PrivacyController::class, 'requestErasure']);
+    Route::get('privacy/export', [PrivacyController::class, 'export']);
     Route::get('profile', [ProfileController::class, 'show']);
     Route::put('profile', [ProfileController::class, 'update']);
 
@@ -61,6 +72,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('admin/reports/appointments', [AdminReportController::class, 'appointmentSummary']);
         Route::get('admin/reports/doctor-occupancy', [AdminReportController::class, 'doctorOccupancy']);
         Route::get('admin/reports/insurance-usage', [AdminReportController::class, 'insuranceUsage']);
+        Route::get('admin/activity-logs', [AdminActivityLogController::class, 'index']);
     });
 
     Route::get('doctor/schedules', [ScheduleController::class, 'index']);

@@ -17,6 +17,10 @@ class SendNotificationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 3;
+
+    public int $backoff = 120;
+
     public function __construct(private int $notificationId)
     {
         $this->onQueue('notifications');
@@ -27,7 +31,16 @@ class SendNotificationJob implements ShouldQueue
         /** @var Notification|null $notification */
         $notification = Notification::with('user')->find($this->notificationId);
 
-        if (! $notification || ! $notification->user?->email) {
+        if (! $notification || $notification->is_suppressed) {
+            return;
+        }
+
+        if (! $notification->user?->email && $notification->channel === NotificationChannel::EMAIL) {
+            $notification->forceFill([
+                'error_message' => __('Destinatário sem e-mail configurado'),
+                'last_attempt_at' => now(),
+                'sent_attempts' => $notification->sent_attempts + 1,
+            ])->save();
             return;
         }
 
@@ -37,11 +50,21 @@ class SendNotificationJob implements ShouldQueue
             }
 
             // Outros canais (SMS, IN_APP) podem ser tratados aqui futuramente.
+            $notification->forceFill([
+                'sent_attempts' => $notification->sent_attempts + 1,
+                'last_attempt_at' => now(),
+                'error_message' => null,
+            ])->save();
         } catch (\Throwable $exception) {
             Log::error('Failed to send notification', [
                 'notification_id' => $this->notificationId,
                 'error' => $exception->getMessage(),
             ]);
+            $notification->forceFill([
+                'sent_attempts' => $notification->sent_attempts + 1,
+                'last_attempt_at' => now(),
+                'error_message' => $exception->getMessage(),
+            ])->save();
 
             $this->fail($exception);
         }

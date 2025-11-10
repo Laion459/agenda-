@@ -1,5 +1,6 @@
 'use client';
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -71,8 +72,16 @@ export function AppHeader() {
 
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-      <Link href="/dashboard" className="text-lg font-semibold tracking-tight text-slate-900">
-        Agenda+
+      <Link href="/dashboard" className="flex items-center gap-3 text-slate-900" aria-label="Ir para o dashboard">
+        <Image
+          src="/logo.png"
+          alt="Agenda+"
+          width={48}
+          height={48}
+          priority
+          className="h-10 w-10 rounded-lg shadow-sm ring-1 ring-slate-200/70"
+        />
+        <span className="text-lg font-semibold tracking-tight">Agenda+</span>
       </Link>
       <div className="flex items-center gap-3 text-sm text-slate-700">
         <Link href="/notifications" className="relative">
@@ -90,5 +99,4 @@ export function AppHeader() {
     </header>
   );
 }
-
 

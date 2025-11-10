@@ -11,8 +11,6 @@ type DoctorPayload = {
   qualification?: string | null;
   is_active?: boolean;
   health_insurance_ids?: number[];
-  created_from?: string;
-  created_to?: string;
 };
 
 type DoctorResourceResponse = {
@@ -34,8 +32,9 @@ export async function updateDoctor(id: number, payload: DoctorPayload) {
   return data.data;
 }
 
-export async function deactivateDoctor(id: number) {
-  await api.delete(`/admin/doctors/${id}`);
+export async function toggleDoctorStatus(id: number) {
+  const { data } = await api.post<DoctorResourceResponse>(`/admin/doctors/${id}/toggle-active`);
+  return data.data;
 }
 
 

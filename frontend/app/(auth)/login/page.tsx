@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -52,8 +53,11 @@ export default function LoginPage() {
 
   return (
     <Card className="w-full max-w-md space-y-6">
-      <CardHeader className="space-y-2">
-        <CardTitle>Entrar</CardTitle>
+      <CardHeader className="space-y-3 text-center">
+        <div className="flex justify-center">
+          <Image src="/logo.png" alt="Agenda+" width={64} height={64} priority className="h-14 w-14" />
+        </div>
+        <CardTitle className="text-2xl">Entrar</CardTitle>
         <CardDescription>Acesse sua conta Agenda+ para gerenciar consultas.</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

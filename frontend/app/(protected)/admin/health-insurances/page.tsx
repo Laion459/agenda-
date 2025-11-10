@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -11,7 +11,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { handleApiError } from "@/lib/handle-api-error";
 import {
   createHealthInsurance,
@@ -46,13 +45,13 @@ export default function HealthInsurancesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<HealthInsurance | null>(null);
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-    setValue,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -66,7 +65,7 @@ export default function HealthInsurancesPage() {
         const data = await fetchHealthInsurances();
         setItems(data);
       } catch (error) {
-        handleApiError(error, 'Não foi possível carregar os convênios');
+        handleApiError(error, "Não foi possível carregar os convênios");
       } finally {
         setLoading(false);
       }
@@ -75,9 +74,14 @@ export default function HealthInsurancesPage() {
     load();
   }, []);
 
+  const reloadItems = useCallback(async () => {
+    const data = await fetchHealthInsurances();
+    setItems(data);
+  }, []);
+
   const resetForm = () => {
     setEditing(null);
-    reset({ name: '', description: '', coverage_percentage: undefined, is_active: true });
+    reset({ name: "", description: "", coverage_percentage: undefined, is_active: true });
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -90,7 +94,13 @@ export default function HealthInsurancesPage() {
           coverage_percentage: values.coverage_percentage,
           is_active: values.is_active,
         });
-        toast.success('Convênio atualizado');
+        await updateHealthInsurance(editing.id, {
+          name: values.name,
+          description: values.description,
+          coverage_percentage: values.coverage_percentage,
+          is_active: values.is_active,
+        });
+        toast.success("Convênio atualizado");
       } else {
         await createHealthInsurance({
           name: values.name,
@@ -98,14 +108,16 @@ export default function HealthInsurancesPage() {
           coverage_percentage: values.coverage_percentage,
           is_active: values.is_active,
         });
-        toast.success('Convênio cadastrado');
+        toast.success("Convênio cadastrado");
       }
 
-      const data = await fetchHealthInsurances();
-      setItems(data);
+      await reloadItems();
       resetForm();
     } catch (error) {
-      handleApiError(error, editing ? 'Não foi possível atualizar o convênio' : 'Não foi possível criar o convênio');
+      handleApiError(
+        error,
+        editing ? "Não foi possível atualizar o convênio" : "Não foi possível criar o convênio",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -116,32 +128,46 @@ export default function HealthInsurancesPage() {
     reset({
       id: item.id,
       name: item.name,
-      description: item.description ?? '',
+      description: item.description ?? "",
       coverage_percentage: item.coverage_percentage ? Number(item.coverage_percentage) : undefined,
       is_active: item.is_active,
     });
   };
 
   const handleToggleActive = async (item: HealthInsurance) => {
+    const question = item.is_active
+      ? "Desativar este convênio? Médicos e pacientes deixarão de vinculá-lo."
+      : "Reativar este convênio para uso nas agendas?";
+    if (typeof window !== "undefined" && !window.confirm(question)) {
+      return;
+    }
+
     try {
       await updateHealthInsurance(item.id, { is_active: !item.is_active });
-      setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, is_active: !entry.is_active } : entry)));
-      toast.success('Status atualizado');
+      await reloadItems();
+      toast.success("Status atualizado");
     } catch (error) {
-      handleApiError(error, 'Não foi possível atualizar status');
+      handleApiError(error, "Não foi possível atualizar status");
     }
   };
 
   const handleDelete = async (item: HealthInsurance) => {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(`Remover o convênio ${item.name}? Esta operação não poderá ser desfeita.`)
+    ) {
+      return;
+    }
+
     try {
       await deleteHealthInsurance(item.id);
-      setItems((prev) => prev.filter((entry) => entry.id !== item.id));
-      toast.success('Convênio removido');
+      await reloadItems();
+      toast.success("Convênio removido");
       if (editing?.id === item.id) {
         resetForm();
       }
     } catch (error) {
-      handleApiError(error, 'Não foi possível remover convênio');
+      handleApiError(error, "Não foi possível remover convênio");
     }
   };
 
@@ -151,16 +177,19 @@ export default function HealthInsurancesPage() {
       [...items]
         .sort((a, b) => a.name.localeCompare(b.name))
         .filter((item) =>
-          normalizedFilter
+          (statusFilter === "all" ||
+            (statusFilter === "active" && item.is_active) ||
+            (statusFilter === "inactive" && !item.is_active)) &&
+          (normalizedFilter
             ? [item.name, item.description, item.coverage_percentage?.toString() ?? ""]
                 .filter(Boolean)
                 .some((value) => value!.toLowerCase().includes(normalizedFilter))
-            : true
+            : true)
         ),
-    [items, normalizedFilter]
+    [items, normalizedFilter, statusFilter],
   );
 
-  if (user?.role !== 'ADMIN') {
+  if (user?.role !== "ADMIN") {
     return <EmptyState>Você não tem permissão para acessar esta página.</EmptyState>;
   }
 
@@ -169,40 +198,58 @@ export default function HealthInsurancesPage() {
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <CardTitle>{editing ? 'Editar convênio' : 'Adicionar convênio'}</CardTitle>
+            <CardTitle>{editing ? "Editar convênio" : "Adicionar convênio"}</CardTitle>
             <CardDescription>Cadastre ou atualize convênios aceitos na clínica.</CardDescription>
           </div>
-          <Input
-            placeholder="Buscar por nome, descrição ou cobertura"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            className="md:max-w-xs"
-          />
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <Input
+              placeholder="Buscar por nome, descrição ou cobertura"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              className="md:max-w-xs"
+            />
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-36"
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+          </div>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
           <div className="space-y-2">
             <Label htmlFor="name">Nome</Label>
-            <Input id="name" {...register('name')} />
+            <Input id="name" {...register("name")} />
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
-            <Input id="description" {...register('description')} />
+            <Input id="description" {...register("description")} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="coverage_percentage">Cobertura (%)</Label>
-            <Input id="coverage_percentage" type="number" min={0} max={100} step={0.1} {...register('coverage_percentage')} />
+            <Input
+              id="coverage_percentage"
+              type="number"
+              min={0}
+              max={100}
+              step={0.1}
+              {...register("coverage_percentage")}
+            />
             {errors.coverage_percentage && <p className="text-xs text-red-500">{errors.coverage_percentage.message}</p>}
           </div>
           <div className="flex items-center gap-2">
-            <input type="checkbox" id="is_active" {...register('is_active')} className="h-4 w-4" />
+            <input type="checkbox" id="is_active" {...register("is_active")} className="h-4 w-4" />
             <Label htmlFor="is_active" className="text-sm font-medium">
               Ativo
             </Label>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Salvando...' : editing ? 'Salvar alterações' : 'Cadastrar convênio'}
+              {submitting ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar convênio"}
             </Button>
             {editing && (
               <Button type="button" variant="ghost" onClick={resetForm}>
@@ -230,31 +277,38 @@ export default function HealthInsurancesPage() {
           ) : (
             <ul className="divide-y divide-slate-200">
               {orderedItems.map((item) => (
-                <li key={item.id} className="flex flex-col gap-2 px-6 py-4 text-sm md:flex-row md:items-center md:justify-between">
+                    <li
+                      key={item.id}
+                      className="flex flex-col gap-2 px-6 py-4 text-sm md:flex-row md:items-center md:justify-between"
+                    >
                   <div>
                     <p className="font-medium text-slate-900">{item.name}</p>
                     {item.coverage_percentage && (
-                      <p className="text-xs text-slate-500">Cobertura média: {Number(item.coverage_percentage).toFixed(1)}%</p>
+                          <p className="text-xs text-slate-500">
+                            Cobertura média: {Number(item.coverage_percentage).toFixed(1)}%
+                          </p>
                     )}
                     {item.description && <p className="text-xs text-slate-500">{item.description}</p>}
-                    <div className="mt-1">
-                      <StatusBadge status={item.is_active ? 'CONFIRMED' : 'CANCELLED'} />
-                    </div>
+                        <span
+                          className={`mt-2 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                            item.is_active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
+                          }`}
+                        >
+                          {item.is_active ? "Ativo" : "Inativo"}
+                        </span>
                   </div>
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     <Button variant="secondary" onClick={() => handleEdit(item)}>
                       Editar
                     </Button>
                     <Button variant="ghost" onClick={() => handleToggleActive(item)}>
-                      {item.is_active ? 'Desativar' : 'Ativar'}
+                          {item.is_active ? "Desativar" : "Ativar"}
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => {
-                        if (confirm(`Remover o convênio ${item.name}?`)) {
-                          handleDelete(item);
-                        }
-                      }}
+                          onClick={() => {
+                            void handleDelete(item);
+                          }}
                     >
                       Remover
                     </Button>

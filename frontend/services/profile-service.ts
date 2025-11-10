@@ -15,4 +15,19 @@ export async function updateProfile(payload: Record<string, unknown>) {
   return data.data;
 }
 
+export async function acceptPrivacyPolicy() {
+  await api.post("/privacy/accept");
+}
+
+export async function requestDataErasure() {
+  await api.post("/privacy/request-erasure");
+}
+
+export async function exportUserData() {
+  const response = await api.get("/privacy/export", {
+    responseType: "json",
+  });
+  return response.data;
+}
+
 

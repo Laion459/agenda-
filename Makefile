@@ -4,7 +4,7 @@ FRONTEND_CONTAINER=$(COMPOSE) exec frontend
 DB_CONTAINER=$(COMPOSE) exec db
 REDIS_CONTAINER=$(COMPOSE) exec redis
 
-.PHONY: up down stop restart logs ps build rebuild install bootstrap seed key queue-backend queue-stop backend-shell frontend-shell db-shell db-root redis-shell frontend-build lint test test-backend test-frontend
+.PHONY: up down stop restart logs ps build rebuild install bootstrap seed key queue-backend queue-stop schedule-run reminders notifications-clean backend-shell frontend-shell db-shell db-root redis-shell frontend-build lint test test-backend test-frontend
 
 # Start all services in detached mode
 up:
@@ -73,6 +73,18 @@ queue-backend:
 # Restart queue workers gracefully
 queue-stop:
 	$(BACKEND_CONTAINER) php artisan queue:restart
+
+# Execute scheduled tasks once (useful for cron/supervisor)
+schedule-run:
+	$(BACKEND_CONTAINER) php artisan schedule:run
+
+# Send pending appointment reminders immediately
+reminders:
+	$(BACKEND_CONTAINER) php artisan appointments:send-reminders
+
+# Cleanup read notifications older than the configured threshold
+notifications-clean:
+	$(BACKEND_CONTAINER) php artisan notifications:cleanup
 
 # Open interactive shell in backend container
 backend-shell:

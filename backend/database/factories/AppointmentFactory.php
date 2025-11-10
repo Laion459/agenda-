@@ -30,6 +30,10 @@ class AppointmentFactory extends Factory
             'price' => fake()->randomFloat(2, 80, 400),
             'notes' => fake()->optional()->sentence(10),
             'metadata' => ['source' => fake()->randomElement(['portal', 'telefone'])],
+            'confirmed_at' => null,
+            'cancelled_at' => null,
+            'completed_at' => null,
+            'reminder_sent_at' => null,
             'created_by' => User::factory()->admin(),
         ];
     }

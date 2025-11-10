@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import toast from "react-hot-toast";
@@ -14,12 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
-import {
-  createPatient,
-  deletePatient,
-  fetchAdminPatients,
-  updatePatient,
-} from "@/services/admin-patient-service";
+import { createPatient, fetchAdminPatients, togglePatientStatus, updatePatient } from "@/services/admin-patient-service";
 import { HealthInsurance, Patient } from "@/types";
 
 const patientSchema = z.object({
@@ -51,6 +46,7 @@ export default function AdminPatientsPage() {
   const [loadingForm, setLoadingForm] = useState(false);
   const [editing, setEditing] = useState<Patient | null>(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [plans, setPlans] = useState<PlanSelection>({});
 
   const {
@@ -96,19 +92,26 @@ export default function AdminPatientsPage() {
   }, []);
 
   const filteredPatients = useMemo(() => {
-    if (!search.trim()) {
-      return patients;
-    }
+    const lower = search.trim().toLowerCase();
 
-    const lower = search.toLowerCase();
     return patients.filter((patient) => {
+      const active = patient.user?.is_active ?? true;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && active) ||
+        (statusFilter === "inactive" && !active);
+
+      if (!lower) {
+        return matchesStatus;
+      }
+
       const matchesName = patient.name.toLowerCase().includes(lower);
       const matchesEmail = patient.user?.email?.toLowerCase().includes(lower);
       const matchesCpf = patient.cpf.toLowerCase().includes(lower);
 
-      return matchesName || matchesEmail || matchesCpf;
+      return matchesStatus && (matchesName || matchesEmail || matchesCpf);
     });
-  }, [patients, search]);
+  }, [patients, search, statusFilter]);
 
   const resetPlans = (patient?: Patient | null) => {
     if (!patient || !patient.health_insurances) {
@@ -142,10 +145,10 @@ export default function AdminPatientsPage() {
     setPlans({});
   };
 
-  const reloadPatients = async () => {
-    const response = await fetchAdminPatients({ per_page: 50 });
+  const reloadPatients = useCallback(async () => {
+    const response = await fetchAdminPatients({ per_page: 100 });
     setPatients(response.data ?? []);
-  };
+  }, []);
 
   const onSubmit = async (values: PatientForm) => {
     if (!editing && !values.password) {
@@ -155,17 +158,21 @@ export default function AdminPatientsPage() {
 
     setLoadingForm(true);
     try {
-      const selectedPlans = Object.entries(plans)
-        .filter(([, value]) => value.selected)
-        .map(([id, value]) => ({
-          id: Number(id),
-          policy_number: value.policy_number || undefined,
-        }));
+      const selectedPlans = Object.entries(plans).filter(([, value]) => value.selected);
+      const healthInsuranceIds = selectedPlans.map(([id]) => Number(id));
+      const policyNumbers = selectedPlans.reduce<Record<number, string | undefined>>((acc, [id, value]) => {
+        const policy = value.policy_number?.trim();
+        if (policy) {
+          acc[Number(id)] = policy;
+        }
+        return acc;
+      }, {});
 
       const payload = {
         ...values,
         password: values.password || undefined,
-        health_insurances: selectedPlans,
+        health_insurance_ids: healthInsuranceIds,
+        health_insurance_policy_numbers: policyNumbers,
       };
 
       if (editing) {
@@ -203,16 +210,18 @@ export default function AdminPatientsPage() {
 
   const handleToggleActive = async (patient: Patient) => {
     const active = patient.user?.is_active ?? true;
+    const question = active
+      ? "Deseja desativar este paciente? Ele não conseguirá acessar o sistema."
+      : "Deseja reativar este paciente?";
+
+    if (typeof window !== "undefined" && !window.confirm(question)) {
+      return;
+    }
 
     try {
       setLoadingForm(true);
-      if (active) {
-        await deletePatient(patient.id);
-        toast.success("Paciente desativado");
-      } else {
-        await updatePatient(patient.id, { is_active: true });
-        toast.success("Paciente reativado");
-      }
+      await togglePatientStatus(patient.id);
+      toast.success(active ? "Paciente desativado" : "Paciente reativado");
       if (editing?.id === patient.id) {
         resetForm();
       }
@@ -255,12 +264,23 @@ export default function AdminPatientsPage() {
             <CardTitle>{editing ? "Editar paciente" : "Cadastrar paciente"}</CardTitle>
             <CardDescription>Cadastre ou atualize os dados dos pacientes.</CardDescription>
           </div>
-          <Input
-            placeholder="Buscar por nome, CPF ou e-mail"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="md:max-w-xs"
-          />
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <Input
+              placeholder="Buscar por nome, CPF ou e-mail"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="md:max-w-xs"
+            />
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-36"
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+          </div>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
           <div className="grid gap-3 md:grid-cols-2">

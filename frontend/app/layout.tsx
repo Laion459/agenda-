@@ -19,6 +19,35 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Agenda+",
   description: "Plataforma de gestão de consultas médicas",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"),
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    other: [
+      {
+        rel: "android-chrome",
+        url: "/android-chrome-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        rel: "android-chrome",
+        url: "/android-chrome-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+  },
+  manifest: "/site.webmanifest",
+  themeColor: "#1d4ed8",
+  other: {
+    "Content-Security-Policy":
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'self';",
+  },
 };
 
 export default function RootLayout({

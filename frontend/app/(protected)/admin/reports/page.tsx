@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { Download, FileJson } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -39,6 +40,7 @@ export default function AdminReportsPage() {
   const [insuranceUsage, setInsuranceUsage] = useState<InsuranceUsageItem[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   const {
     register,
@@ -54,7 +56,7 @@ export default function AdminReportsPage() {
     },
   });
 
-  const loadReports = async (filters?: FilterForm) => {
+  const loadReports = useCallback(async (filters?: FilterForm) => {
     try {
       setLoading(true);
       const [summaryData, occupancyData, insuranceData] = await Promise.all([
@@ -71,7 +73,7 @@ export default function AdminReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     async function initialize() {
@@ -89,7 +91,7 @@ export default function AdminReportsPage() {
     }
 
     void initialize();
-  }, []);
+  }, [loadReports]);
 
   const onSubmit = async (values: FilterForm) => {
     const payload = {
@@ -109,6 +111,73 @@ export default function AdminReportsPage() {
     };
     reset(defaults);
     void loadReports(defaults);
+  };
+
+  const statusCards = useMemo(() => {
+    if (!summary) return [];
+    return Object.entries(summary.by_status).map(([status, info]) => ({
+      label: status,
+      total: info.total,
+      percentage: info.percentage,
+    }));
+  }, [summary]);
+
+  const downloadFile = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportReports = async (type: "csv" | "json") => {
+    try {
+      setExporting(true);
+      const payload: Record<string, unknown> = {
+        summary,
+        doctorOccupancy,
+        insuranceUsage,
+        generated_at: new Date().toISOString(),
+      };
+
+      if (type === "json") {
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json;charset=utf-8",
+        });
+        downloadFile(blob, `relatorio-agenda-${Date.now()}.json`);
+        toast.success("Exportação JSON gerada.");
+        return;
+      }
+
+      const rows: string[] = [];
+      rows.push("Sessão;Coluna;Valor");
+      if (summary) {
+        rows.push(`Consultas;Total;${summary.total}`);
+        Object.entries(summary.by_status).forEach(([status, info]) => {
+          rows.push(`Consultas ${status};Total;${info.total}`);
+          rows.push(`Consultas ${status};Percentual;${info.percentage}`);
+        });
+      }
+      doctorOccupancy.forEach((item) => {
+        rows.push(
+          `Médicos;${item.doctor_name};${item.total_appointments}|${item.confirmed}|${item.completed}|${item.occupancy_rate}`,
+        );
+      });
+      insuranceUsage.forEach((item) => {
+        rows.push(`Convênios;${item.name};${item.total_appointments}`);
+      });
+
+      const blob = new Blob([rows.join("\n")], {
+        type: "text/csv;charset=utf-8",
+      });
+      downloadFile(blob, `relatorio-agenda-${Date.now()}.csv`);
+      toast.success("Exportação CSV gerada.");
+    } catch (error) {
+      handleApiError(error, "Não foi possível gerar a exportação");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -156,6 +225,27 @@ export default function AdminReportsPage() {
         </form>
       </Card>
 
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => exportReports("csv")}
+          disabled={exporting || (!summary && doctorOccupancy.length === 0 && insuranceUsage.length === 0)}
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Exportar CSV
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => exportReports("json")}
+          disabled={exporting || (!summary && doctorOccupancy.length === 0 && insuranceUsage.length === 0)}
+        >
+          <FileJson className="mr-2 h-4 w-4" />
+          Exportar JSON
+        </Button>
+      </div>
+
       {loading ? (
         <div className="grid gap-6 md:grid-cols-2">
           <Skeleton className="h-64 w-full" />
@@ -164,6 +254,30 @@ export default function AdminReportsPage() {
         </div>
       ) : (
         <>
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card className="border-blue-200 bg-blue-50/60">
+              <div className="space-y-1 p-4">
+                <p className="text-xs font-semibold uppercase text-blue-700">Total de consultas</p>
+                <p className="text-2xl font-bold text-blue-900">{summary?.total ?? 0}</p>
+                <p className="text-xs text-blue-700">
+                  Período:{" "}
+                  {summary
+                    ? `${summary.start_date} a ${summary.end_date}`
+                    : "Nenhum período carregado"}
+                </p>
+              </div>
+            </Card>
+            {statusCards.map((card) => (
+              <Card key={card.label}>
+                <div className="space-y-1 p-4">
+                  <p className="text-xs font-semibold uppercase text-slate-500">{card.label}</p>
+                  <p className="text-2xl font-bold text-slate-900">{card.total}</p>
+                  <p className="text-xs text-slate-500">{card.percentage}% do total</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -195,14 +309,23 @@ export default function AdminReportsPage() {
                       {summary.trend.length === 0 ? (
                         <p className="text-xs text-slate-500">Sem registros no período.</p>
                       ) : (
-                        <ul className="mt-2 space-y-1 text-xs text-slate-600">
-                          {summary.trend.slice(-7).map((item) => (
-                            <li key={item.date} className="flex justify-between">
-                              <span>{item.date}</span>
-                              <span>{item.total} consultas</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="mt-3 flex h-24 items-end gap-1">
+                          {summary.trend.slice(-14).map((item) => {
+                            const max = Math.max(...summary.trend.map((trend) => trend.total)) || 1;
+                            const height = Math.max((item.total / max) * 100, 4);
+                            return (
+                              <div key={item.date} className="group flex flex-col items-center">
+                                <div
+                                  className="w-3 rounded-t bg-blue-500 transition-colors group-hover:bg-blue-600"
+                                  style={{ height: `${height}%` }}
+                                />
+                                <span className="mt-1 hidden text-[10px] text-slate-500 group-hover:block">
+                                  {item.total}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
                   </>

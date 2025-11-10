@@ -28,6 +28,11 @@ class User extends Authenticatable
         'email',
         'phone',
         'is_active',
+        'failed_login_attempts',
+        'locked_until',
+        'privacy_policy_accepted_at',
+        'privacy_policy_version',
+        'data_erasure_requested_at',
         'role',
         'password',
     ];
@@ -56,6 +61,10 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'failed_login_attempts' => 'integer',
+            'locked_until' => 'datetime',
+            'privacy_policy_accepted_at' => 'datetime',
+            'data_erasure_requested_at' => 'datetime',
         ];
     }
 

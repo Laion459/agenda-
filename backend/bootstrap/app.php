@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\AuditLogMiddleware;
+use App\Http\Middleware\SecurityHeadersMiddleware;
+use App\Http\Middleware\SanitizeInputMiddleware;
+use App\Http\Middleware\RequestMetricsMiddleware;
+use App\Http\Middleware\EnsureTokenNotExpired;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,6 +27,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'active' => EnsureUserIsActive::class,
+            'audit' => AuditLogMiddleware::class,
+            'token.fresh' => EnsureTokenNotExpired::class,
+        ]);
+
+        $middleware->append(SecurityHeadersMiddleware::class);
+
+        $middleware->api(prepend: [
+            SanitizeInputMiddleware::class,
+            RequestMetricsMiddleware::class,
+            EnsureTokenNotExpired::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

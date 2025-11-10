@@ -14,6 +14,8 @@ import {
   Bell,
   UserCog,
   Users,
+  ScrollText,
+  BarChart3,
 } from "lucide-react";
 
 import { useAuthStore } from "@/store/auth-store";
@@ -49,6 +51,8 @@ export function AppSidebar() {
       { href: "/admin/patients", label: "Gerenciar pacientes", icon: Users },
       { href: "/admin/users", label: "Todos os usuários", icon: Users },
       { href: "/admin/health-insurances", label: "Convênios", icon: ShieldCheck },
+      { href: "/admin/reports", label: "Relatórios", icon: BarChart3 },
+      { href: "/admin/audit", label: "Auditoria", icon: ScrollText },
     );
   }
 

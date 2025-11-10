@@ -16,7 +16,7 @@ class CreateAppointmentRequest extends FormRequest
     {
         return [
             'doctor_id' => ['required', 'exists:doctors,id'],
-            'scheduled_at' => ['required', 'date'],
+            'scheduled_at' => ['required', 'date', 'after:now'],
             'duration_minutes' => ['nullable', 'integer', 'min:15', 'max:240'],
             'type' => ['nullable', 'string', Rule::in(['PRESENTIAL', 'ONLINE'])],
             'price' => ['nullable', 'numeric', 'min:0'],
