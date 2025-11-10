@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\API\Admin\PatientController as AdminPatientController;
+use App\Http\Controllers\API\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\API\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\AuthController;
@@ -57,6 +58,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('admin/patients', AdminPatientController::class);
         Route::get('admin/users', [AdminUserController::class, 'index']);
         Route::get('admin/users/export', [AdminUserController::class, 'export']);
+        Route::get('admin/reports/appointments', [AdminReportController::class, 'appointmentSummary']);
+        Route::get('admin/reports/doctor-occupancy', [AdminReportController::class, 'doctorOccupancy']);
+        Route::get('admin/reports/insurance-usage', [AdminReportController::class, 'insuranceUsage']);
     });
 
     Route::get('doctor/schedules', [ScheduleController::class, 'index']);

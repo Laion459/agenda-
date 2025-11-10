@@ -11,6 +11,8 @@ type DoctorPayload = {
   qualification?: string | null;
   is_active?: boolean;
   health_insurance_ids?: number[];
+  created_from?: string;
+  created_to?: string;
 };
 
 type DoctorResourceResponse = {
