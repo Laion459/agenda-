@@ -64,7 +64,7 @@
 
 ### 2.4 Casos de Uso e Endpoints
 - [x] Autenticação e gestão de sessão (login, refresh, logout, bloqueio por tentativas).
-- [ ] Cadastro e gestão de usuários (admin, médico, paciente).
+- [x] Cadastro e gestão de usuários (admin, médico, paciente).
 - [x] Gestão de agenda médica (CRUD de schedules, bloqueios).
 - [x] Agendamento, cancelamento e remarcação de consultas.
 - [x] Observações médicas e prontuário.
@@ -109,7 +109,7 @@
 - [x] Fluxos completos de agendamento, remarcação e cancelamento.
 - [x] Gestão de agendas para médicos (calendário interativo).
 - [x] Visualização de histórico e prontuário para perfis autorizados.
-- [ ] Gestão administrativa (relatórios, convênios, usuários).
+- [~] Gestão administrativa (relatórios, convênios, usuários). *(convênios e usuários completos, relatórios pendentes)*
 - [x] Notificações e alertas (toast, e-mail opt-in/out).
 - [ ] Acessibilidade (WCAG AA) e responsividade (mobile-first).
 
