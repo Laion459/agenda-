@@ -14,7 +14,10 @@ class HealthInsuranceController extends Controller
     public function index(): JsonResponse
     {
         return HealthInsuranceResource::collection(
-            HealthInsurance::query()->orderBy('name')->get()
+            HealthInsurance::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get()
         )->response();
     }
 
@@ -36,9 +39,12 @@ class HealthInsuranceController extends Controller
 
     public function destroy(HealthInsurance $healthInsurance): JsonResponse
     {
+        $healthInsurance->update(['is_active' => false]);
         $healthInsurance->delete();
 
-        return response()->json(null, 204);
+        return response()->json([
+            'message' => __('Convênio inativado com sucesso.'),
+        ]);
     }
 }
 

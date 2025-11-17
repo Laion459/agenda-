@@ -3,6 +3,7 @@
 namespace App\Application\Appointments;
 
 use App\Application\Notifications\NotificationDispatcher;
+use App\Domain\Appointments\AppointmentStatusWorkflow;
 use App\Domain\Shared\Enums\AppointmentStatus;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\Appointment;
@@ -25,7 +26,8 @@ class AppointmentService
 {
     public function __construct(
         private NotificationDispatcher $notifications,
-        private DatabaseManager $db
+        private DatabaseManager $db,
+        private AppointmentStatusWorkflow $statusWorkflow
     ) {
     }
 
@@ -44,6 +46,8 @@ class AppointmentService
             $query->where('status', $filters['status']);
         }
 
+        $this->applyPeriodFilter($query, $filters);
+
         return $query->paginate($filters['per_page'] ?? 10);
     }
 
@@ -61,6 +65,8 @@ class AppointmentService
             $query->where('status', $filters['status']);
         }
 
+        $this->applyPeriodFilter($query, $filters);
+
         return $query->paginate($filters['per_page'] ?? 10);
     }
 
@@ -73,6 +79,8 @@ class AppointmentService
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
+
+        $this->applyPeriodFilter($query, $filters);
 
         return $query->paginate($filters['per_page'] ?? 10);
     }
@@ -151,11 +159,12 @@ class AppointmentService
     {
         $appointment->loadMissing(['doctor.user', 'patient.user']);
 
-        if ($appointment->status !== AppointmentStatus::PENDING) {
-            throw ValidationException::withMessages([
-                'status' => __('Somente consultas pendentes podem ser confirmadas.'),
-            ]);
-        }
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+        $this->statusWorkflow->validateTransition(
+            $appointment->status,
+            AppointmentStatus::CONFIRMED,
+            $role
+        );
 
         $appointment->update([
             'status' => AppointmentStatus::CONFIRMED,
@@ -193,6 +202,13 @@ class AppointmentService
 
         $this->ensureCancellationAllowed($appointment, $user);
 
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+        $this->statusWorkflow->validateTransition(
+            $appointment->status,
+            AppointmentStatus::CANCELLED,
+            $role
+        );
+
         $appointment->update([
             'status' => AppointmentStatus::CANCELLED,
             'cancelled_at' => now(),
@@ -217,6 +233,34 @@ class AppointmentService
             ],
             metadata: ['appointment_id' => $appointment->id, 'reason' => $reason]
         );
+
+        return $appointment->refresh();
+    }
+
+    public function complete(Appointment $appointment, User $user): Appointment
+    {
+        $appointment->loadMissing(['doctor.user', 'patient.user']);
+
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+        $this->statusWorkflow->validateTransition(
+            $appointment->status,
+            AppointmentStatus::COMPLETED,
+            $role
+        );
+
+        $appointment->update([
+            'status' => AppointmentStatus::COMPLETED,
+            'completed_at' => now(),
+        ]);
+
+        AppointmentLog::create([
+            'appointment_id' => $appointment->id,
+            'old_status' => $appointment->getOriginal('status'),
+            'new_status' => AppointmentStatus::COMPLETED,
+            'changed_by' => $user->id,
+            'metadata' => ['action' => 'completed'],
+            'changed_at' => now(),
+        ]);
 
         return $appointment->refresh();
     }
@@ -416,6 +460,22 @@ class AppointmentService
                 'scheduled_at' => __('Existe conflito de horário com outra consulta.'),
             ]);
         }
+    }
+
+    protected function applyPeriodFilter(Builder $query, array $filters): void
+    {
+        if (empty($filters['period'])) {
+            return;
+        }
+
+        $now = now();
+
+        match ($filters['period']) {
+            'future' => $query->where('scheduled_at', '>', $now),
+            'past' => $query->where('scheduled_at', '<', $now),
+            'all' => null, // Não aplica filtro
+            default => null,
+        };
     }
 }
 

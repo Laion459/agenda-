@@ -2,6 +2,7 @@
 
 namespace App\Application\Patients;
 
+use App\Application\Notifications\NotificationDispatcher;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\Patient;
 use App\Models\User;
@@ -9,11 +10,14 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AdminPatientService
 {
-    public function __construct(private DatabaseManager $db)
-    {
+    public function __construct(
+        private DatabaseManager $db,
+        private NotificationDispatcher $notifications
+    ) {
     }
 
     public function list(array $filters = []): LengthAwarePaginator
@@ -61,6 +65,13 @@ class AdminPatientService
     public function create(array $data): Patient
     {
         return $this->db->transaction(function () use ($data) {
+            $password = Arr::get($data, 'password');
+            $generatePassword = empty($password);
+
+            if ($generatePassword) {
+                $password = Str::random(12);
+            }
+
             /** @var \App\Models\User $user */
             $user = User::create([
                 'name' => $data['name'],
@@ -68,7 +79,7 @@ class AdminPatientService
                 'phone' => Arr::get($data, 'phone'),
                 'is_active' => Arr::get($data, 'is_active', true),
                 'role' => UserRole::PATIENT,
-                'password' => Hash::make($data['password']),
+                'password' => Hash::make($password),
             ]);
             $user->assignRole(UserRole::PATIENT->value);
 
@@ -85,6 +96,19 @@ class AdminPatientService
             if (! empty($data['health_insurances'])) {
                 $patient->healthInsurances()->sync(
                     $this->preparePatientPivot($data['health_insurances'])
+                );
+            }
+
+            if ($generatePassword) {
+                $this->notifications->dispatchFromTemplate(
+                    $user,
+                    'patient.welcome',
+                    [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'password' => $password,
+                    ],
+                    metadata: ['patient_id' => $patient->id, 'type' => 'welcome']
                 );
             }
 

@@ -51,7 +51,7 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment): JsonResponse
     {
-        $this->authorizeParticipant(request()->user(), $appointment);
+        $this->authorize('view', $appointment);
 
         $appointment->load([
             'doctor.user',
@@ -67,16 +67,25 @@ class AppointmentController extends Controller
 
     public function confirm(UpdateAppointmentStatusRequest $request, Appointment $appointment): JsonResponse
     {
-        $this->authorizeDoctor($request->user(), $appointment);
+        $this->authorize('confirm', $appointment);
 
         $appointment = $this->service->confirm($appointment, $request->user());
 
         return (new AppointmentResource($appointment))->response();
     }
 
+    public function complete(UpdateAppointmentStatusRequest $request, Appointment $appointment): JsonResponse
+    {
+        $this->authorize('update', $appointment);
+
+        $appointment = $this->service->complete($appointment, $request->user());
+
+        return (new AppointmentResource($appointment))->response();
+    }
+
     public function cancel(UpdateAppointmentStatusRequest $request, Appointment $appointment): JsonResponse
     {
-        $this->authorizeParticipant($request->user(), $appointment);
+        $this->authorize('cancel', $appointment);
 
         $appointment = $this->service->cancel($appointment, $request->user(), $request->input('reason'));
 
@@ -85,46 +94,13 @@ class AppointmentController extends Controller
 
     public function reschedule(RescheduleAppointmentRequest $request, Appointment $appointment): JsonResponse
     {
-        $this->authorizeParticipant($request->user(), $appointment);
+        $this->authorize('reschedule', $appointment);
 
         $appointment = $this->service->reschedule($appointment, $request->user(), $request->validated());
 
         return (new AppointmentResource($appointment))->response();
     }
 
-    protected function authorizeDoctor($user, Appointment $appointment): void
-    {
-        $role = $this->resolveRole($user);
-
-        if ($role !== UserRole::DOCTOR && $role !== UserRole::ADMIN) {
-            abort(403, __('Somente o médico responsável pode executar esta ação.'));
-        }
-
-        if ($role === UserRole::DOCTOR && $appointment->doctor_id !== $user->doctor?->id) {
-            abort(403, __('Somente o médico responsável pode executar esta ação.'));
-        }
-    }
-
-    protected function authorizeParticipant($user, Appointment $appointment): void
-    {
-        $role = $this->resolveRole($user);
-
-        if ($role === UserRole::ADMIN) {
-            return;
-        }
-
-        $isDoctor = $role === UserRole::DOCTOR && $appointment->doctor_id === $user->doctor?->id;
-        $isPatient = $role === UserRole::PATIENT && $appointment->patient_id === $user->patient?->id;
-
-        if (! $isDoctor && ! $isPatient) {
-            abort(403, __('Você não está autorizado para esta consulta.'));
-        }
-    }
-
-    private function resolveRole($user): UserRole
-    {
-        return $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
-    }
 }
 
 

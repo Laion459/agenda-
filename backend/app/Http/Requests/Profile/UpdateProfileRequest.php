@@ -19,7 +19,7 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'password' => ['sometimes', 'nullable', 'string', 'min:6'],
+            'password' => ['sometimes', 'nullable', 'string', 'min:8'],
             'email' => [
                 'sometimes',
                 'required',

@@ -34,6 +34,11 @@ return [
             'subject' => 'Paciente solicitou remarcação',
             'message' => 'A consulta com :patient foi remarcada para :date às :time.',
         ],
+        'patient.welcome' => [
+            'type' => NotificationType::CONFIRMATION,
+            'subject' => 'Bem-vindo ao Agenda+',
+            'message' => 'Olá :name, suas credenciais de acesso foram criadas. E-mail: :email, Senha: :password. Por favor, altere sua senha no primeiro acesso.',
+        ],
     ],
 ];
 

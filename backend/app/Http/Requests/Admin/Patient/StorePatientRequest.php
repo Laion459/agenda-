@@ -18,7 +18,7 @@ class StorePatientRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['nullable', 'string', 'min:8'],
             'cpf' => ['required', 'string', 'max:14', 'unique:patients,cpf'],
             'birth_date' => ['required', 'date'],
             'gender' => ['nullable', Rule::in(['M', 'F', 'OTHER'])],

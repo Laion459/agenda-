@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Application\Notifications\NotificationDispatcher;
+use App\Domain\Appointments\AppointmentStatusWorkflow;
 use App\Services\Notifications\SmsProviderInterface;
 use App\Services\Notifications\NullSmsProvider;
 use Illuminate\Support\Facades\Blade;
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationDispatcher::class);
         $this->app->alias(NotificationDispatcher::class, 'notifications.dispatcher');
         $this->app->bind(SmsProviderInterface::class, NullSmsProvider::class);
+        $this->app->singleton(AppointmentStatusWorkflow::class);
     }
 
     /**

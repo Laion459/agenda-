@@ -28,7 +28,7 @@ class UpdateDoctorRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($doctor?->user_id),
             ],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'password' => ['sometimes', 'nullable', 'string', 'min:6'],
+            'password' => ['sometimes', 'nullable', 'string', 'min:8'],
             'crm' => [
                 'sometimes',
                 'required',

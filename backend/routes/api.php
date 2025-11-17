@@ -19,7 +19,8 @@ use App\Http\Controllers\API\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
+    // Auto-registro de pacientes desabilitado - apenas admin pode criar pacientes
+    // Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('password/forgot', [PasswordResetController::class, 'sendResetLink']);
     Route::post('password/reset', [PasswordResetController::class, 'reset']);
@@ -39,6 +40,7 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
     Route::post('appointments', [AppointmentController::class, 'store']);
     Route::get('appointments/{appointment}', [AppointmentController::class, 'show']);
     Route::post('appointments/{appointment}/confirm', [AppointmentController::class, 'confirm']);
+    Route::post('appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
     Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
     Route::post('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::post('appointments/{appointment}/observations', [ObservationController::class, 'store']);
@@ -70,8 +72,11 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
         Route::get('admin/users', [AdminUserController::class, 'index']);
         Route::get('admin/users/export', [AdminUserController::class, 'export']);
         Route::get('admin/reports/appointments', [AdminReportController::class, 'appointmentSummary']);
+        Route::get('admin/reports/appointments/pdf', [AdminReportController::class, 'appointmentSummaryPdf']);
         Route::get('admin/reports/doctor-occupancy', [AdminReportController::class, 'doctorOccupancy']);
+        Route::get('admin/reports/doctor-occupancy/pdf', [AdminReportController::class, 'doctorOccupancyPdf']);
         Route::get('admin/reports/insurance-usage', [AdminReportController::class, 'insuranceUsage']);
+        Route::get('admin/reports/insurance-usage/pdf', [AdminReportController::class, 'insuranceUsagePdf']);
         Route::get('admin/activity-logs', [AdminActivityLogController::class, 'index']);
     });
 

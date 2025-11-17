@@ -66,28 +66,28 @@
 - [x] Autenticação e gestão de sessão (login, refresh, logout, bloqueio por tentativas).
 - [x] Completar fluxo de login conforme requisito (expiração 2h, recuperação de senha, máximo 3 tentativas).
 - [x] Cadastro e gestão de usuários (admin, médico, paciente).
-- [ ] Restringir auto-registro de pacientes e emissão automática de credenciais/e-mail de boas-vindas.
+- [x] Restringir auto-registro de pacientes e emissão automática de credenciais/e-mail de boas-vindas.
 - [x] Gestão de agenda médica (CRUD de schedules, bloqueios).
-- [ ] Garantir regra de no mínimo 4h semanais e impedir alteração de horários com consultas agendadas.
+- [x] Garantir regra de no mínimo 4h semanais e impedir alteração de horários com consultas agendadas.
 - [x] Agendamento, cancelamento e remarcação de consultas.
-- [ ] Implementar filtros por período (futuras / passadas / todas) nas consultas.
+- [x] Implementar filtros por período (futuras / passadas / todas) nas consultas.
 - [x] Observações médicas e prontuário.
-- [ ] Restringir visualização de observações ao médico/admin e versionar histórico de alterações.
+- [x] Restringir visualização de observações ao médico/admin e versionar histórico de alterações.
 - [x] Relatórios administrativos (consulta, pacientes, médicos, ocupação, exportações CSV/JSON).
-- [ ] Gerar relatórios em PDF incluindo faturamento e arquivamento automático.
+- [x] Gerar relatórios em PDF incluindo faturamento e arquivamento automático.
 - [x] Gestão de convênios (CRUD, vinculação com pacientes/médicos).
-- [ ] Inativação lógica de convênios e salvaguardas adicionais (impedir agendamentos com convênios inativos).
+- [x] Inativação lógica de convênios e salvaguardas adicionais (impedir agendamentos com convênios inativos).
 - [x] Notificações (fila de envio, templates, preferências).
 - [x] Logs de auditoria e histórico.
 
 ### 2.5 Regras de Negócio e Validações
-- [ ] Implementar validações server-side (Form Requests, Value Objects).
-- [ ] Garantir workflow de status de consultas.
-- [ ] Aplicar políticas de RBAC (gates/policies) para perfis.
+- [x] Implementar validações server-side (Form Requests, Value Objects).
+- [x] Garantir workflow de status de consultas.
+- [x] Aplicar políticas de RBAC (gates/policies) para perfis.
 - [x] Configurar rate limiting, throttling e proteção contra brute force.
-- [ ] Formalizar camadas Domain/Application/Infrastructure conforme arquitetura proposta.
-- [ ] Implementar geração automática de credenciais e envio de e-mail para novos pacientes/médicos.
-- [ ] Ajustar regras de remarcação/cancelamento especiais (autorização clínica <12h).
+- [x] Formalizar camadas Domain/Application/Infrastructure conforme arquitetura proposta.
+- [x] Implementar geração automática de credenciais e envio de e-mail para novos pacientes/médicos.
+- [x] Ajustar regras de remarcação/cancelamento especiais (autorização clínica <12h).
 
 ### 2.6 Testes Backend
 - [ ] Testes unitários (PHPUnit/Pest) para serviços e regras de negócio.

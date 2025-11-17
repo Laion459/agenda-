@@ -40,7 +40,11 @@ class ScheduleService
 
         $this->ensureNoOverlap($doctor, $data);
 
-        return $doctor->schedules()->create($data);
+        $schedule = $doctor->schedules()->create($data);
+
+        $this->ensureMinimumWeeklyHours($doctor);
+
+        return $schedule;
     }
 
     public function update(Schedule $schedule, User $user, array $data): Schedule
@@ -59,9 +63,13 @@ class ScheduleService
             ]);
         }
 
+        $this->ensureScheduleHasNoAppointments($schedule);
+
         $this->ensureNoOverlap($doctor, $data, $schedule->id);
 
         $schedule->update($data);
+
+        $this->ensureMinimumWeeklyHours($doctor);
 
         return $schedule;
     }
@@ -76,7 +84,11 @@ class ScheduleService
             ]);
         }
 
+        $this->ensureScheduleHasNoAppointments($schedule);
+
         $schedule->delete();
+
+        $this->ensureMinimumWeeklyHours($doctor);
     }
 
     protected function ensureNoOverlap(Doctor $doctor, array $data, ?int $ignoreId = null): void
@@ -92,6 +104,7 @@ class ScheduleService
 
         $query = $doctor->schedules()
             ->where('day_of_week', $data['day_of_week'])
+            ->where('is_blocked', false)
             ->when($ignoreId, fn (Builder $builder) => $builder->where('id', '!=', $ignoreId))
             ->where(function (Builder $builder) use ($start, $end) {
                 $builder->whereBetween('start_time', [$start->format('H:i'), $end->format('H:i')])
@@ -105,6 +118,47 @@ class ScheduleService
         if ($query->exists()) {
             throw ValidationException::withMessages([
                 'start_time' => __('Conflito com outro horário configurado.'),
+            ]);
+        }
+    }
+
+    protected function ensureMinimumWeeklyHours(Doctor $doctor): void
+    {
+        $totalMinutes = $doctor->schedules()
+            ->where('is_blocked', false)
+            ->get()
+            ->sum(function (Schedule $schedule) {
+                $start = Carbon::createFromFormat('H:i:s', $schedule->start_time);
+                $end = Carbon::createFromFormat('H:i:s', $schedule->end_time);
+                return $start->diffInMinutes($end);
+            });
+
+        $minimumHours = 4;
+        $minimumMinutes = $minimumHours * 60;
+
+        if ($totalMinutes < $minimumMinutes) {
+            throw ValidationException::withMessages([
+                'schedules' => __("A agenda deve ter no mínimo {$minimumHours} horas semanais disponíveis."),
+            ]);
+        }
+    }
+
+    protected function ensureScheduleHasNoAppointments(Schedule $schedule): void
+    {
+        $startTime = Carbon::createFromFormat('H:i:s', $schedule->start_time);
+        $endTime = Carbon::createFromFormat('H:i:s', $schedule->end_time);
+
+        $hasAppointments = \App\Models\Appointment::query()
+            ->where('doctor_id', $schedule->doctor_id)
+            ->whereRaw('EXTRACT(DOW FROM scheduled_at) = ?', [$schedule->day_of_week])
+            ->whereTime('scheduled_at', '>=', $startTime->format('H:i:s'))
+            ->whereTime('scheduled_at', '<', $endTime->format('H:i:s'))
+            ->whereNotIn('status', ['CANCELLED'])
+            ->exists();
+
+        if ($hasAppointments) {
+            throw ValidationException::withMessages([
+                'schedule' => __('Não é possível remover ou alterar horários que possuem consultas agendadas.'),
             ]);
         }
     }
