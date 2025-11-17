@@ -269,6 +269,91 @@ class ReportController extends Controller
 
         return $pdf->download('relatorio-convenios-' . now()->format('Y-m-d') . '.pdf');
     }
+
+    #[OA\Get(
+        path: "/admin/reports/billing",
+        summary: "Relatório de faturamento (JSON)",
+        description: "Retorna dados de faturamento em formato JSON. Inclui receita total, ticket médio, faturamento por status, médico e mês.",
+        tags: ["Relatórios"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(
+                name: "start_date",
+                in: "query",
+                description: "Data inicial (Y-m-d)",
+                required: false,
+                schema: new OA\Schema(type: "string", format: "date")
+            ),
+            new OA\Parameter(
+                name: "end_date",
+                in: "query",
+                description: "Data final (Y-m-d)",
+                required: false,
+                schema: new OA\Schema(type: "string", format: "date")
+            ),
+            new OA\Parameter(
+                name: "doctor_id",
+                in: "query",
+                description: "Filtrar por médico",
+                required: false,
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Dados de faturamento",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: 401, description: "Não autenticado"),
+            new OA\Response(response: 403, description: "Apenas administradores")
+        ]
+    )]
+    public function billing(Request $request): JsonResponse
+    {
+        $data = $this->service->billing($request->all());
+
+        return response()->json($data);
+    }
+
+    #[OA\Get(
+        path: "/admin/reports/billing/pdf",
+        summary: "Gerar PDF - Faturamento",
+        description: "Gera e baixa relatório em PDF de faturamento com gráficos e estatísticas",
+        tags: ["Relatórios"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(
+                name: "start_date",
+                in: "query",
+                description: "Data inicial (Y-m-d)",
+                required: false,
+                schema: new OA\Schema(type: "string", format: "date")
+            ),
+            new OA\Parameter(
+                name: "end_date",
+                in: "query",
+                description: "Data final (Y-m-d)",
+                required: false,
+                schema: new OA\Schema(type: "string", format: "date")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Arquivo PDF",
+                content: new OA\MediaType(mediaType: "application/pdf")
+            ),
+            new OA\Response(response: 401, description: "Não autenticado"),
+            new OA\Response(response: 403, description: "Apenas administradores")
+        ]
+    )]
+    public function billingPdf(Request $request)
+    {
+        $pdf = $this->pdfService->generateBillingPdf($request->all());
+
+        return $pdf->download('relatorio-faturamento-' . now()->format('Y-m-d') . '.pdf');
+    }
 }
 
 

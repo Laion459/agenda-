@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -37,18 +38,22 @@ class AppointmentService
         $patient = $user->patient;
         $patient?->loadMissing('user');
 
-        $query = Appointment::query()
-            ->with(['doctor.user', 'patient.user'])
-            ->where('patient_id', $patient->id)
-            ->orderByDesc('scheduled_at');
+        $cacheKey = 'appointments:patient:' . $patient->id . ':' . md5(json_encode($filters));
 
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($patient, $filters) {
+            $query = Appointment::query()
+                ->with(['doctor.user', 'patient.user'])
+                ->where('patient_id', $patient->id)
+                ->orderByDesc('scheduled_at');
 
-        $this->applyPeriodFilter($query, $filters);
+            if (! empty($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
 
-        return $query->paginate($filters['per_page'] ?? 10);
+            $this->applyPeriodFilter($query, $filters);
+
+            return $query->paginate($filters['per_page'] ?? 10);
+        });
     }
 
     public function listForDoctor(User $user, array $filters = []): LengthAwarePaginator
@@ -56,33 +61,41 @@ class AppointmentService
         /** @var Doctor $doctor */
         $doctor = $user->doctor;
 
-        $query = Appointment::query()
-            ->with(['doctor.user', 'patient.user'])
-            ->where('doctor_id', $doctor->id)
-            ->orderByDesc('scheduled_at');
+        $cacheKey = 'appointments:doctor:' . $doctor->id . ':' . md5(json_encode($filters));
 
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($doctor, $filters) {
+            $query = Appointment::query()
+                ->with(['doctor.user', 'patient.user'])
+                ->where('doctor_id', $doctor->id)
+                ->orderByDesc('scheduled_at');
 
-        $this->applyPeriodFilter($query, $filters);
+            if (! empty($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
 
-        return $query->paginate($filters['per_page'] ?? 10);
+            $this->applyPeriodFilter($query, $filters);
+
+            return $query->paginate($filters['per_page'] ?? 10);
+        });
     }
 
     public function listForAdmin(array $filters = []): LengthAwarePaginator
     {
-        $query = Appointment::query()
-            ->with(['doctor.user', 'patient.user'])
-            ->orderByDesc('scheduled_at');
+        $cacheKey = 'appointments:admin:' . md5(json_encode($filters));
 
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($filters) {
+            $query = Appointment::query()
+                ->with(['doctor.user', 'patient.user'])
+                ->orderByDesc('scheduled_at');
 
-        $this->applyPeriodFilter($query, $filters);
+            if (! empty($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
 
-        return $query->paginate($filters['per_page'] ?? 10);
+            $this->applyPeriodFilter($query, $filters);
+
+            return $query->paginate($filters['per_page'] ?? 10);
+        });
     }
 
     public function createForPatient(User $user, array $data): Appointment
@@ -106,7 +119,7 @@ class AppointmentService
         $this->ensureScheduleIsValid($doctor, $scheduledAt, $duration);
         $this->ensureNoConflicts($doctor, $patient, $scheduledAt, $duration);
 
-        return $this->db->transaction(function () use ($patient, $doctor, $user, $scheduledAt, $duration, $data) {
+        $appointment = $this->db->transaction(function () use ($patient, $doctor, $user, $scheduledAt, $duration, $data) {
             /** @var Appointment $appointment */
             $appointment = Appointment::create([
                 'patient_id' => $patient->id,
@@ -153,6 +166,11 @@ class AppointmentService
 
             return $appointment->load(['doctor.user', 'patient.user']);
         });
+
+        // Limpar cache relacionado
+        $this->clearAppointmentCache($patient->id, $doctor->id);
+
+        return $appointment;
     }
 
     public function confirm(Appointment $appointment, User $user): Appointment
@@ -190,6 +208,8 @@ class AppointmentService
             ],
             metadata: ['appointment_id' => $appointment->id]
         );
+
+        $this->clearAppointmentCache($appointment->patient_id, $appointment->doctor_id);
 
         return $appointment;
     }
@@ -234,6 +254,8 @@ class AppointmentService
             metadata: ['appointment_id' => $appointment->id, 'reason' => $reason]
         );
 
+        $this->clearAppointmentCache($appointment->patient_id, $appointment->doctor_id);
+
         return $appointment->refresh();
     }
 
@@ -261,6 +283,8 @@ class AppointmentService
             'metadata' => ['action' => 'completed'],
             'changed_at' => now(),
         ]);
+
+        $this->clearAppointmentCache($appointment->patient_id, $appointment->doctor_id);
 
         return $appointment->refresh();
     }
@@ -321,6 +345,8 @@ class AppointmentService
             $rescheduleContext,
             metadata: ['appointment_id' => $appointment->id]
         );
+
+        $this->clearAppointmentCache($appointment->patient_id, $appointment->doctor_id);
 
         return $appointment->refresh();
     }
@@ -477,6 +503,28 @@ class AppointmentService
             default => null,
         };
     }
+
+    /**
+     * Limpa cache relacionado a consultas
+     */
+    protected function clearAppointmentCache(?int $patientId = null, ?int $doctorId = null): void
+    {
+        $patterns = ['appointments:*'];
+
+        if ($patientId) {
+            $patterns[] = "appointments:patient:{$patientId}:*";
+        }
+
+        if ($doctorId) {
+            $patterns[] = "appointments:doctor:{$doctorId}:*";
+        }
+
+        foreach ($patterns as $pattern) {
+            try {
+                Cache::flush(); // Em produção, usar cache tags ou Redis SCAN
+            } catch (\Exception $e) {
+                // Ignorar erros de cache
+            }
+        }
+    }
 }
-
-

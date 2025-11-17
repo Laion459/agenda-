@@ -31,6 +31,10 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+// Health check endpoints (sem autenticação)
+Route::get('health', [\App\Http\Controllers\API\HealthController::class, 'check']);
+Route::get('health/ping', [\App\Http\Controllers\API\HealthController::class, 'ping']);
+
 Route::get('doctors', [DoctorController::class, 'index']);
 Route::get('doctors/{doctor}', [DoctorController::class, 'show']);
 Route::get('health-insurances', [HealthInsuranceController::class, 'index']);
@@ -77,6 +81,8 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
         Route::get('admin/reports/doctor-occupancy/pdf', [AdminReportController::class, 'doctorOccupancyPdf']);
         Route::get('admin/reports/insurance-usage', [AdminReportController::class, 'insuranceUsage']);
         Route::get('admin/reports/insurance-usage/pdf', [AdminReportController::class, 'insuranceUsagePdf']);
+        Route::get('admin/reports/billing', [AdminReportController::class, 'billing']);
+        Route::get('admin/reports/billing/pdf', [AdminReportController::class, 'billingPdf']);
         Route::get('admin/activity-logs', [AdminActivityLogController::class, 'index']);
     });
 
