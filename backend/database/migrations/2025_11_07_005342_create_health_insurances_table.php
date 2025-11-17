@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('coverage_percentage', 5, 2)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->boolean('is_blocked')->default(false);
             $table->string('blocked_reason', 255)->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->unique(['doctor_id', 'day_of_week', 'start_time'], 'schedules_unique_slot');
         });

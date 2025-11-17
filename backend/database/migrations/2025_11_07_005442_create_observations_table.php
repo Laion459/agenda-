@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->json('attachments')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

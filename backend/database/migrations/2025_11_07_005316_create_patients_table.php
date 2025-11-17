@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('gender', ['M', 'F', 'OTHER'])->nullable();
             $table->timestamp('profile_completed_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -3,28 +3,50 @@
 namespace App\Http\Controllers\API;
 
 use App\Application\Auth\AuthService;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\API\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterPatientRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: "Autenticação")]
 class AuthController extends Controller
 {
     public function __construct(private AuthService $authService)
     {
     }
 
-    public function register(RegisterPatientRequest $request): JsonResponse
-    {
-        $user = $this->authService->registerPatient($request->validated());
-
-        return response()->json([
-            'message' => __('Paciente registrado com sucesso.'),
-            'data' => $user,
-        ], 201);
-    }
-
+    #[OA\Post(
+        path: "/auth/login",
+        summary: "Realizar login",
+        description: "Autentica um usuário e retorna um token de acesso. Após 3 tentativas falhas, a conta é bloqueada por 30 minutos.",
+        tags: ["Autenticação"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "password"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email", example: "paciente@example.com"),
+                    new OA\Property(property: "password", type: "string", format: "password", example: "senha123")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Login realizado com sucesso",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "token", type: "string", example: "1|abcdef123456..."),
+                        new OA\Property(property: "user", type: "object")
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: "Credenciais inválidas"),
+            new OA\Response(response: 429, description: "Muitas tentativas. Conta bloqueada temporariamente")
+        ]
+    )]
     public function login(LoginRequest $request): JsonResponse
     {
         $payload = $this->authService->login(
@@ -38,6 +60,21 @@ class AuthController extends Controller
         ]);
     }
 
+    #[OA\Get(
+        path: "/auth/me",
+        summary: "Obter usuário autenticado",
+        description: "Retorna os dados completos do usuário autenticado incluindo relacionamentos",
+        tags: ["Autenticação"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Dados do usuário",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: 401, description: "Não autenticado")
+        ]
+    )]
     public function me(): JsonResponse
     {
         return response()->json(
@@ -45,6 +82,25 @@ class AuthController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: "/auth/logout",
+        summary: "Encerrar sessão",
+        description: "Invalida o token de autenticação atual",
+        tags: ["Autenticação"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Sessão encerrada com sucesso",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "message", type: "string", example: "Sessão encerrada com sucesso.")
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: "Não autenticado")
+        ]
+    )]
     public function logout(): JsonResponse
     {
         $this->authService->logout();

@@ -5,10 +5,27 @@ namespace App\Models;
 use App\Domain\Shared\Enums\AppointmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @OA\Schema(
+ *     schema="Appointment",
+ *     type="object",
+ *     title="Consulta",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="status", type="string", enum={"PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"}, example="PENDING"),
+ *     @OA\Property(property="type", type="string", example="PRESENTIAL"),
+ *     @OA\Property(property="scheduled_at", type="string", format="date-time", example="2025-12-01 14:00:00"),
+ *     @OA\Property(property="duration_minutes", type="integer", example=30),
+ *     @OA\Property(property="price", type="number", format="float", example=150.00),
+ *     @OA\Property(property="notes", type="string", nullable=true),
+ *     @OA\Property(property="patient", type="object", ref="#/components/schemas/Patient"),
+ *     @OA\Property(property="doctor", type="object", ref="#/components/schemas/Doctor")
+ * )
+ */
 class Appointment extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'patient_id',
@@ -69,5 +86,3 @@ class Appointment extends Model
         return $query->where('status', $status->value);
     }
 }
-
-

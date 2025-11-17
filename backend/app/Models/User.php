@@ -2,58 +2,49 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Domain\Shared\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @OA\Schema(
+ *     schema="User",
+ *     type="object",
+ *     title="Usuário",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="João Silva"),
+ *     @OA\Property(property="email", type="string", format="email", example="joao@example.com"),
+ *     @OA\Property(property="phone", type="string", example="(11) 99999-9999"),
+ *     @OA\Property(property="role", type="string", enum={"PATIENT", "DOCTOR", "ADMIN"}, example="PATIENT"),
+ *     @OA\Property(property="is_active", type="boolean", example=true)
+ * )
+ */
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens;
-    use HasFactory;
-    use HasRoles;
-    use Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'phone',
+        'password',
+        'role',
         'is_active',
-        'failed_login_attempts',
-        'locked_until',
         'privacy_policy_accepted_at',
         'privacy_policy_version',
-        'data_erasure_requested_at',
-        'role',
-        'password',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
-    protected string $guard_name = 'web';
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -61,10 +52,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
-            'failed_login_attempts' => 'integer',
-            'locked_until' => 'datetime',
             'privacy_policy_accepted_at' => 'datetime',
-            'data_erasure_requested_at' => 'datetime',
+            'locked_until' => 'datetime',
+            'failed_login_attempts' => 'integer',
         ];
     }
 
@@ -76,30 +66,5 @@ class User extends Authenticatable
     public function doctor()
     {
         return $this->hasOne(Doctor::class);
-    }
-
-    public function appointmentsCreated()
-    {
-        return $this->hasMany(Appointment::class, 'created_by');
-    }
-
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class);
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === UserRole::ADMIN;
-    }
-
-    public function isDoctor(): bool
-    {
-        return $this->role === UserRole::DOCTOR;
-    }
-
-    public function isPatient(): bool
-    {
-        return $this->role === UserRole::PATIENT;
     }
 }

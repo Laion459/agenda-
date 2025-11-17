@@ -4,10 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @OA\Schema(
+ *     schema="Doctor",
+ *     type="object",
+ *     title="Médico",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="crm", type="string", example="123456-SP"),
+ *     @OA\Property(property="specialty", type="string", example="Cardiologia"),
+ *     @OA\Property(property="qualification", type="string", nullable=true),
+ *     @OA\Property(property="is_active", type="boolean", example=true),
+ *     @OA\Property(property="user", type="object", ref="#/components/schemas/User")
+ * )
+ */
 class Doctor extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',

@@ -28,6 +28,7 @@ return new class extends Migration
             $table->timestamp('reminder_sent_at')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->unique(['doctor_id', 'scheduled_at']);
             $table->unique(['patient_id', 'scheduled_at'], 'appointments_unique_patient_schedule');
