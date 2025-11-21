@@ -30,7 +30,7 @@ class AnonymizeUserJob implements ShouldQueue
         $user->forceFill([
             'name' => sprintf('Usuário Anônimo %d', $user->id),
             'email' => sprintf('anon-%d@anon.agendaplus', $user->id),
-            'phone' => null,
+            'phone' => sprintf('+550000%04d', $user->id),
             'is_active' => false,
             'failed_login_attempts' => 0,
             'locked_until' => null,

@@ -37,9 +37,15 @@ class DatabaseSeeder extends Seeder
                 'phone' => '+5511999990000',
                 'password' => Hash::make('password'),
                 'role' => UserRole::ADMIN->value,
+                'is_active' => true,
             ]
         );
-        $admin->syncRoles([UserRole::ADMIN->value]);
+        
+        // Atribui role usando assignRole (string) - usa guard padrão (sanctum)
+        if (!$admin->hasRole(UserRole::ADMIN->value)) {
+            $admin->assignRole(UserRole::ADMIN->value);
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        }
 
         $healthInsurances = HealthInsurance::factory(5)->create();
 

@@ -8,7 +8,12 @@ class UpdateHealthInsuranceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage health insurances') ?? false;
+        $user = $this->user();
+        if (!$user) {
+            return false;
+        }
+        return $user->role === \App\Domain\Shared\Enums\UserRole::ADMIN 
+            || $user->can('manage health insurances');
     }
 
     public function rules(): array

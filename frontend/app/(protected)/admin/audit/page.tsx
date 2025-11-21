@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleApiError } from "@/lib/handle-api-error";
-import { fetchActivityLogs } from "@/services/activity-log-service";
+import { exportActivityLogs, fetchActivityLogs } from "@/services/activity-log-service";
 import { ActivityLog, PaginatedResponse } from "@/types";
 
 interface Filters {
@@ -31,6 +30,7 @@ export default function AuditLogsPage() {
     per_page: 25,
     page: 1,
   });
+  const [exporting, setExporting] = useState(false);
 
   const loadLogs = useCallback(async () => {
     try {
@@ -38,8 +38,7 @@ export default function AuditLogsPage() {
       const response = await fetchActivityLogs({
         per_page: filters.per_page,
         page: filters.page,
-        action: filters.search || undefined,
-        user_id: filters.user_id || undefined,
+        ...buildFilterParams(),
       });
       setLogs(response.data ?? []);
       setMeta(response.meta);
@@ -73,6 +72,31 @@ export default function AuditLogsPage() {
   const handlePrevPage = () => {
     if (filters.page > 1) {
       setFilters((prev) => ({ ...prev, page: prev.page - 1 }));
+    }
+  };
+
+  const buildFilterParams = () => ({
+    action: filters.search || undefined,
+    user_id: filters.user_id || undefined,
+  });
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const blob = await exportActivityLogs(buildFilterParams());
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `auditoria-${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Exportação gerada com sucesso.");
+    } catch (error) {
+      handleApiError(error, "Não foi possível exportar os logs");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -121,7 +145,7 @@ export default function AuditLogsPage() {
             >
               Limpar
             </Button>
-            <Button type="button" variant="outline" onClick={() => toast.success("Exportação em breve")}>
+            <Button type="button" variant="outline" onClick={handleExport} disabled={exporting || loading}>
               Exportar
             </Button>
           </div>
@@ -171,7 +195,13 @@ export default function AuditLogsPage() {
                 {logs.map((log) => (
                   <tr key={log.id}>
                     <td className="px-4 py-3 text-xs text-slate-500">
-                      {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
+                      {new Date(log.created_at).toLocaleString('pt-BR', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
                     </td>
                     <td className="px-4 py-3">
                       {log.user ? `${log.user.name} (${log.user.id})` : "Sistema"}

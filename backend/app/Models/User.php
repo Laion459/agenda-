@@ -27,6 +27,13 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
+    /**
+     * Guard padrão para o Spatie Permission
+     * Como usamos Sanctum nas APIs, definimos 'sanctum' como padrão
+     * O Spatie Permission usa isso para determinar qual guard verificar
+     */
+    protected $guard_name = 'sanctum';
+
     protected $fillable = [
         'name',
         'email',
@@ -66,5 +73,24 @@ class User extends Authenticatable
     public function doctor()
     {
         return $this->hasOne(Doctor::class);
+    }
+
+    /**
+     * Relacionamento customizado para notificações
+     * Sobrescreve o relacionamento padrão do trait Notifiable
+     * que usa notifiable_type/notifiable_id
+     */
+    public function customNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'user_id');
+    }
+
+    /**
+     * Sobrescreve o relacionamento notifications() do trait Notifiable
+     * para usar user_id em vez de notifiable_type/notifiable_id
+     */
+    public function notifications()
+    {
+        return $this->customNotifications();
     }
 }

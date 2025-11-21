@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\PermissionRegistrar;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,9 +33,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (! $this->app->environment('production')) {
+            config([
+                'cache.default' => 'array',
+                'permission.cache.store' => 'array',
+            ]);
+        }
+
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
+
+        // Limpa o cache do Spatie Permission ao iniciar
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         RateLimiter::for('login', function (Request $request) {
             return [

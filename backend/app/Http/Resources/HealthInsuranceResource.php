@@ -12,6 +12,7 @@ class HealthInsuranceResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'description' => $this->description,
             'coverage_percentage' => $this->coverage_percentage,
             'is_active' => $this->is_active,
             'pivot' => $this->whenPivotLoaded(

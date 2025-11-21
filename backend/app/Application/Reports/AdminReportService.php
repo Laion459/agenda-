@@ -179,16 +179,16 @@ class AdminReportService
                     'appointments_count' => (int) $row->count,
                 ]);
 
-            $byMonth = $query->clone()
-                ->select(DB::raw("DATE_TRUNC('month', scheduled_at) as month"), DB::raw('SUM(price) as revenue'), DB::raw('COUNT(*) as count'))
-                ->groupBy(DB::raw("DATE_TRUNC('month', scheduled_at)"))
-                ->orderBy(DB::raw("DATE_TRUNC('month', scheduled_at)"))
-                ->get()
-                ->map(fn ($row) => [
-                    'month' => Carbon::parse($row->month)->format('Y-m'),
-                    'revenue' => (float) $row->revenue,
-                    'count' => (int) $row->count,
-                ]);
+        $byMonth = $query->clone()
+            ->select('scheduled_at', 'price')
+            ->get()
+            ->groupBy(fn ($row) => Carbon::parse($row->scheduled_at)->format('Y-m'))
+            ->map(fn ($rows, $month) => [
+                'month' => $month,
+                'revenue' => (float) $rows->sum('price'),
+                'count' => (int) $rows->count(),
+            ])
+            ->values();
 
             return [
                 'start_date' => $start->toDateString(),

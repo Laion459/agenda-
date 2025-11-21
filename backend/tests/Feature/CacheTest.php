@@ -18,7 +18,10 @@ class CacheTest extends TestCase
     {
         $admin = User::factory()->create([
             'role' => UserRole::ADMIN,
+            'is_active' => true,
         ]);
+        
+        $admin->assignRole(UserRole::ADMIN->value);
 
         Appointment::factory()->count(5)->create();
 
@@ -88,6 +91,8 @@ class CacheTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return \App\Models\Patient::factory()->create([
             'user_id' => $user->id,
@@ -101,6 +106,8 @@ class CacheTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return \App\Models\Doctor::factory()->create([
             'user_id' => $user->id,

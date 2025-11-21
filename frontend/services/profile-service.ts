@@ -16,7 +16,8 @@ export async function updateProfile(payload: Record<string, unknown>) {
 }
 
 export async function acceptPrivacyPolicy() {
-  await api.post("/privacy/accept");
+  const { data } = await api.post<{ message: string; user?: User }>("/privacy/accept");
+  return data;
 }
 
 export async function requestDataErasure() {

@@ -18,8 +18,10 @@ class PrivacyController extends Controller
             'privacy_policy_version' => config('privacy.policy_version'),
         ])->save();
 
+        // Retorna o usuário atualizado para o frontend atualizar o estado
         return response()->json([
             'message' => __('Termos de privacidade aceitos com sucesso.'),
+            'user' => $user->fresh()->load(['patient', 'doctor']),
         ]);
     }
 
@@ -40,27 +42,25 @@ class PrivacyController extends Controller
 
     public function export(Request $request): JsonResponse
     {
-        $user = $request->user()->load(['patient', 'doctor', 'notifications']);
+        $user = $request->user()->load(['patient', 'doctor']);
 
         return response()->json([
-            'data' => [
-                'user' => $user->only([
-                    'id',
-                    'name',
-                    'email',
-                    'phone',
-                    'role',
-                    'created_at',
-                    'privacy_policy_accepted_at',
-                    'privacy_policy_version',
-                ]),
-                'patient' => $user->patient,
-                'doctor' => $user->doctor,
-                'notifications' => $user->notifications()
-                    ->latest()
-                    ->take(50)
-                    ->get(['type', 'subject', 'sent_at', 'channel', 'metadata']),
-            ],
+            'user' => $user->only([
+                'id',
+                'name',
+                'email',
+                'phone',
+                'role',
+                'created_at',
+                'privacy_policy_accepted_at',
+                'privacy_policy_version',
+            ]),
+            'patient' => $user->patient,
+            'doctor' => $user->doctor,
+            'notifications' => $user->customNotifications()
+                ->latest()
+                ->take(50)
+                ->get(['type', 'subject', 'sent_at', 'channel', 'metadata']),
         ]);
     }
 }

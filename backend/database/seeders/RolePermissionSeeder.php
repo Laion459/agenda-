@@ -24,23 +24,28 @@ class RolePermissionSeeder extends Seeder
             'manage health insurances',
         ];
 
-        $permissionModels = collect($permissions)
-            ->map(fn (string $permission) => Permission::findOrCreate($permission, 'web'));
+        // Cria permissões e roles para ambos os guards (web e sanctum)
+        $guards = ['web', 'sanctum'];
+        
+        foreach ($guards as $guard) {
+            $permissionModels = collect($permissions)
+                ->map(fn (string $permission) => Permission::findOrCreate($permission, $guard));
 
-        $adminRole = Role::findOrCreate(UserRole::ADMIN->value, 'web');
-        $doctorRole = Role::findOrCreate(UserRole::DOCTOR->value, 'web');
-        $patientRole = Role::findOrCreate(UserRole::PATIENT->value, 'web');
+            $adminRole = Role::findOrCreate(UserRole::ADMIN->value, $guard);
+            $doctorRole = Role::findOrCreate(UserRole::DOCTOR->value, $guard);
+            $patientRole = Role::findOrCreate(UserRole::PATIENT->value, $guard);
 
-        $adminRole->syncPermissions($permissionModels);
+            $adminRole->syncPermissions($permissionModels);
 
-        $doctorRole->syncPermissions($permissionModels->whereIn('name', [
-            'manage schedules',
-            'manage appointments',
-        ]));
+            $doctorRole->syncPermissions($permissionModels->whereIn('name', [
+                'manage schedules',
+                'manage appointments',
+            ]));
 
-        $patientRole->syncPermissions($permissionModels->whereIn('name', [
-            'manage appointments',
-        ]));
+            $patientRole->syncPermissions($permissionModels->whereIn('name', [
+                'manage appointments',
+            ]));
+        }
     }
 }
 

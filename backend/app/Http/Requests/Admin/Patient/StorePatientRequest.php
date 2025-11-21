@@ -9,7 +9,12 @@ class StorePatientRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage patients') ?? false;
+        $user = $this->user();
+        if (!$user) {
+            return false;
+        }
+        return $user->role === \App\Domain\Shared\Enums\UserRole::ADMIN 
+            || $user->can('manage patients');
     }
 
     public function rules(): array

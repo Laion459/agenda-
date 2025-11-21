@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests\Observations;
 
+use App\Domain\Shared\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreObservationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'DOCTOR';
+        return $this->user()?->role === UserRole::DOCTOR;
     }
 
     public function rules(): array

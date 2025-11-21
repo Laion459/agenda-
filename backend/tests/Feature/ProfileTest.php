@@ -17,6 +17,8 @@ class ProfileTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
         
@@ -24,9 +26,11 @@ class ProfileTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'id' => $user->id,
-                'email' => $user->email,
-                'name' => $user->name,
+                'data' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->name,
+                ],
             ]);
     }
 
@@ -35,6 +39,8 @@ class ProfileTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
         
@@ -95,6 +101,8 @@ class ProfileTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
         

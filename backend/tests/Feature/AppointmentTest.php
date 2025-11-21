@@ -32,8 +32,9 @@ class AppointmentTest extends TestCase
 
         $scheduledAt = Carbon::now()->addDays(2)->setTime(10, 0);
 
-        $response = $this->actingAs($patient->user)
-            ->postJson('/api/appointments', [
+        $this->authAs($patient->user);
+        
+        $response = $this->postJson('/api/appointments', [
                 'doctor_id' => $doctor->id,
                 'scheduled_at' => $scheduledAt->toIso8601String(),
                 'duration_minutes' => 30,
@@ -42,11 +43,13 @@ class AppointmentTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'patient_id',
-                'doctor_id',
-                'scheduled_at',
-                'status',
+                'data' => [
+                    'id',
+                    'patient_id',
+                    'doctor_id',
+                    'scheduled_at',
+                    'status',
+                ],
             ]);
 
         $this->assertDatabaseHas('appointments', [
@@ -65,10 +68,9 @@ class AppointmentTest extends TestCase
 
         $scheduledAt = Carbon::now()->addHours(12);
 
-        $token = $patient->user->createToken('test-token')->plainTextToken;
+        $this->authAs($patient->user);
         
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/appointments', [
+        $response = $this->postJson('/api/appointments', [
                 'doctor_id' => $doctor->id,
                 'scheduled_at' => $scheduledAt->toIso8601String(),
                 'duration_minutes' => 30,
@@ -87,10 +89,9 @@ class AppointmentTest extends TestCase
 
         $scheduledAt = Carbon::now()->addDays(2);
 
-        $token = $patient->user->createToken('test-token')->plainTextToken;
+        $this->authAs($patient->user);
         
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/appointments', [
+        $response = $this->postJson('/api/appointments', [
                 'doctor_id' => $doctor->id,
                 'scheduled_at' => $scheduledAt->toIso8601String(),
                 'duration_minutes' => 30,
@@ -106,12 +107,13 @@ class AppointmentTest extends TestCase
         $patient = $this->createActivePatient();
         $patient->update(['profile_completed_at' => null]);
 
-        $scheduledAt = Carbon::now()->addDays(2);
+        $this->createSchedule($doctor, Carbon::now()->addDays(2));
 
-        $token = $patient->user->createToken('test-token')->plainTextToken;
+        $scheduledAt = Carbon::now()->addDays(2)->setTime(10, 0);
+
+        $this->authAs($patient->user);
         
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/appointments', [
+        $response = $this->postJson('/api/appointments', [
                 'doctor_id' => $doctor->id,
                 'scheduled_at' => $scheduledAt->toIso8601String(),
                 'duration_minutes' => 30,
@@ -143,7 +145,7 @@ class AppointmentTest extends TestCase
         $response->assertStatus(200);
 
         $appointment->refresh();
-        $this->assertEquals(AppointmentStatus::CANCELLED->value, $appointment->status);
+        $this->assertEquals(AppointmentStatus::CANCELLED, $appointment->status);
     }
 
     public function test_nao_pode_cancelar_consulta_com_menos_de_12h(): void
@@ -235,10 +237,9 @@ class AppointmentTest extends TestCase
             'patient_id' => $patient->id,
         ]);
 
-        $token = $patient->user->createToken('test-token')->plainTextToken;
+        $this->authAs($patient->user);
         
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->getJson('/api/appointments');
+        $response = $this->getJson('/api/appointments');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -264,10 +265,9 @@ class AppointmentTest extends TestCase
             'scheduled_at' => Carbon::now()->subDays(1),
         ]);
 
-        $token = $patient->user->createToken('test-token')->plainTextToken;
+        $this->authAs($patient->user);
         
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->getJson('/api/appointments?period=future');
+        $response = $this->getJson('/api/appointments?period=future');
 
         $response->assertStatus(200);
         $this->assertCount(1, $response->json('data'));
@@ -284,15 +284,14 @@ class AppointmentTest extends TestCase
             'status' => AppointmentStatus::PENDING,
         ]);
 
-        $token = $doctor->user->createToken('test-token')->plainTextToken;
+        $this->authAs($doctor->user);
         
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson("/api/appointments/{$appointment->id}/confirm");
+        $response = $this->postJson("/api/appointments/{$appointment->id}/confirm");
 
         $response->assertStatus(200);
 
         $appointment->refresh();
-        $this->assertEquals(AppointmentStatus::CONFIRMED->value, $appointment->status);
+        $this->assertEquals(AppointmentStatus::CONFIRMED, $appointment->status);
     }
 
     public function test_medico_pode_completar_consulta(): void
@@ -306,15 +305,14 @@ class AppointmentTest extends TestCase
             'status' => AppointmentStatus::CONFIRMED,
         ]);
 
-        $token = $doctor->user->createToken('test-token')->plainTextToken;
+        $this->authAs($doctor->user);
         
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson("/api/appointments/{$appointment->id}/complete");
+        $response = $this->postJson("/api/appointments/{$appointment->id}/complete");
 
         $response->assertStatus(200);
 
         $appointment->refresh();
-        $this->assertEquals(AppointmentStatus::COMPLETED->value, $appointment->status);
+        $this->assertEquals(AppointmentStatus::COMPLETED, $appointment->status);
     }
 
     protected function createActiveDoctor(): Doctor
@@ -323,6 +321,8 @@ class AppointmentTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
             'user_id' => $user->id,
@@ -336,6 +336,8 @@ class AppointmentTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
             'user_id' => $user->id,

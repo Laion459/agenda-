@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Calendar, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { logout as logoutRequest } from "@/services/auth-service";
@@ -24,8 +25,13 @@ export function AppHeader() {
       // ignora erros ao encerrar sessão
     } finally {
       logout();
+      // Redireciona para home se for admin, senão para login
+      if (user?.role === 'ADMIN') {
+        router.push("/");
+      } else {
+        router.push("/login");
+      }
     }
-    router.push("/login");
   };
 
   useEffect(() => {
@@ -70,18 +76,31 @@ export function AppHeader() {
       </span>
     ) : null;
 
+  const getRoleLabel = () => {
+    switch (user?.role) {
+      case 'DOCTOR':
+        return 'Portal do Médico';
+      case 'PATIENT':
+        return 'Portal do Paciente';
+      case 'ADMIN':
+        return 'Área Administrativa';
+      default:
+        return '';
+    }
+  };
+
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
       <Link href="/dashboard" className="flex items-center gap-3 text-slate-900" aria-label="Ir para o dashboard">
-        <Image
-          src="/logo.png"
-          alt="Agenda+"
-          width={48}
-          height={48}
-          priority
-          className="h-10 w-10 rounded-lg shadow-sm ring-1 ring-slate-200/70"
-        />
-        <span className="text-lg font-semibold tracking-tight">Agenda+</span>
+        <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+          <Calendar className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <span className="text-lg font-bold tracking-tight block">Agenda+</span>
+          {getRoleLabel() && (
+            <span className="text-xs text-slate-600 block">{getRoleLabel()}</span>
+          )}
+        </div>
       </Link>
       <div className="flex items-center gap-3 text-sm text-slate-700">
         <Link href="/notifications" className="relative">
@@ -92,7 +111,8 @@ export function AppHeader() {
           <p className="font-medium">{user?.name}</p>
           <p className="text-xs text-slate-500">{user?.role}</p>
         </div>
-        <Button variant="ghost" onClick={handleLogout}>
+        <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
+          <LogOut className="h-4 w-4" />
           Sair
         </Button>
       </div>

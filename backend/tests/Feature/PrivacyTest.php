@@ -17,6 +17,8 @@ class PrivacyTest extends TestCase
             'role' => UserRole::PATIENT,
             'privacy_policy_accepted_at' => null,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
         
@@ -33,6 +35,8 @@ class PrivacyTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
         
@@ -49,6 +53,8 @@ class PrivacyTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
         

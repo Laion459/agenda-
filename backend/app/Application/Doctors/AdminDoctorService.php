@@ -9,6 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class AdminDoctorService
 {
@@ -68,7 +69,12 @@ class AdminDoctorService
                 'role' => UserRole::DOCTOR,
                 'password' => Hash::make($data['password']),
             ]);
+            // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
+            // Configurado no AppServiceProvider
             $user->assignRole(UserRole::DOCTOR->value);
+            
+            // Limpar cache do Spatie Permission após atribuir role
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
             /** @var \App\Models\Doctor $doctor */
             $doctor = Doctor::create([

@@ -89,15 +89,16 @@ export default function AdminUsersPage() {
 
     try {
       setExporting(true);
-      const response = await exportAdminUsers(params);
-      const blob = new Blob([response.data], { type: "text/csv;charset=utf-8" });
+      const blob = await exportAdminUsers(params);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `usuarios-${Date.now()}.csv`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success("Exportação iniciada com sucesso");
+      toast.success("Exportação realizada com sucesso");
     } catch (error) {
       handleApiError(error, "Falha ao exportar usuários");
     } finally {

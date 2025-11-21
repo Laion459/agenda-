@@ -27,8 +27,9 @@ class ObservationTest extends TestCase
             'status' => AppointmentStatus::COMPLETED,
         ]);
 
-        $response = $this->actingAs($doctor->user)
-            ->postJson("/api/appointments/{$appointment->id}/observations", [
+        $this->authAs($doctor->user);
+        
+        $response = $this->postJson("/api/appointments/{$appointment->id}/observations", [
                 'anamnesis' => 'Paciente relata dor de cabeça',
                 'diagnosis' => 'Cefaleia tensional',
                 'prescription' => 'Paracetamol 500mg',
@@ -37,14 +38,16 @@ class ObservationTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'appointment_id',
-                'doctor_id',
-                'patient_id',
-                'anamnesis',
-                'diagnosis',
-                'prescription',
-                'notes',
+                'data' => [
+                    'id',
+                    'appointment_id',
+                    'doctor_id',
+                    'patient_id',
+                    'anamnesis',
+                    'diagnosis',
+                    'prescription',
+                    'notes',
+                ],
             ]);
 
         $this->assertDatabaseHas('observations', [
@@ -140,6 +143,8 @@ class ObservationTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
             'user_id' => $user->id,
@@ -153,6 +158,8 @@ class ObservationTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
             'user_id' => $user->id,

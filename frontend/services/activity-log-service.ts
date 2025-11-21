@@ -8,4 +8,12 @@ export async function fetchActivityLogs(params?: Record<string, unknown>) {
   return data;
 }
 
+export async function exportActivityLogs(params?: Record<string, unknown>) {
+  const response = await api.get("/admin/activity-logs/export", {
+    params,
+    responseType: "blob",
+  });
+  return response.data;
+}
+
 

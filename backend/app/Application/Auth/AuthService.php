@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class AuthService
 {
@@ -39,7 +40,7 @@ class AuthService
             }
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'email' => __('Credenciais inválidas. Verifique seu e-mail e senha.'),
             ]);
         }
 
@@ -83,7 +84,12 @@ class AuthService
             'privacy_policy_version' => config('privacy.policy_version'),
         ]);
 
+        // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
+        // Configurado no AppServiceProvider
         $user->assignRole(UserRole::PATIENT->value);
+        
+        // Limpar cache do Spatie Permission após atribuir role
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
         $user->patient()->create([
             'cpf' => $data['cpf'],
@@ -94,6 +100,35 @@ class AuthService
         ]);
 
         return $user->load('patient');
+    }
+
+    public function registerDoctor(array $data): User
+    {
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'role' => UserRole::DOCTOR,
+            'password' => $this->hasher->make($data['password']),
+            'privacy_policy_accepted_at' => now(),
+            'privacy_policy_version' => config('privacy.policy_version'),
+        ]);
+
+        // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
+        // Configurado no AppServiceProvider
+        $user->assignRole(UserRole::DOCTOR->value);
+        
+        // Limpar cache do Spatie Permission após atribuir role
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $user->doctor()->create([
+            'crm' => $data['crm'],
+            'specialty' => $data['specialty'],
+            'qualification' => $data['qualification'] ?? null,
+            'is_active' => true,
+        ]);
+
+        return $user->load('doctor');
     }
 }
 

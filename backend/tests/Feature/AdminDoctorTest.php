@@ -15,6 +15,10 @@ class AdminDoctorTest extends TestCase
     public function test_admin_pode_cadastrar_medico(): void
     {
         $admin = $this->createAdmin();
+        
+        // Debug: verificar se o role foi atribuído para o guard sanctum
+        $this->assertTrue($admin->hasRole(UserRole::ADMIN->value, 'sanctum'));
+        $this->assertTrue($admin->hasAnyRole([UserRole::ADMIN->value], 'sanctum'));
 
         $this->authAs($admin);
         
@@ -30,10 +34,12 @@ class AdminDoctorTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'user_id',
-                'crm',
-                'specialty',
+                'data' => [
+                    'id',
+                    'user_id',
+                    'crm',
+                    'specialty',
+                ],
             ]);
 
         $this->assertDatabaseHas('users', [
@@ -111,7 +117,7 @@ class AdminDoctorTest extends TestCase
             'is_active' => true,
         ]);
         
-        $user->assignRole(UserRole::ADMIN->value);
+        $this->assignRoleToUser($user, UserRole::ADMIN);
         
         return $user;
     }

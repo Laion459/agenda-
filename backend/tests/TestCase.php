@@ -18,8 +18,11 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         
-        // Limpar cache antes de cada teste
-        \Illuminate\Support\Facades\Cache::flush();
+        // Limpar cache antes de cada teste (apenas se não for Redis)
+        // Nos testes, usamos CACHE_DRIVER=array, então flush() é seguro
+        if (config('cache.default') !== 'redis') {
+            \Illuminate\Support\Facades\Cache::flush();
+        }
         
         // Resetar cache de permissões
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -33,9 +36,27 @@ abstract class TestCase extends BaseTestCase
      */
     protected function ensureRolesExist(): void
     {
-        Role::findOrCreate(UserRole::ADMIN->value, 'web');
-        Role::findOrCreate(UserRole::DOCTOR->value, 'web');
-        Role::findOrCreate(UserRole::PATIENT->value, 'web');
+        // Criar roles para ambos os guards (web e sanctum)
+        $guards = ['web', 'sanctum'];
+        foreach ($guards as $guard) {
+            Role::findOrCreate(UserRole::ADMIN->value, $guard);
+            Role::findOrCreate(UserRole::DOCTOR->value, $guard);
+            Role::findOrCreate(UserRole::PATIENT->value, $guard);
+        }
+    }
+
+    /**
+     * Atribui role para um usuário (seguindo o padrão do código de produção)
+     * O Spatie Permission usa o guard padrão do modelo User ($guard_name = 'sanctum')
+     */
+    protected function assignRoleToUser(\App\Models\User $user, UserRole $role): void
+    {
+        // Usar assignRole() sem especificar guard, como no código de produção
+        // O Spatie Permission usa o guard padrão do modelo User (sanctum)
+        $user->assignRole($role->value);
+        
+        // Limpar cache do Spatie Permission após atribuir role
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     /**
@@ -48,7 +69,7 @@ abstract class TestCase extends BaseTestCase
             'is_active' => true,
         ], $attributes));
         
-        $user->assignRole($role->value);
+        $this->assignRoleToUser($user, $role);
         
         return $user;
     }

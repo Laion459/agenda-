@@ -5,7 +5,7 @@ import { Download, FileJson } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date-utils";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,8 @@ export default function AdminReportsPage() {
   } = useForm<FilterForm>({
     resolver: zodResolver(filtersSchema),
     defaultValues: {
-      start_date: format(new Date().setMonth(new Date().getMonth() - 1), "yyyy-MM-dd"),
-      end_date: format(new Date(), "yyyy-MM-dd"),
+      start_date: formatDate(new Date().setMonth(new Date().getMonth() - 1), "yyyy-MM-dd"),
+      end_date: formatDate(new Date(), "yyyy-MM-dd"),
       doctor_id: "",
     },
   });
@@ -85,8 +85,8 @@ export default function AdminReportsPage() {
       }
 
       await loadReports({
-        start_date: format(new Date().setMonth(new Date().getMonth() - 1), "yyyy-MM-dd"),
-        end_date: format(new Date(), "yyyy-MM-dd"),
+        start_date: formatDate(new Date().setMonth(new Date().getMonth() - 1), "yyyy-MM-dd"),
+        end_date: formatDate(new Date(), "yyyy-MM-dd"),
       });
     }
 
@@ -105,8 +105,8 @@ export default function AdminReportsPage() {
 
   const resetFilters = () => {
     const defaults = {
-      start_date: format(new Date().setMonth(new Date().getMonth() - 1), "yyyy-MM-dd"),
-      end_date: format(new Date(), "yyyy-MM-dd"),
+      start_date: formatDate(new Date().setMonth(new Date().getMonth() - 1), "yyyy-MM-dd"),
+      end_date: formatDate(new Date(), "yyyy-MM-dd"),
       doctor_id: "",
     };
     reset(defaults);

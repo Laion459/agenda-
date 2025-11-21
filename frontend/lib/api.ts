@@ -19,5 +19,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor de resposta para garantir que blobs sejam tratados corretamente
+api.interceptors.response.use(
+  (response) => {
+    // Se a resposta é um blob, retorna diretamente
+    if (response.config.responseType === 'blob') {
+      return response;
+    }
+    return response;
+  },
+  (error) => {
+    // Se o erro é relacionado a blob, tenta converter
+    if (error.config?.responseType === 'blob' && error.response?.data) {
+      const blob = error.response.data instanceof Blob 
+        ? error.response.data 
+        : new Blob([error.response.data], { type: 'application/json' });
+      return Promise.reject({ ...error, blob });
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
  

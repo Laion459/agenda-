@@ -32,10 +32,12 @@ class AdminPatientTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'user_id',
-                'cpf',
-                'birth_date',
+                'data' => [
+                    'id',
+                    'user_id',
+                    'cpf',
+                    'birth_date',
+                ],
             ]);
 
         $this->assertDatabaseHas('users', [
@@ -132,7 +134,7 @@ class AdminPatientTest extends TestCase
             'is_active' => true,
         ]);
         
-        $user->assignRole(UserRole::ADMIN->value);
+        $this->assignRoleToUser($user, UserRole::ADMIN);
         
         return $user;
     }

@@ -26,10 +26,12 @@ class HealthInsuranceTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'name',
-                'description',
-                'coverage_percentage',
+                'data' => [
+                    'id',
+                    'name',
+                    'description',
+                    'coverage_percentage',
+                ],
             ]);
 
         $this->assertDatabaseHas('health_insurances', [
@@ -114,7 +116,7 @@ class HealthInsuranceTest extends TestCase
             'is_active' => true,
         ]);
         
-        $user->assignRole(UserRole::ADMIN->value);
+        $this->assignRoleToUser($user, UserRole::ADMIN);
         
         return $user;
     }

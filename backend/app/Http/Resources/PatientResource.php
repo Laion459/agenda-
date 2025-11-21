@@ -11,6 +11,7 @@ class PatientResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
             'name' => $this->whenLoaded('user', fn () => $this->user->name),
             'cpf' => $this->cpf,
             'birth_date' => $this->birth_date,

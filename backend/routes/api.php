@@ -19,11 +19,11 @@ use App\Http\Controllers\API\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    // Auto-registro de pacientes desabilitado - apenas admin pode criar pacientes
-    // Route::post('register', [AuthController::class, 'register']);
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:register');
+    Route::post('register/doctor', [AuthController::class, 'registerDoctor'])->middleware('throttle:register');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('password/forgot', [PasswordResetController::class, 'sendResetLink']);
-    Route::post('password/reset', [PasswordResetController::class, 'reset']);
+    Route::post('password/reset', [PasswordResetController::class, 'reset'])->name('password.reset');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
@@ -84,6 +84,7 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
         Route::get('admin/reports/billing', [AdminReportController::class, 'billing']);
         Route::get('admin/reports/billing/pdf', [AdminReportController::class, 'billingPdf']);
         Route::get('admin/activity-logs', [AdminActivityLogController::class, 'index']);
+        Route::get('admin/activity-logs/export', [AdminActivityLogController::class, 'export']);
     });
 
     Route::get('doctor/schedules', [ScheduleController::class, 'index']);

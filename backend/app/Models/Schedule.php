@@ -22,8 +22,6 @@ class Schedule extends Model
 
     protected $casts = [
         'day_of_week' => 'integer',
-        'start_time' => 'datetime:H:i:s',
-        'end_time' => 'datetime:H:i:s',
         'slot_duration_minutes' => 'integer',
         'is_blocked' => 'boolean',
     ];

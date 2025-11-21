@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ScheduleService
@@ -128,8 +129,8 @@ class ScheduleService
             ->where('is_blocked', false)
             ->get()
             ->sum(function (Schedule $schedule) {
-                $start = Carbon::createFromFormat('H:i:s', $schedule->start_time);
-                $end = Carbon::createFromFormat('H:i:s', $schedule->end_time);
+                $start = $this->parseTimeString($schedule->start_time);
+                $end = $this->parseTimeString($schedule->end_time);
                 return $start->diffInMinutes($end);
             });
 
@@ -145,22 +146,52 @@ class ScheduleService
 
     protected function ensureScheduleHasNoAppointments(Schedule $schedule): void
     {
-        $startTime = Carbon::createFromFormat('H:i:s', $schedule->start_time);
-        $endTime = Carbon::createFromFormat('H:i:s', $schedule->end_time);
+        $startTime = $this->parseTimeString($schedule->start_time);
+        $endTime = $this->parseTimeString($schedule->end_time);
 
-        $hasAppointments = \App\Models\Appointment::query()
+        $query = \App\Models\Appointment::query()
             ->where('doctor_id', $schedule->doctor_id)
-            ->whereRaw('EXTRACT(DOW FROM scheduled_at) = ?', [$schedule->day_of_week])
-            ->whereTime('scheduled_at', '>=', $startTime->format('H:i:s'))
-            ->whereTime('scheduled_at', '<', $endTime->format('H:i:s'))
             ->whereNotIn('status', ['CANCELLED'])
-            ->exists();
+            ->whereNull('deleted_at');
+
+        $driver = DB::connection()->getDriverName();
+        $normalizedDay = $this->normalizeDayOfWeek($schedule->day_of_week);
+
+        if ($driver === 'sqlite') {
+            $query->whereRaw("CAST(strftime('%w', scheduled_at) AS INTEGER) = ?", [$normalizedDay])
+                ->whereRaw("strftime('%H:%M:%S', scheduled_at) >= ?", [$startTime->format('H:i:s')])
+                ->whereRaw("strftime('%H:%M:%S', scheduled_at) < ?", [$endTime->format('H:i:s')]);
+        } else {
+            $query->whereRaw('EXTRACT(DOW FROM scheduled_at) = ?', [$normalizedDay])
+                ->whereTime('scheduled_at', '>=', $startTime->format('H:i:s'))
+                ->whereTime('scheduled_at', '<', $endTime->format('H:i:s'));
+        }
+
+        $hasAppointments = $query->exists();
 
         if ($hasAppointments) {
             throw ValidationException::withMessages([
                 'schedule' => __('Não é possível remover ou alterar horários que possuem consultas agendadas.'),
             ]);
         }
+    }
+
+    protected function parseTimeString(string $value): Carbon
+    {
+        foreach (['H:i:s', 'H:i'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $value);
+            } catch (\Throwable $exception) {
+                // tentar próximo formato
+            }
+        }
+
+        return Carbon::parse($value);
+    }
+
+    protected function normalizeDayOfWeek(int $value): int
+    {
+        return $value % 7;
     }
 }
 

@@ -11,6 +11,7 @@ use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class AdminPatientService
 {
@@ -81,7 +82,12 @@ class AdminPatientService
                 'role' => UserRole::PATIENT,
                 'password' => Hash::make($password),
             ]);
+            // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
+            // Configurado no AppServiceProvider
             $user->assignRole(UserRole::PATIENT->value);
+            
+            // Limpar cache do Spatie Permission após atribuir role
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
             /** @var \App\Models\Patient $patient */
             $patient = Patient::create([

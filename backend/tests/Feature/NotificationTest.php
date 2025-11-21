@@ -21,6 +21,8 @@ class NotificationTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
+        
+        $user->assignRole(UserRole::PATIENT->value);
 
         Notification::factory()->count(5)->create([
             'user_id' => $user->id,
@@ -42,7 +44,11 @@ class NotificationTest extends TestCase
 
     public function test_usuario_pode_marcar_notificacao_como_lida(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::PATIENT,
+        ]);
+        
+        $user->assignRole(UserRole::PATIENT->value);
         
         $notification = Notification::factory()->create([
             'user_id' => $user->id,
@@ -61,7 +67,11 @@ class NotificationTest extends TestCase
 
     public function test_usuario_pode_marcar_todas_como_lidas(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => UserRole::PATIENT,
+        ]);
+        
+        $user->assignRole(UserRole::PATIENT->value);
         
         Notification::factory()->count(3)->create([
             'user_id' => $user->id,
@@ -72,7 +82,7 @@ class NotificationTest extends TestCase
         
         $response = $this->postJson('/api/notifications/read-all');
 
-        $response->assertStatus(200);
+        $response->assertStatus(204);
 
         $this->assertEquals(0, Notification::where('user_id', $user->id)
             ->where('is_read', false)
@@ -84,13 +94,25 @@ class NotificationTest extends TestCase
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
 
+        // Criar agenda para o médico
+        $scheduledAt = \Carbon\Carbon::now()->addDays(2);
+        \App\Models\Schedule::factory()->create([
+            'doctor_id' => $doctor->id,
+            'day_of_week' => $scheduledAt->dayOfWeekIso,
+            'start_time' => '08:00:00',
+            'end_time' => '18:00:00',
+            'is_blocked' => false,
+        ]);
+
         $this->authAs($patient->user);
         
-        $this->postJson('/api/appointments', [
+        $response = $this->postJson('/api/appointments', [
                 'doctor_id' => $doctor->id,
-                'scheduled_at' => now()->addDays(2)->toIso8601String(),
+                'scheduled_at' => $scheduledAt->setTime(10, 0)->toIso8601String(),
                 'duration_minutes' => 30,
             ]);
+
+        $response->assertStatus(201);
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $doctor->user_id,
@@ -107,6 +129,8 @@ class NotificationTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
             'user_id' => $user->id,
@@ -120,6 +144,8 @@ class NotificationTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
             'user_id' => $user->id,

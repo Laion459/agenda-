@@ -25,6 +25,7 @@ class ScheduleTest extends TestCase
             'day_of_week' => 1, // Segunda-feira
             'start_time' => '08:00',
             'end_time' => '12:00',
+            'slot_duration_minutes' => 30,
             'is_blocked' => false,
         ]);
 
@@ -47,12 +48,12 @@ class ScheduleTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
 
-        // Criar apenas 2 horas semanais
+        // Criar apenas 1 hora semanal
         Schedule::factory()->create([
             'doctor_id' => $doctor->id,
             'day_of_week' => 1,
             'start_time' => '08:00:00',
-            'end_time' => '10:00:00',
+            'end_time' => '09:00:00',
             'is_blocked' => false,
         ]);
 
@@ -62,7 +63,8 @@ class ScheduleTest extends TestCase
             ->postJson('/api/doctor/schedules', [
                 'day_of_week' => 2,
                 'start_time' => '08:00',
-                'end_time' => '10:00',
+                'end_time' => '09:00',
+                'slot_duration_minutes' => 30,
                 'is_blocked' => false,
             ]);
 
@@ -140,6 +142,7 @@ class ScheduleTest extends TestCase
                 'day_of_week' => 1,
                 'start_time' => '10:00',
                 'end_time' => '14:00',
+                'slot_duration_minutes' => 30,
                 'is_blocked' => false,
             ]);
 
@@ -153,6 +156,8 @@ class ScheduleTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
             'user_id' => $user->id,
@@ -166,6 +171,8 @@ class ScheduleTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
+        
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return \App\Models\Patient::factory()->create([
             'user_id' => $user->id,

@@ -133,7 +133,11 @@ export default function ProfilePage() {
   const handleAcceptPrivacy = async () => {
     try {
       setPrivacyLoading(true);
-      await acceptPrivacyPolicy();
+      const response = await acceptPrivacyPolicy();
+      // Atualiza o usuário no store se a resposta incluir o usuário atualizado
+      if (response?.user) {
+        setUser(response.user);
+      }
       toast.success("Termos de privacidade aceitos.");
       await load();
     } catch (error) {
@@ -282,21 +286,23 @@ export default function ProfilePage() {
         </CardHeader>
         <div className="space-y-4 p-6 pt-0">
           <div>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 mb-2">
               {authUser?.privacy_policy_accepted_at
                 ? `Termos aceitos em ${new Date(
                     authUser.privacy_policy_accepted_at,
                   ).toLocaleDateString("pt-BR")}.`
                 : "Você ainda não aceitou os termos de privacidade vigentes."}
             </p>
-            <Button
-              variant="secondary"
-              className="mt-2"
-              onClick={handleAcceptPrivacy}
-              disabled={privacyLoading}
-            >
-              Aceitar termos de privacidade
-            </Button>
+            {!authUser?.privacy_policy_accepted_at && (
+              <Button
+                variant="secondary"
+                className="mt-2"
+                onClick={handleAcceptPrivacy}
+                disabled={privacyLoading}
+              >
+                {privacyLoading ? "Aceitando..." : "Aceitar termos de privacidade"}
+              </Button>
+            )}
           </div>
           <div>
             <p className="text-sm text-slate-600">

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Stethoscope, Search, Filter, Plus, Edit, Trash2, CheckCircle2, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -215,46 +216,72 @@ export default function AdminDoctorsPage() {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <Stethoscope className="h-8 w-8 text-purple-600" />
+            Gerenciar Médicos
+          </h1>
+          <p className="text-sm text-slate-600 mt-1">Cadastre e gerencie os profissionais da clínica</p>
+        </div>
+      </div>
+
+      {/* Filtros */}
       <Card>
-        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
-            <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
-          </div>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-            <Input
-              placeholder="Buscar por nome, CRM ou e-mail"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="md:max-w-xs"
-            />
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-36"
-            >
-              <option value="all">Todos</option>
-              <option value="active">Ativos</option>
-              <option value="inactive">Inativos</option>
-            </select>
-            <select
-              value={planFilter === "all" ? "all" : String(planFilter)}
-              onChange={(event) =>
-                setPlanFilter(event.target.value === "all" ? "all" : Number(event.target.value))
-              }
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-44"
-            >
-              <option value="all">Todos os convênios</option>
-              {healthInsurances.map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.name}
-                </option>
-              ))}
-            </select>
+        <CardHeader>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-slate-400" />
+              <Input
+                placeholder="Buscar por nome, CRM ou e-mail"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="md:max-w-xs"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-slate-400" />
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 md:w-36"
+              >
+                <option value="all">Todos</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+              </select>
+              <select
+                value={planFilter === "all" ? "all" : String(planFilter)}
+                onChange={(event) =>
+                  setPlanFilter(event.target.value === "all" ? "all" : Number(event.target.value))
+                }
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 md:w-44"
+              >
+                <option value="all">Todos os convênios</option>
+                {healthInsurances.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+        {/* Formulário */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              {editing ? <Edit className="h-5 w-5 text-purple-600" /> : <Plus className="h-5 w-5 text-purple-600" />}
+              <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
+            </div>
+            <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
@@ -330,23 +357,27 @@ export default function AdminDoctorsPage() {
             </Label>
           </div>
           <div className="flex gap-2">
-            <Button type="submit" disabled={loadingForm}>
+            <Button type="submit" disabled={loadingForm} className="bg-purple-600 hover:bg-purple-700">
               {loadingForm ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar médico"}
             </Button>
             {editing && (
               <Button type="button" variant="ghost" onClick={resetForm} disabled={loadingForm}>
-                Cancelar edição
+                Cancelar
               </Button>
             )}
           </div>
         </form>
-      </Card>
+        </Card>
 
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Médicos cadastrados</CardTitle>
-          <CardDescription>Controle dos profissionais ativos e inativos.</CardDescription>
-        </CardHeader>
+        {/* Lista de Médicos */}
+        <Card className="overflow-hidden">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Stethoscope className="h-5 w-5 text-purple-600" />
+              Médicos cadastrados ({filteredDoctors.length})
+            </CardTitle>
+            <CardDescription>Controle dos profissionais ativos e inativos.</CardDescription>
+          </CardHeader>
         <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
           {loading ? (
             <div className="space-y-3 p-6">
@@ -370,10 +401,13 @@ export default function AdminDoctorsPage() {
                         </p>
                       </div>
                       <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                          active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
+                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                          active 
+                            ? "bg-green-100 text-green-700" 
+                            : "bg-slate-200 text-slate-600"
                         }`}
                       >
+                        {active ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                         {active ? "Ativo" : "Inativo"}
                       </span>
                     </div>
@@ -390,13 +424,23 @@ export default function AdminDoctorsPage() {
                       </p>
                       <p className="md:col-span-2">
                         <span className="font-medium">Convênios:</span>{" "}
-                        {doctor.health_insurances && doctor.health_insurances.length > 0
-                          ? doctor.health_insurances.map((plan) => plan.name).join(", ")
-                          : "Nenhum convênio"}
+                        {(() => {
+                          const plans = doctor.health_insurances;
+                          if (plans && plans.length > 0) {
+                            return plans.map((plan) => plan.name).join(", ");
+                          }
+                          return "Nenhum convênio";
+                        })()}
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => handleEdit(doctor)}>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={() => handleEdit(doctor)}
+                        className="flex items-center gap-1"
+                      >
+                        <Edit className="h-3 w-3" />
                         Editar
                       </Button>
                       <Button
@@ -404,8 +448,19 @@ export default function AdminDoctorsPage() {
                         size="sm"
                         onClick={() => handleToggleActive(doctor)}
                         disabled={loadingForm}
+                        className={active ? "text-red-600 hover:text-red-700" : ""}
                       >
-                        {active ? "Desativar" : "Reativar"}
+                        {active ? (
+                          <>
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Desativar
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Reativar
+                          </>
+                        )}
                       </Button>
                     </div>
                   </li>
@@ -414,7 +469,8 @@ export default function AdminDoctorsPage() {
             </ul>
           )}
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

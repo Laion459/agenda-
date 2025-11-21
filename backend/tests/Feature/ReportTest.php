@@ -195,7 +195,7 @@ class ReportTest extends TestCase
             'is_active' => true,
         ]);
         
-        $user->assignRole(UserRole::ADMIN->value);
+        $this->assignRoleToUser($user, UserRole::ADMIN);
         
         return $user;
     }
@@ -207,7 +207,7 @@ class ReportTest extends TestCase
             'is_active' => true,
         ]);
         
-        $user->assignRole(UserRole::DOCTOR->value);
+        $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
             'user_id' => $user->id,
@@ -222,7 +222,7 @@ class ReportTest extends TestCase
             'is_active' => true,
         ]);
         
-        $user->assignRole(UserRole::PATIENT->value);
+        $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
             'user_id' => $user->id,

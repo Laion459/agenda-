@@ -9,7 +9,13 @@ class StoreDoctorRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage doctors') ?? false;
+        $user = $this->user();
+        if (!$user) {
+            return false;
+        }
+        // Verifica se é admin ou tem a permissão específica
+        return $user->role === \App\Domain\Shared\Enums\UserRole::ADMIN 
+            || $user->can('manage doctors');
     }
 
     public function rules(): array

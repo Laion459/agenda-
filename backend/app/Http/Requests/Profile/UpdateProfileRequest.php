@@ -20,6 +20,14 @@ class UpdateProfileRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
             'password' => ['sometimes', 'nullable', 'string', 'min:8'],
+            'current_password' => [
+                'required_with:password',
+                function ($attribute, $value, $fail) {
+                    if ($value && ! \Illuminate\Support\Facades\Hash::check($value, $this->user()->password)) {
+                        $fail('A senha atual está incorreta.');
+                    }
+                },
+            ],
             'email' => [
                 'sometimes',
                 'required',

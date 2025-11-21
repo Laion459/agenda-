@@ -15,7 +15,8 @@ class NotificationController extends Controller
         $user = $request->user();
         $perPage = (int) ($request->input('per_page') ?? 15);
 
-        $query = $user->notifications()->latest();
+        // Usa o relacionamento customizado que usa user_id em vez de notifiable_type/notifiable_id
+        $query = $user->customNotifications()->latest();
 
         if ($request->filled('is_read')) {
             $value = filter_var($request->input('is_read'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -33,7 +34,7 @@ class NotificationController extends Controller
                 'last_page' => $notifications->lastPage(),
                 'per_page' => $notifications->perPage(),
                 'total' => $notifications->total(),
-                'unread_count' => $user->notifications()->where('is_read', false)->count(),
+                'unread_count' => $user->customNotifications()->where('is_read', false)->count(),
             ],
         ]);
     }
@@ -52,7 +53,7 @@ class NotificationController extends Controller
     public function markAllAsRead(Request $request): JsonResponse
     {
         $user = $request->user();
-        $user->notifications()->where('is_read', false)->update([
+        $user->customNotifications()->where('is_read', false)->update([
             'is_read' => true,
             'read_at' => now(),
         ]);

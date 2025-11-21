@@ -7,6 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin \App\Models\Schedule */
 class ScheduleResource extends JsonResource
 {
+    public static $wrap = null;
+
     public function toArray($request): array
     {
         return [

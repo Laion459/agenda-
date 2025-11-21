@@ -9,7 +9,7 @@ class CreateAppointmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'PATIENT';
+        return $this->user()?->role === \App\Domain\Shared\Enums\UserRole::PATIENT;
     }
 
     public function rules(): array
