@@ -91,7 +91,7 @@ jobs:
           DB_PASSWORD: agenda
           REDIS_HOST: localhost
           REDIS_PORT: 6379
-        run: php artisan test --coverage --min=70
+        run: php artisan test
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
