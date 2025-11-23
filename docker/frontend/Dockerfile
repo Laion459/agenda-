@@ -57,8 +57,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/.next ./.next
 COPY --from=builder /usr/src/app/public ./public
-COPY frontend/next.config.mjs ./next.config.mjs
-COPY frontend/tailwind.config.ts ./tailwind.config.ts
+COPY frontend/next.config.ts ./next.config.ts
 COPY frontend/postcss.config.mjs ./postcss.config.mjs
 COPY frontend/tsconfig.json ./tsconfig.json
 COPY frontend/next-env.d.ts ./next-env.d.ts
