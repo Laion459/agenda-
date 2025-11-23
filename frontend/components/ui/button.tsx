@@ -2,7 +2,7 @@
 
 import { Slot } from "@radix-ui/react-slot";
 import { clsx } from "clsx";
-import { ButtonHTMLAttributes, ElementRef, forwardRef } from "react";
+import { ButtonHTMLAttributes, forwardRef } from "react";
 
 const base =
   "inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50";
@@ -20,12 +20,20 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", asChild, ...props }, ref) => {
-    const Component = asChild ? Slot : "button";
+    if (asChild) {
+      return (
+        <Slot
+          className={clsx(base, variants[variant], className)}
+        >
+          {props.children}
+        </Slot>
+      );
+    }
 
     return (
-      <Component
+      <button
         className={clsx(base, variants[variant], className)}
-        ref={ref as ElementRef<typeof Component>}
+        ref={ref}
         {...props}
       />
     );

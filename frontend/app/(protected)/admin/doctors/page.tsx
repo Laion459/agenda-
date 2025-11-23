@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Stethoscope, Search, Plus, Edit, Trash2, CheckCircle2, Eye } from "lucide-react";
+import { Search, Plus, Edit, Trash2, CheckCircle2, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";

@@ -133,6 +133,7 @@ export default function HealthInsurancesPage() {
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _handleToggleActive = async (item: HealthInsurance) => {
     const question = item.is_active
       ? "Desativar este convênio? Médicos e pacientes deixarão de vinculá-lo."

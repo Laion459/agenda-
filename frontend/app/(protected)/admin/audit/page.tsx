@@ -80,11 +80,6 @@ export default function AuditLogsPage() {
     }
   };
 
-  const buildFilterParams = () => ({
-    action: filters.search || undefined,
-    user_id: filters.user_id || undefined,
-  });
-
   const handleExport = async () => {
     try {
       setExporting(true);

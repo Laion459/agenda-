@@ -25,6 +25,7 @@ export function handleApiError(error: unknown, fallback = "Ocorreu um erro inesp
  * Extrai primeira mensagem de erro de validação
  * @deprecated Use errorHandler.getValidationErrors() ou errorHandler.getErrorMessage()
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _extractFirstError(errors?: Record<string, string[] | string>) {
   if (!errors) return null;
   const firstKey = Object.keys(errors)[0];

@@ -61,6 +61,10 @@ export default function DoctorDashboardPage() {
     }
   }, [selectedDate, viewMode]);
 
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
+
   const getDayAppointments = (date: Date) => {
     return appointments.filter((apt) => {
       const aptDate = new Date(apt.scheduled_at);
