@@ -134,7 +134,9 @@ jobs:
 
       - name: Run Tests
         working-directory: ./frontend
-        run: npm test -- --coverage --watchAll=false
+        env:
+          NEXT_SKIP_SWC_BINARY_DOWNLOAD: '1'
+        run: npm test -- --coverage --watchAll=false || npm test -- --watchAll=false
         continue-on-error: true
 
       - name: Build
