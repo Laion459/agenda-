@@ -13,7 +13,7 @@ use Carbon\CarbonInterface;
 
 /**
  * Serviço responsável pela criação de consultas
- * 
+ *
  * Separa a lógica de criação do AppointmentService principal
  * seguindo o princípio de responsabilidade única
  */
@@ -21,8 +21,7 @@ class AppointmentCreationService
 {
     public function __construct(
         private NotificationDispatcher $notifications
-    ) {
-    }
+    ) {}
 
     /**
      * Cria uma nova consulta e registra log
@@ -100,4 +99,3 @@ class AppointmentCreationService
         );
     }
 }
-

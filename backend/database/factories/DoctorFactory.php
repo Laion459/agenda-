@@ -17,7 +17,7 @@ class DoctorFactory extends Factory
     {
         return [
             'user_id' => User::factory()->doctor(),
-            'crm' => 'CRM-' . fake()->unique()->numerify('######'),
+            'crm' => 'CRM-'.fake()->unique()->numerify('######'),
             'specialty' => fake()->randomElement(['Cardiologia', 'Dermatologia', 'Pediatria', 'Clínico Geral']),
             'qualification' => fake()->sentence(8),
             'is_active' => true,
@@ -29,5 +29,3 @@ class DoctorFactory extends Factory
         return $this->state(fn () => ['is_active' => false]);
     }
 }
-
-

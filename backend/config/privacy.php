@@ -5,5 +5,3 @@ return [
     'erasure_grace_period_days' => (int) env('PRIVACY_ERASURE_GRACE_PERIOD_DAYS', 7),
     'export_disk' => env('PRIVACY_EXPORT_DISK', env('FILESYSTEM_DISK', 'local')),
 ];
-
-

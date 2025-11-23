@@ -25,4 +25,3 @@ class RegisterDoctorRequest extends FormRequest
         ];
     }
 }
-

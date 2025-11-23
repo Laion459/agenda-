@@ -9,5 +9,3 @@ enum NotificationType: string
     case CANCELLATION = 'CANCELLATION';
     case RESCHEDULING = 'RESCHEDULING';
 }
-
-

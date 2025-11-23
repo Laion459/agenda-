@@ -63,4 +63,3 @@ class PatientPolicy
         return $role === UserRole::ADMIN;
     }
 }
-

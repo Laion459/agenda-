@@ -26,7 +26,7 @@ class RolePermissionSeeder extends Seeder
 
         // Cria permissões e roles para ambos os guards (web e sanctum)
         $guards = ['web', 'sanctum'];
-        
+
         foreach ($guards as $guard) {
             $permissionModels = collect($permissions)
                 ->map(fn (string $permission) => Permission::findOrCreate($permission, $guard));
@@ -48,5 +48,3 @@ class RolePermissionSeeder extends Seeder
         }
     }
 }
-
-

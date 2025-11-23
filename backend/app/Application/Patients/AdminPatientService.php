@@ -18,8 +18,7 @@ class AdminPatientService
     public function __construct(
         private DatabaseManager $db,
         private NotificationDispatcher $notifications
-    ) {
-    }
+    ) {}
 
     public function list(array $filters = []): LengthAwarePaginator
     {
@@ -38,24 +37,24 @@ class AdminPatientService
                     });
             });
 
-        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
-            $value = filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($value !== null) {
-                $query->whereHas('user', fn ($relation) => $relation->where('is_active', $value));
+            if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+                $value = filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($value !== null) {
+                    $query->whereHas('user', fn ($relation) => $relation->where('is_active', $value));
+                }
             }
-        }
 
-        if (! empty($filters['created_from'])) {
-            $query->whereDate('created_at', '>=', $filters['created_from']);
-        }
+            if (! empty($filters['created_from'])) {
+                $query->whereDate('created_at', '>=', $filters['created_from']);
+            }
 
-        if (! empty($filters['created_to'])) {
-            $query->whereDate('created_at', '<=', $filters['created_to']);
-        }
+            if (! empty($filters['created_to'])) {
+                $query->whereDate('created_at', '<=', $filters['created_to']);
+            }
 
-        if (! empty($filters['health_insurance_id'])) {
-            $query->whereHas('healthInsurances', fn ($relation) => $relation->where('health_insurances.id', $filters['health_insurance_id']));
-        }
+            if (! empty($filters['health_insurance_id'])) {
+                $query->whereHas('healthInsurances', fn ($relation) => $relation->where('health_insurances.id', $filters['health_insurance_id']));
+            }
         }
 
         $perPage = (int) ($filters['per_page'] ?? 15);
@@ -85,7 +84,7 @@ class AdminPatientService
             // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
             // Configurado no AppServiceProvider
             $user->assignRole(UserRole::PATIENT->value);
-            
+
             // Limpar cache do Spatie Permission após atribuir role
             app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -173,5 +172,3 @@ class AdminPatientService
             ->toArray();
     }
 }
-
-

@@ -28,11 +28,11 @@ class IntegrationTest extends TestCase
             'role' => UserRole::ADMIN,
             'is_active' => true,
         ]);
-        
+
         $admin->assignRole(UserRole::ADMIN->value);
 
         $this->authAs($admin);
-        
+
         $doctorResponse = $this->postJson('/api/admin/doctors', [
             'name' => 'Dr. João Silva',
             'email' => 'joao.medico@test.com',
@@ -62,7 +62,7 @@ class IntegrationTest extends TestCase
 
         // 3. Médico configura agenda
         $this->authAs($doctor->user);
-        
+
         $scheduleResponse = $this->postJson('/api/doctor/schedules', [
             'day_of_week' => Carbon::now()->addDays(2)->dayOfWeekIso,
             'start_time' => '08:00',
@@ -75,9 +75,9 @@ class IntegrationTest extends TestCase
         // 4. Paciente agenda consulta (usa authAs diretamente já que a senha é gerada aleatoriamente)
         $patientUser = User::find($patient->user_id);
         $this->authAs($patientUser);
-        
+
         $scheduledAt = Carbon::now()->addDays(2)->setTime(10, 0);
-        
+
         $appointmentResponse = $this->postJson('/api/appointments', [
             'doctor_id' => $doctor->id,
             'scheduled_at' => $scheduledAt->toIso8601String(),
@@ -91,7 +91,7 @@ class IntegrationTest extends TestCase
 
         // 6. Médico confirma consulta
         $this->authAs($doctor->user);
-        
+
         $confirmResponse = $this->postJson("/api/appointments/{$appointmentId}/confirm");
         $confirmResponse->assertStatus(200);
 
@@ -117,11 +117,11 @@ class IntegrationTest extends TestCase
 
         // 9. Admin gera relatório
         $this->authAs($admin);
-        
+
         // Passar filtro de data que inclua o agendamento criado (2 dias no futuro)
         $startDate = Carbon::now()->subDays(1)->format('Y-m-d');
         $endDate = Carbon::now()->addDays(3)->format('Y-m-d');
-        
+
         $reportResponse = $this->getJson("/api/admin/reports/appointments?start_date={$startDate}&end_date={$endDate}");
         $reportResponse->assertStatus(200);
         $this->assertGreaterThan(0, $reportResponse->json('total'));
@@ -145,7 +145,7 @@ class IntegrationTest extends TestCase
 
         // Criar consulta
         $this->authAs($patient->user);
-        
+
         $appointment = Appointment::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -173,7 +173,7 @@ class IntegrationTest extends TestCase
 
         // Remarcar
         $newDate = Carbon::now()->addDays(3)->setTime(14, 0);
-        
+
         $rescheduleResponse = $this->postJson("/api/appointments/{$appointment2->id}/reschedule", [
             'scheduled_at' => $newDate->toIso8601String(),
         ]);
@@ -190,7 +190,7 @@ class IntegrationTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
@@ -205,7 +205,7 @@ class IntegrationTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
@@ -225,4 +225,3 @@ class IntegrationTest extends TestCase
         ]);
     }
 }
-

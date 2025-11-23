@@ -23,5 +23,3 @@ class EnsureTokenNotExpired
         return $next($request);
     }
 }
-
-

@@ -13,7 +13,7 @@ class ObservationResource extends JsonResource
     {
         $user = Auth::user();
         $role = $user?->role instanceof UserRole ? $user->role : ($user?->role ? UserRole::from($user->role) : null);
-        
+
         $isPatient = $role === UserRole::PATIENT;
         $isDoctorOrAdmin = $role === UserRole::DOCTOR || $role === UserRole::ADMIN;
 
@@ -41,5 +41,3 @@ class ObservationResource extends JsonResource
         ];
     }
 }
-
-

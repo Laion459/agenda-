@@ -15,6 +15,7 @@ use Spatie\Permission\Traits\HasRoles;
  *     schema="User",
  *     type="object",
  *     title="Usuário",
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="João Silva"),
  *     @OA\Property(property="email", type="string", format="email", example="joao@example.com"),

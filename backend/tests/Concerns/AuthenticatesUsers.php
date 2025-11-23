@@ -15,11 +15,11 @@ trait AuthenticatesUsers
     {
         // Usar Sanctum::actingAs conforme documentação oficial
         Sanctum::actingAs($user, ['*']);
-        
+
         // Garantir que o guard 'sanctum' seja usado para autenticação
         // Isso é importante para que o Spatie Permission verifique o guard correto
         \Illuminate\Support\Facades\Auth::shouldUse('sanctum');
-        
+
         return $this;
     }
 
@@ -29,7 +29,7 @@ trait AuthenticatesUsers
     protected function actingAsWithToken(User $user): array
     {
         $token = $user->createToken('test-token')->plainTextToken;
-        
+
         return [
             'Authorization' => "Bearer {$token}",
         ];
@@ -43,4 +43,3 @@ trait AuthenticatesUsers
         return $this->actingAsUser($user);
     }
 }
-

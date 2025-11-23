@@ -17,11 +17,11 @@ class ProfileTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
-        
+
         $response = $this->getJson('/api/profile');
 
         $response->assertStatus(200)
@@ -39,15 +39,15 @@ class ProfileTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
-        
+
         $response = $this->putJson('/api/profile', [
-                'name' => 'Nome Atualizado',
-                'phone' => '(11) 88888-8888',
-            ]);
+            'name' => 'Nome Atualizado',
+            'phone' => '(11) 88888-8888',
+        ]);
 
         $response->assertStatus(200);
 
@@ -64,12 +64,12 @@ class ProfileTest extends TestCase
         ]);
 
         $this->authAs($user);
-        
+
         $response = $this->putJson('/api/profile', [
-                'current_password' => 'senha_antiga',
-                'password' => 'nova_senha_123',
-                'password_confirmation' => 'nova_senha_123',
-            ]);
+            'current_password' => 'senha_antiga',
+            'password' => 'nova_senha_123',
+            'password_confirmation' => 'nova_senha_123',
+        ]);
 
         $response->assertStatus(200);
 
@@ -85,12 +85,12 @@ class ProfileTest extends TestCase
         ]);
 
         $this->authAs($user);
-        
+
         $response = $this->putJson('/api/profile', [
-                'current_password' => 'senha_errada',
-                'password' => 'nova_senha_123',
-                'password_confirmation' => 'nova_senha_123',
-            ]);
+            'current_password' => 'senha_errada',
+            'password' => 'nova_senha_123',
+            'password_confirmation' => 'nova_senha_123',
+        ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['current_password']);
@@ -101,18 +101,17 @@ class ProfileTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
-        
+
         $response = $this->putJson('/api/profile', [
-                'password' => '1234567',
-                'password_confirmation' => '1234567',
-            ]);
+            'password' => '1234567',
+            'password_confirmation' => '1234567',
+        ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['password']);
     }
 }
-

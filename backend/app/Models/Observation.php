@@ -40,5 +40,3 @@ class Observation extends Model
         return $this->belongsTo(Patient::class);
     }
 }
-
-

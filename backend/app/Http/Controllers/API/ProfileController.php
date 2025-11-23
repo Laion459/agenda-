@@ -46,5 +46,3 @@ class ProfileController extends Controller
         )->response();
     }
 }
-
-

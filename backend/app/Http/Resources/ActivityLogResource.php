@@ -22,5 +22,3 @@ class ActivityLogResource extends JsonResource
         ];
     }
 }
-
-

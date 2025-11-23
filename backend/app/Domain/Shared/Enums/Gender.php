@@ -17,5 +17,3 @@ enum Gender: string
         };
     }
 }
-
-

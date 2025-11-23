@@ -12,21 +12,21 @@ use Tests\Concerns\AuthenticatesUsers;
 
 abstract class TestCase extends BaseTestCase
 {
-    use RefreshDatabase, WithFaker, AuthenticatesUsers;
+    use AuthenticatesUsers, RefreshDatabase, WithFaker;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Limpar cache antes de cada teste (apenas se não for Redis)
         // Nos testes, usamos CACHE_DRIVER=array, então flush() é seguro
         if (config('cache.default') !== 'redis') {
             \Illuminate\Support\Facades\Cache::flush();
         }
-        
+
         // Resetar cache de permissões
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        
+
         // Garantir que os roles existam
         $this->ensureRolesExist();
     }
@@ -54,7 +54,7 @@ abstract class TestCase extends BaseTestCase
         // Usar assignRole() sem especificar guard, como no código de produção
         // O Spatie Permission usa o guard padrão do modelo User (sanctum)
         $user->assignRole($role->value);
-        
+
         // Limpar cache do Spatie Permission após atribuir role
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
@@ -68,9 +68,9 @@ abstract class TestCase extends BaseTestCase
             'role' => $role,
             'is_active' => true,
         ], $attributes));
-        
+
         $this->assignRoleToUser($user, $role);
-        
+
         return $user;
     }
 }

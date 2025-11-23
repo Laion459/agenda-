@@ -7,17 +7,16 @@ use App\Domain\Shared\Enums\NotificationChannel;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\AppointmentLog;
-use App\Models\DataRetentionPolicy;
 use App\Models\Doctor;
 use App\Models\HealthInsurance;
 use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\Schedule;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -40,9 +39,9 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        
+
         // Atribui role usando assignRole (string) - usa guard padrão (sanctum)
-        if (!$admin->hasRole(UserRole::ADMIN->value)) {
+        if (! $admin->hasRole(UserRole::ADMIN->value)) {
             $admin->assignRole(UserRole::ADMIN->value);
             app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
         }

@@ -17,12 +17,12 @@ class HealthInsuranceTest extends TestCase
         $admin = $this->createAdmin();
 
         $this->authAs($admin);
-        
+
         $response = $this->postJson('/api/health-insurances', [
-                'name' => 'Unimed',
-                'description' => 'Plano de saúde Unimed',
-                'coverage_percentage' => 80.00,
-            ]);
+            'name' => 'Unimed',
+            'description' => 'Plano de saúde Unimed',
+            'coverage_percentage' => 80.00,
+        ]);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -42,11 +42,11 @@ class HealthInsuranceTest extends TestCase
     public function test_admin_pode_listar_convenios(): void
     {
         $admin = $this->createAdmin();
-        
+
         HealthInsurance::factory()->count(5)->create();
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/health-insurances');
 
         $response->assertStatus(200)
@@ -63,11 +63,11 @@ class HealthInsuranceTest extends TestCase
         $insurance = HealthInsurance::factory()->create();
 
         $this->authAs($admin);
-        
+
         $response = $this->putJson("/api/health-insurances/{$insurance->id}", [
-                'name' => 'Nome Atualizado',
-                'coverage_percentage' => 90.00,
-            ]);
+            'name' => 'Nome Atualizado',
+            'coverage_percentage' => 90.00,
+        ]);
 
         $response->assertStatus(200);
 
@@ -81,7 +81,7 @@ class HealthInsuranceTest extends TestCase
         $insurance = HealthInsurance::factory()->create(['is_active' => true]);
 
         $this->authAs($admin);
-        
+
         $response = $this->deleteJson("/api/health-insurances/{$insurance->id}");
 
         $response->assertStatus(200);
@@ -100,12 +100,12 @@ class HealthInsuranceTest extends TestCase
         $response = $this->getJson('/api/health-insurances');
 
         $response->assertStatus(200);
-        
+
         // Deve retornar apenas convênios ativos
         $activeCount = collect($response->json('data'))
             ->filter(fn ($item) => $item['is_active'])
             ->count();
-        
+
         $this->assertGreaterThan(0, $activeCount);
     }
 
@@ -115,10 +115,9 @@ class HealthInsuranceTest extends TestCase
             'role' => UserRole::ADMIN,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::ADMIN);
-        
+
         return $user;
     }
 }
-

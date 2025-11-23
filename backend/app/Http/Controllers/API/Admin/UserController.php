@@ -10,9 +10,7 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function __construct(private AdminUserService $service)
-    {
-    }
+    public function __construct(private AdminUserService $service) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -25,7 +23,7 @@ class UserController extends Controller
     {
         [$header, $rows] = $this->service->toCsv($request->all());
 
-        $filename = 'users-' . now()->format('Ymd_His') . '.csv';
+        $filename = 'users-'.now()->format('Ymd_His').'.csv';
 
         $callback = static function () use ($header, $rows): void {
             $output = fopen('php://output', 'w');
@@ -41,5 +39,3 @@ class UserController extends Controller
         ]);
     }
 }
-
-

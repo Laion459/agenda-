@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *     schema="Appointment",
  *     type="object",
  *     title="Consulta",
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="status", type="string", enum={"PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"}, example="PENDING"),
  *     @OA\Property(property="type", type="string", example="PRESENTIAL"),

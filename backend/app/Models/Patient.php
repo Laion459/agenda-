@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *     schema="Patient",
  *     type="object",
  *     title="Paciente",
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="cpf", type="string", example="123.456.789-00"),
  *     @OA\Property(property="birth_date", type="string", format="date", example="1990-01-15"),

@@ -4,8 +4,8 @@ namespace App\Http\Requests\Appointments;
 
 use App\Domain\Shared\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Validator;
 
 class StoreScheduleRequest extends FormRequest
 {
@@ -49,6 +49,7 @@ class StoreScheduleRequest extends FormRequest
 
             if ($start->greaterThanOrEqualTo($end)) {
                 $validator->errors()->add('end_time', __('O horário de término deve ser maior que o início.'));
+
                 return;
             }
 
@@ -56,6 +57,7 @@ class StoreScheduleRequest extends FormRequest
 
             if ($this->slot_duration_minutes > $totalMinutes) {
                 $validator->errors()->add('slot_duration_minutes', __('A duração precisa ser menor que o intervalo total.'));
+
                 return;
             }
 
@@ -65,5 +67,3 @@ class StoreScheduleRequest extends FormRequest
         });
     }
 }
-
-

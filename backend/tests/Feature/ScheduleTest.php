@@ -20,7 +20,7 @@ class ScheduleTest extends TestCase
         $doctor = $this->createActiveDoctor();
 
         $this->authAs($doctor->user);
-        
+
         $response = $this->postJson('/api/doctor/schedules', [
             'day_of_week' => 1, // Segunda-feira
             'start_time' => '08:00',
@@ -58,7 +58,7 @@ class ScheduleTest extends TestCase
         ]);
 
         $headers = $this->actingAsWithToken($doctor->user);
-        
+
         $response = $this->withHeaders($headers)
             ->postJson('/api/doctor/schedules', [
                 'day_of_week' => 2,
@@ -76,7 +76,7 @@ class ScheduleTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $schedule = Schedule::factory()->create([
             'doctor_id' => $doctor->id,
             'day_of_week' => 1,
@@ -92,7 +92,7 @@ class ScheduleTest extends TestCase
         ]);
 
         $headers = $this->actingAsWithToken($doctor->user);
-        
+
         $response = $this->withHeaders($headers)
             ->deleteJson("/api/doctor/schedules/{$schedule->id}");
 
@@ -103,13 +103,13 @@ class ScheduleTest extends TestCase
     public function test_medico_pode_listar_seus_horarios(): void
     {
         $doctor = $this->createActiveDoctor();
-        
+
         Schedule::factory()->count(5)->create([
             'doctor_id' => $doctor->id,
         ]);
 
         $headers = $this->actingAsWithToken($doctor->user);
-        
+
         $response = $this->withHeaders($headers)
             ->getJson('/api/doctor/schedules');
 
@@ -126,7 +126,7 @@ class ScheduleTest extends TestCase
     public function test_nao_pode_criar_horarios_sobrepostos(): void
     {
         $doctor = $this->createActiveDoctor();
-        
+
         Schedule::factory()->create([
             'doctor_id' => $doctor->id,
             'day_of_week' => 1,
@@ -136,7 +136,7 @@ class ScheduleTest extends TestCase
         ]);
 
         $headers = $this->actingAsWithToken($doctor->user);
-        
+
         $response = $this->withHeaders($headers)
             ->postJson('/api/doctor/schedules', [
                 'day_of_week' => 1,
@@ -156,7 +156,7 @@ class ScheduleTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
@@ -171,7 +171,7 @@ class ScheduleTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return \App\Models\Patient::factory()->create([
@@ -180,4 +180,3 @@ class ScheduleTest extends TestCase
         ]);
     }
 }
-

@@ -16,8 +16,5 @@ class DataRetentionPruning
     public function __construct(
         public string $resource,
         public Carbon $threshold
-    ) {
-    }
+    ) {}
 }
-
-

@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class BackupDatabase extends Command
 {
@@ -22,6 +21,7 @@ class BackupDatabase extends Command
 
         if ($config['driver'] !== 'pgsql') {
             $this->error('Backup automático suporta apenas PostgreSQL');
+
             return Command::FAILURE;
         }
 
@@ -55,12 +55,13 @@ class BackupDatabase extends Command
         exec($command, $output, $returnCode);
 
         if ($returnCode !== 0) {
-            $this->error('Erro ao criar backup: ' . implode("\n", $output));
+            $this->error('Erro ao criar backup: '.implode("\n", $output));
+
             return Command::FAILURE;
         }
 
         $fileSize = filesize($fullPath);
-        $this->info("Backup criado com sucesso: {$filename} (" . $this->formatBytes($fileSize) . ")");
+        $this->info("Backup criado com sucesso: {$filename} (".$this->formatBytes($fileSize).')');
 
         // Limpar backups antigos
         $retention = (int) $this->option('retention');
@@ -86,7 +87,7 @@ class BackupDatabase extends Command
 
             if ($fileAge > $retentionDays) {
                 unlink($file);
-                $this->info("Backup antigo removido: " . basename($file));
+                $this->info('Backup antigo removido: '.basename($file));
             }
         }
     }
@@ -99,7 +100,6 @@ class BackupDatabase extends Command
         $pow = min($pow, count($units) - 1);
         $bytes /= (1 << (10 * $pow));
 
-        return round($bytes, 2) . ' ' . $units[$pow];
+        return round($bytes, 2).' '.$units[$pow];
     }
 }
-

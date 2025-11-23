@@ -15,10 +15,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('appointments:send-reminders')->dailyAt('08:00');
         $schedule->command('notifications:cleanup')->daily();
         $schedule->command('data-retention:enforce')->dailyAt('02:00');
-        
+
         // Backups automáticos diários às 02:00
         $schedule->command('backup:database --retention=30')->dailyAt('02:00');
-        
+
         // Arquivamento de relatórios mensalmente
         $schedule->command('reports:archive --months=6')->monthly();
     }
@@ -33,5 +33,3 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
-
-

@@ -8,13 +8,12 @@ use Tests\TestCase;
 
 class CacheManagerTest extends TestCase
 {
-
     private CacheManager $cacheManager;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->cacheManager = new CacheManager();
+        $this->cacheManager = new CacheManager;
     }
 
     public function test_clear_appointment_cache_clears_general_cache(): void
@@ -58,4 +57,3 @@ class CacheManagerTest extends TestCase
         $this->assertTrue(true); // Teste básico
     }
 }
-

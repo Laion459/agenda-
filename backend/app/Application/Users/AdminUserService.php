@@ -20,7 +20,7 @@ class AdminUserService
             });
 
         if (! empty($filters['search'])) {
-            $like = '%' . mb_strtolower($filters['search']) . '%';
+            $like = '%'.mb_strtolower($filters['search']).'%';
             $query->where(function ($builder) use ($like) {
                 $builder->whereRaw('LOWER(name) LIKE ?', [$like])
                     ->orWhereRaw('LOWER(email) LIKE ?', [$like])
@@ -62,5 +62,3 @@ class AdminUserService
         return [$header, $rows];
     }
 }
-
-

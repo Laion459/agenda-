@@ -29,5 +29,3 @@ class ObservationFactory extends Factory
         ];
     }
 }
-
-

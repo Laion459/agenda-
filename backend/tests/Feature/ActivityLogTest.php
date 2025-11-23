@@ -30,5 +30,3 @@ class ActivityLogTest extends TestCase
         $this->assertStringContainsString('POST api/admin/doctors', $response->streamedContent());
     }
 }
-
-

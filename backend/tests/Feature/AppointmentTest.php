@@ -11,7 +11,6 @@ use App\Models\Schedule;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AppointmentTest extends TestCase
@@ -27,19 +26,19 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $this->createSchedule($doctor, Carbon::now()->addDays(2));
 
         $scheduledAt = Carbon::now()->addDays(2)->setTime(10, 0);
 
         $this->authAs($patient->user);
-        
+
         $response = $this->postJson('/api/appointments', [
-                'doctor_id' => $doctor->id,
-                'scheduled_at' => $scheduledAt->toIso8601String(),
-                'duration_minutes' => 30,
-                'type' => 'PRESENTIAL',
-            ]);
+            'doctor_id' => $doctor->id,
+            'scheduled_at' => $scheduledAt->toIso8601String(),
+            'duration_minutes' => 30,
+            'type' => 'PRESENTIAL',
+        ]);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -63,18 +62,18 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $this->createSchedule($doctor, Carbon::now()->addHours(12));
 
         $scheduledAt = Carbon::now()->addHours(12);
 
         $this->authAs($patient->user);
-        
+
         $response = $this->postJson('/api/appointments', [
-                'doctor_id' => $doctor->id,
-                'scheduled_at' => $scheduledAt->toIso8601String(),
-                'duration_minutes' => 30,
-            ]);
+            'doctor_id' => $doctor->id,
+            'scheduled_at' => $scheduledAt->toIso8601String(),
+            'duration_minutes' => 30,
+        ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['scheduled_at']);
@@ -84,18 +83,18 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $doctor->update(['is_active' => false]);
-        
+
         $patient = $this->createActivePatient();
 
         $scheduledAt = Carbon::now()->addDays(2);
 
         $this->authAs($patient->user);
-        
+
         $response = $this->postJson('/api/appointments', [
-                'doctor_id' => $doctor->id,
-                'scheduled_at' => $scheduledAt->toIso8601String(),
-                'duration_minutes' => 30,
-            ]);
+            'doctor_id' => $doctor->id,
+            'scheduled_at' => $scheduledAt->toIso8601String(),
+            'duration_minutes' => 30,
+        ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['doctor_id']);
@@ -112,12 +111,12 @@ class AppointmentTest extends TestCase
         $scheduledAt = Carbon::now()->addDays(2)->setTime(10, 0);
 
         $this->authAs($patient->user);
-        
+
         $response = $this->postJson('/api/appointments', [
-                'doctor_id' => $doctor->id,
-                'scheduled_at' => $scheduledAt->toIso8601String(),
-                'duration_minutes' => 30,
-            ]);
+            'doctor_id' => $doctor->id,
+            'scheduled_at' => $scheduledAt->toIso8601String(),
+            'duration_minutes' => 30,
+        ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['patient']);
@@ -127,7 +126,7 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $appointment = Appointment::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -136,7 +135,7 @@ class AppointmentTest extends TestCase
         ]);
 
         $token = $patient->user->createToken('test-token')->plainTextToken;
-        
+
         $response = $this->withHeader('Authorization', "Bearer {$token}")
             ->postJson("/api/appointments/{$appointment->id}/cancel", [
                 'reason' => 'Motivo do cancelamento',
@@ -152,7 +151,7 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $appointment = Appointment::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -161,7 +160,7 @@ class AppointmentTest extends TestCase
         ]);
 
         $token = $patient->user->createToken('test-token')->plainTextToken;
-        
+
         $response = $this->withHeader('Authorization', "Bearer {$token}")
             ->postJson("/api/appointments/{$appointment->id}/cancel");
 
@@ -173,9 +172,9 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $this->createSchedule($doctor, Carbon::now()->addDays(3));
-        
+
         $appointment = Appointment::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -186,7 +185,7 @@ class AppointmentTest extends TestCase
         $newDate = Carbon::now()->addDays(3)->setTime(14, 0);
 
         $headers = $this->actingAsWithToken($patient->user);
-        
+
         $response = $this->withHeaders($headers)
             ->postJson("/api/appointments/{$appointment->id}/reschedule", [
                 'scheduled_at' => $newDate->toIso8601String(),
@@ -202,7 +201,7 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $appointment = Appointment::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -219,7 +218,7 @@ class AppointmentTest extends TestCase
         $newDate = Carbon::now()->addDays(3);
 
         $token = $patient->user->createToken('test-token')->plainTextToken;
-        
+
         $response = $this->withHeader('Authorization', "Bearer {$token}")
             ->postJson("/api/appointments/{$appointment->id}/reschedule", [
                 'scheduled_at' => $newDate->toIso8601String(),
@@ -232,13 +231,13 @@ class AppointmentTest extends TestCase
     public function test_paciente_pode_listar_suas_consultas(): void
     {
         $patient = $this->createActivePatient();
-        
+
         Appointment::factory()->count(5)->create([
             'patient_id' => $patient->id,
         ]);
 
         $this->authAs($patient->user);
-        
+
         $response = $this->getJson('/api/appointments');
 
         $response->assertStatus(200)
@@ -254,7 +253,7 @@ class AppointmentTest extends TestCase
     public function test_pode_filtrar_consultas_por_periodo(): void
     {
         $patient = $this->createActivePatient();
-        
+
         Appointment::factory()->create([
             'patient_id' => $patient->id,
             'scheduled_at' => Carbon::now()->addDays(1),
@@ -266,7 +265,7 @@ class AppointmentTest extends TestCase
         ]);
 
         $this->authAs($patient->user);
-        
+
         $response = $this->getJson('/api/appointments?period=future');
 
         $response->assertStatus(200);
@@ -277,7 +276,7 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $appointment = Appointment::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -285,7 +284,7 @@ class AppointmentTest extends TestCase
         ]);
 
         $this->authAs($doctor->user);
-        
+
         $response = $this->postJson("/api/appointments/{$appointment->id}/confirm");
 
         $response->assertStatus(200);
@@ -298,7 +297,7 @@ class AppointmentTest extends TestCase
     {
         $doctor = $this->createActiveDoctor();
         $patient = $this->createActivePatient();
-        
+
         $appointment = Appointment::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -306,7 +305,7 @@ class AppointmentTest extends TestCase
         ]);
 
         $this->authAs($doctor->user);
-        
+
         $response = $this->postJson("/api/appointments/{$appointment->id}/complete");
 
         $response->assertStatus(200);
@@ -321,7 +320,7 @@ class AppointmentTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
@@ -336,7 +335,7 @@ class AppointmentTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
@@ -356,4 +355,3 @@ class AppointmentTest extends TestCase
         ]);
     }
 }
-

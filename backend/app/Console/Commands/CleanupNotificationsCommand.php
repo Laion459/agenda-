@@ -32,5 +32,3 @@ class CleanupNotificationsCommand extends Command
         return self::SUCCESS;
     }
 }
-
-

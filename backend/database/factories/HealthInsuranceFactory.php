@@ -15,7 +15,7 @@ class HealthInsuranceFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->unique()->company() . ' Saúde',
+            'name' => fake()->unique()->company().' Saúde',
             'description' => fake()->sentence(12),
             'coverage_percentage' => fake()->numberBetween(40, 100),
             'is_active' => true,
@@ -27,5 +27,3 @@ class HealthInsuranceFactory extends Factory
         return $this->state(fn () => ['is_active' => false]);
     }
 }
-
-

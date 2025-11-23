@@ -20,5 +20,3 @@ class AppointmentLogResource extends JsonResource
         ];
     }
 }
-
-

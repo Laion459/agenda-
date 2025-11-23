@@ -61,4 +61,3 @@ class ObservationPolicy
         return $role === UserRole::ADMIN;
     }
 }
-

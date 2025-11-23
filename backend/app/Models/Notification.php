@@ -17,10 +17,10 @@ class Notification extends Model
         'subject',
         'message',
         'channel',
-            'is_suppressed',
-            'sent_attempts',
-            'last_attempt_at',
-            'error_message',
+        'is_suppressed',
+        'sent_attempts',
+        'last_attempt_at',
+        'error_message',
         'is_read',
         'sent_at',
         'read_at',
@@ -31,11 +31,11 @@ class Notification extends Model
         'type' => NotificationType::class,
         'channel' => NotificationChannel::class,
         'is_read' => 'boolean',
-            'is_suppressed' => 'boolean',
-            'sent_attempts' => 'integer',
+        'is_suppressed' => 'boolean',
+        'sent_attempts' => 'integer',
         'sent_at' => 'datetime',
         'read_at' => 'datetime',
-            'last_attempt_at' => 'datetime',
+        'last_attempt_at' => 'datetime',
         'metadata' => 'array',
     ];
 
@@ -52,5 +52,3 @@ class Notification extends Model
         ])->save();
     }
 }
-
-

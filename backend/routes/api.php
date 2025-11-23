@@ -1,21 +1,21 @@
 <?php
 
+use App\Http\Controllers\API\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\API\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\API\Admin\PatientController as AdminPatientController;
 use App\Http\Controllers\API\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\API\Admin\UserController as AdminUserController;
-use App\Http\Controllers\API\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\API\AppointmentController;
-use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\Auth\PasswordResetController;
+use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\DoctorController;
 use App\Http\Controllers\API\HealthInsuranceController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\NotificationPreferenceController;
-use App\Http\Controllers\API\PrivacyController;
 use App\Http\Controllers\API\ObservationController;
-use App\Http\Controllers\API\ScheduleController;
+use App\Http\Controllers\API\PrivacyController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\ScheduleController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -92,5 +92,3 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
     Route::put('doctor/schedules/{schedule}', [ScheduleController::class, 'update']);
     Route::delete('doctor/schedules/{schedule}', [ScheduleController::class, 'destroy']);
 });
-
-

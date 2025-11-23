@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Redis;
 
 /**
  * Gerenciador de cache com suporte a tags e padrões
- * 
+ *
  * Fornece métodos para limpar cache de forma eficiente
  * usando tags (quando disponível) ou padrões Redis
  */
@@ -43,12 +43,14 @@ class CacheManager
             // Redis suporta tags através de sets
             if (method_exists($store, 'tags')) {
                 Cache::tags($tags)->flush();
+
                 return;
             }
 
             // Fallback: limpar por padrão usando Redis SCAN
             if ($store instanceof \Illuminate\Cache\RedisStore) {
                 $this->clearByPattern($tags);
+
                 return;
             }
 
@@ -80,7 +82,7 @@ class CacheManager
                         ['match' => "{$prefix}{$tag}:*", 'count' => 100]
                     );
 
-                    if (!empty($keys)) {
+                    if (! empty($keys)) {
                         $redis->del($keys);
                     }
                 } while ($cursor !== 0);
@@ -140,4 +142,3 @@ class CacheManager
         $this->clearAppointmentCache(null, $doctorId);
     }
 }
-

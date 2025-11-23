@@ -2,8 +2,6 @@
 
 namespace App\Application\Appointments;
 
-use App\Application\Appointments\AppointmentCreationService;
-use App\Application\Appointments\AppointmentValidationService;
 use App\Application\Notifications\NotificationDispatcher;
 use App\Domain\Appointments\AppointmentStatusWorkflow;
 use App\Domain\Shared\Enums\AppointmentStatus;
@@ -13,17 +11,13 @@ use App\Models\Appointment;
 use App\Models\AppointmentLog;
 use App\Models\Doctor;
 use App\Models\Patient;
-use App\Models\Schedule;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentService
@@ -35,8 +29,7 @@ class AppointmentService
         private CacheManager $cacheManager,
         private AppointmentCreationService $creationService,
         private AppointmentValidationService $validationService
-    ) {
-    }
+    ) {}
 
     public function listForPatient(User $user, array $filters = []): LengthAwarePaginator
     {
@@ -44,7 +37,7 @@ class AppointmentService
         $patient = $user->patient;
         $patient?->loadMissing('user');
 
-        $cacheKey = 'appointments:patient:' . $patient->id . ':' . md5(json_encode($filters));
+        $cacheKey = 'appointments:patient:'.$patient->id.':'.md5(json_encode($filters));
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($patient, $filters) {
             $query = Appointment::query()
@@ -67,7 +60,7 @@ class AppointmentService
         /** @var Doctor $doctor */
         $doctor = $user->doctor;
 
-        $cacheKey = 'appointments:doctor:' . $doctor->id . ':' . md5(json_encode($filters));
+        $cacheKey = 'appointments:doctor:'.$doctor->id.':'.md5(json_encode($filters));
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($doctor, $filters) {
             $query = Appointment::query()
@@ -87,7 +80,7 @@ class AppointmentService
 
     public function listForAdmin(array $filters = []): LengthAwarePaginator
     {
-        $cacheKey = 'appointments:admin:' . md5(json_encode($filters));
+        $cacheKey = 'appointments:admin:'.md5(json_encode($filters));
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($filters) {
             $query = Appointment::query()
@@ -346,7 +339,6 @@ class AppointmentService
 
         return $appointment->refresh();
     }
-
 
     protected function applyPeriodFilter(Builder $query, array $filters): void
     {

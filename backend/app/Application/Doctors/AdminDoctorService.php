@@ -13,9 +13,7 @@ use Spatie\Permission\Models\Role;
 
 class AdminDoctorService
 {
-    public function __construct(private DatabaseManager $db)
-    {
-    }
+    public function __construct(private DatabaseManager $db) {}
 
     public function list(array $filters = []): LengthAwarePaginator
     {
@@ -43,13 +41,13 @@ class AdminDoctorService
                     });
             });
 
-        if (! empty($filters['created_from'])) {
-            $query->whereDate('created_at', '>=', $filters['created_from']);
-        }
+            if (! empty($filters['created_from'])) {
+                $query->whereDate('created_at', '>=', $filters['created_from']);
+            }
 
-        if (! empty($filters['created_to'])) {
-            $query->whereDate('created_at', '<=', $filters['created_to']);
-        }
+            if (! empty($filters['created_to'])) {
+                $query->whereDate('created_at', '<=', $filters['created_to']);
+            }
         }
 
         $perPage = (int) ($filters['per_page'] ?? 15);
@@ -72,7 +70,7 @@ class AdminDoctorService
             // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
             // Configurado no AppServiceProvider
             $user->assignRole(UserRole::DOCTOR->value);
-            
+
             // Limpar cache do Spatie Permission após atribuir role
             app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -142,5 +140,3 @@ class AdminDoctorService
             ->toArray();
     }
 }
-
-

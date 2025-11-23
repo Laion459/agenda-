@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *     schema="Doctor",
  *     type="object",
  *     title="Médico",
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="crm", type="string", example="123456-SP"),
  *     @OA\Property(property="specialty", type="string", example="Cardiologia"),
@@ -67,5 +68,3 @@ class Doctor extends Model
         return $query->where('is_active', true);
     }
 }
-
-

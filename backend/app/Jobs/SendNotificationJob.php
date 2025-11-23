@@ -41,6 +41,7 @@ class SendNotificationJob implements ShouldQueue
                 'last_attempt_at' => now(),
                 'sent_attempts' => $notification->sent_attempts + 1,
             ])->save();
+
             return;
         }
 
@@ -70,5 +71,3 @@ class SendNotificationJob implements ShouldQueue
         }
     }
 }
-
-

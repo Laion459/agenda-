@@ -64,5 +64,3 @@ class PrivacyController extends Controller
         ]);
     }
 }
-
-

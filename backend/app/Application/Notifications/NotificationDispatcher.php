@@ -6,16 +6,14 @@ use App\Domain\Shared\Enums\NotificationChannel;
 use App\Domain\Shared\Enums\NotificationType;
 use App\Jobs\SendNotificationJob;
 use App\Models\Notification;
-use App\Models\User;
 use App\Models\NotificationPreference;
+use App\Models\User;
 use App\Services\Notifications\SmsProviderInterface;
 use Illuminate\Support\Arr;
 
 class NotificationDispatcher
 {
-    public function __construct(private SmsProviderInterface $smsProvider)
-    {
-    }
+    public function __construct(private SmsProviderInterface $smsProvider) {}
 
     public function dispatch(User $user, NotificationType $type, string $subject, string $message, ?NotificationChannel $channel = null, array $metadata = []): Notification
     {
@@ -131,5 +129,3 @@ class NotificationDispatcher
         }
     }
 }
-
-

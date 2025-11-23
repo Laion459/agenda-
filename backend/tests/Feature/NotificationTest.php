@@ -2,9 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Domain\Shared\Enums\AppointmentStatus;
 use App\Domain\Shared\Enums\UserRole;
-use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Notification;
 use App\Models\Patient;
@@ -21,7 +19,7 @@ class NotificationTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $user->assignRole(UserRole::PATIENT->value);
 
         Notification::factory()->count(5)->create([
@@ -29,7 +27,7 @@ class NotificationTest extends TestCase
         ]);
 
         $this->authAs($user);
-        
+
         $response = $this->getJson('/api/notifications');
 
         $response->assertStatus(200)
@@ -47,16 +45,16 @@ class NotificationTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $user->assignRole(UserRole::PATIENT->value);
-        
+
         $notification = Notification::factory()->create([
             'user_id' => $user->id,
             'is_read' => false,
         ]);
 
         $this->authAs($user);
-        
+
         $response = $this->postJson("/api/notifications/{$notification->id}/read");
 
         $response->assertStatus(200);
@@ -70,16 +68,16 @@ class NotificationTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $user->assignRole(UserRole::PATIENT->value);
-        
+
         Notification::factory()->count(3)->create([
             'user_id' => $user->id,
             'is_read' => false,
         ]);
 
         $this->authAs($user);
-        
+
         $response = $this->postJson('/api/notifications/read-all');
 
         $response->assertStatus(204);
@@ -105,12 +103,12 @@ class NotificationTest extends TestCase
         ]);
 
         $this->authAs($patient->user);
-        
+
         $response = $this->postJson('/api/appointments', [
-                'doctor_id' => $doctor->id,
-                'scheduled_at' => $scheduledAt->setTime(10, 0)->toIso8601String(),
-                'duration_minutes' => 30,
-            ]);
+            'doctor_id' => $doctor->id,
+            'scheduled_at' => $scheduledAt->setTime(10, 0)->toIso8601String(),
+            'duration_minutes' => 30,
+        ]);
 
         $response->assertStatus(201);
 
@@ -129,7 +127,7 @@ class NotificationTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
@@ -144,7 +142,7 @@ class NotificationTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
@@ -153,4 +151,3 @@ class NotificationTest extends TestCase
         ]);
     }
 }
-

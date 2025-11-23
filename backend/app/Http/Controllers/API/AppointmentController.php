@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API;
 
 use App\Application\Appointments\AppointmentService;
 use App\Domain\Shared\Enums\UserRole;
-use App\Http\Controllers\API\Controller;
 use App\Http\Requests\Appointments\CreateAppointmentRequest;
 use App\Http\Requests\Appointments\RescheduleAppointmentRequest;
 use App\Http\Requests\Appointments\UpdateAppointmentStatusRequest;
@@ -14,7 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
-#[OA\Tag(name: "Consultas")]
+#[OA\Tag(name: 'Consultas')]
 class AppointmentController extends Controller
 {
     public function __construct(private AppointmentService $service)
@@ -23,41 +22,41 @@ class AppointmentController extends Controller
     }
 
     #[OA\Get(
-        path: "/appointments",
-        summary: "Listar consultas",
-        description: "Lista consultas do usuário autenticado. Retorna consultas diferentes conforme o perfil: paciente vê suas consultas, médico vê suas consultas, admin vê todas.",
-        tags: ["Consultas"],
-        security: [["bearerAuth" => []]],
+        path: '/appointments',
+        summary: 'Listar consultas',
+        description: 'Lista consultas do usuário autenticado. Retorna consultas diferentes conforme o perfil: paciente vê suas consultas, médico vê suas consultas, admin vê todas.',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: "status",
-                in: "query",
-                description: "Filtrar por status",
+                name: 'status',
+                in: 'query',
+                description: 'Filtrar por status',
                 required: false,
-                schema: new OA\Schema(type: "string", enum: ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"])
+                schema: new OA\Schema(type: 'string', enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'])
             ),
             new OA\Parameter(
-                name: "period",
-                in: "query",
-                description: "Filtrar por período: future (futuras), past (passadas), all (todas)",
+                name: 'period',
+                in: 'query',
+                description: 'Filtrar por período: future (futuras), past (passadas), all (todas)',
                 required: false,
-                schema: new OA\Schema(type: "string", enum: ["future", "past", "all"])
+                schema: new OA\Schema(type: 'string', enum: ['future', 'past', 'all'])
             ),
             new OA\Parameter(
-                name: "per_page",
-                in: "query",
-                description: "Itens por página",
+                name: 'per_page',
+                in: 'query',
+                description: 'Itens por página',
                 required: false,
-                schema: new OA\Schema(type: "integer", default: 10)
-            )
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Lista de consultas paginada",
-                content: new OA\JsonContent(type: "object")
+                description: 'Lista de consultas paginada',
+                content: new OA\JsonContent(type: 'object')
             ),
-            new OA\Response(response: 401, description: "Não autenticado")
+            new OA\Response(response: 401, description: 'Não autenticado'),
         ]
     )]
     public function index(Request $request): JsonResponse
@@ -80,32 +79,32 @@ class AppointmentController extends Controller
     }
 
     #[OA\Post(
-        path: "/appointments",
-        summary: "Agendar consulta",
-        description: "Cria um novo agendamento de consulta. Requer antecedência mínima de 24h, perfil completo do paciente e médico ativo.",
-        tags: ["Consultas"],
-        security: [["bearerAuth" => []]],
+        path: '/appointments',
+        summary: 'Agendar consulta',
+        description: 'Cria um novo agendamento de consulta. Requer antecedência mínima de 24h, perfil completo do paciente e médico ativo.',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["doctor_id", "scheduled_at"],
+                required: ['doctor_id', 'scheduled_at'],
                 properties: [
-                    new OA\Property(property: "doctor_id", type: "integer", example: 1),
-                    new OA\Property(property: "scheduled_at", type: "string", format: "date-time", example: "2025-12-01 14:00:00"),
-                    new OA\Property(property: "duration_minutes", type: "integer", example: 30),
-                    new OA\Property(property: "type", type: "string", example: "PRESENTIAL"),
-                    new OA\Property(property: "price", type: "number", format: "float", example: 150.00),
-                    new OA\Property(property: "notes", type: "string", example: "Consulta de rotina")
+                    new OA\Property(property: 'doctor_id', type: 'integer', example: 1),
+                    new OA\Property(property: 'scheduled_at', type: 'string', format: 'date-time', example: '2025-12-01 14:00:00'),
+                    new OA\Property(property: 'duration_minutes', type: 'integer', example: 30),
+                    new OA\Property(property: 'type', type: 'string', example: 'PRESENTIAL'),
+                    new OA\Property(property: 'price', type: 'number', format: 'float', example: 150.00),
+                    new OA\Property(property: 'notes', type: 'string', example: 'Consulta de rotina'),
                 ]
             )
         ),
         responses: [
             new OA\Response(
                 response: 201,
-                description: "Consulta agendada com sucesso",
-                content: new OA\JsonContent(type: "object")
+                description: 'Consulta agendada com sucesso',
+                content: new OA\JsonContent(type: 'object')
             ),
-            new OA\Response(response: 422, description: "Dados inválidos ou regras de negócio violadas")
+            new OA\Response(response: 422, description: 'Dados inválidos ou regras de negócio violadas'),
         ]
     )]
     public function store(CreateAppointmentRequest $request): JsonResponse
@@ -118,28 +117,28 @@ class AppointmentController extends Controller
     }
 
     #[OA\Get(
-        path: "/appointments/{id}",
-        summary: "Obter detalhes da consulta",
-        description: "Retorna os detalhes completos de uma consulta incluindo médico, paciente, observações e logs",
-        tags: ["Consultas"],
-        security: [["bearerAuth" => []]],
+        path: '/appointments/{id}',
+        summary: 'Obter detalhes da consulta',
+        description: 'Retorna os detalhes completos de uma consulta incluindo médico, paciente, observações e logs',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: "id",
-                in: "path",
+                name: 'id',
+                in: 'path',
                 required: true,
-                description: "ID da consulta",
-                schema: new OA\Schema(type: "integer")
-            )
+                description: 'ID da consulta',
+                schema: new OA\Schema(type: 'integer')
+            ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Detalhes da consulta",
-                content: new OA\JsonContent(type: "object")
+                description: 'Detalhes da consulta',
+                content: new OA\JsonContent(type: 'object')
             ),
-            new OA\Response(response: 403, description: "Não autorizado para esta consulta"),
-            new OA\Response(response: 404, description: "Consulta não encontrada")
+            new OA\Response(response: 403, description: 'Não autorizado para esta consulta'),
+            new OA\Response(response: 404, description: 'Consulta não encontrada'),
         ]
     )]
     public function show(Appointment $appointment): JsonResponse
@@ -159,27 +158,27 @@ class AppointmentController extends Controller
     }
 
     #[OA\Post(
-        path: "/appointments/{id}/confirm",
-        summary: "Confirmar consulta",
-        description: "Confirma uma consulta pendente. Apenas o médico responsável ou admin pode confirmar.",
-        tags: ["Consultas"],
-        security: [["bearerAuth" => []]],
+        path: '/appointments/{id}/confirm',
+        summary: 'Confirmar consulta',
+        description: 'Confirma uma consulta pendente. Apenas o médico responsável ou admin pode confirmar.',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: "id",
-                in: "path",
+                name: 'id',
+                in: 'path',
                 required: true,
-                schema: new OA\Schema(type: "integer")
-            )
+                schema: new OA\Schema(type: 'integer')
+            ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Consulta confirmada",
-                content: new OA\JsonContent(type: "object")
+                description: 'Consulta confirmada',
+                content: new OA\JsonContent(type: 'object')
             ),
-            new OA\Response(response: 403, description: "Não autorizado"),
-            new OA\Response(response: 422, description: "Transição de status inválida")
+            new OA\Response(response: 403, description: 'Não autorizado'),
+            new OA\Response(response: 422, description: 'Transição de status inválida'),
         ]
     )]
     public function confirm(UpdateAppointmentStatusRequest $request, Appointment $appointment): JsonResponse
@@ -192,27 +191,27 @@ class AppointmentController extends Controller
     }
 
     #[OA\Post(
-        path: "/appointments/{id}/complete",
-        summary: "Marcar consulta como realizada",
-        description: "Marca uma consulta confirmada como realizada. Apenas médico ou admin pode executar.",
-        tags: ["Consultas"],
-        security: [["bearerAuth" => []]],
+        path: '/appointments/{id}/complete',
+        summary: 'Marcar consulta como realizada',
+        description: 'Marca uma consulta confirmada como realizada. Apenas médico ou admin pode executar.',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: "id",
-                in: "path",
+                name: 'id',
+                in: 'path',
                 required: true,
-                schema: new OA\Schema(type: "integer")
-            )
+                schema: new OA\Schema(type: 'integer')
+            ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Consulta marcada como realizada",
-                content: new OA\JsonContent(type: "object")
+                description: 'Consulta marcada como realizada',
+                content: new OA\JsonContent(type: 'object')
             ),
-            new OA\Response(response: 403, description: "Não autorizado"),
-            new OA\Response(response: 422, description: "Transição de status inválida")
+            new OA\Response(response: 403, description: 'Não autorizado'),
+            new OA\Response(response: 422, description: 'Transição de status inválida'),
         ]
     )]
     public function complete(UpdateAppointmentStatusRequest $request, Appointment $appointment): JsonResponse
@@ -225,35 +224,35 @@ class AppointmentController extends Controller
     }
 
     #[OA\Post(
-        path: "/appointments/{id}/cancel",
-        summary: "Cancelar consulta",
-        description: "Cancela uma consulta. Requer antecedência mínima de 12h. Pacientes e médicos podem cancelar suas próprias consultas, admin pode cancelar qualquer consulta.",
-        tags: ["Consultas"],
-        security: [["bearerAuth" => []]],
+        path: '/appointments/{id}/cancel',
+        summary: 'Cancelar consulta',
+        description: 'Cancela uma consulta. Requer antecedência mínima de 12h. Pacientes e médicos podem cancelar suas próprias consultas, admin pode cancelar qualquer consulta.',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: "id",
-                in: "path",
+                name: 'id',
+                in: 'path',
                 required: true,
-                schema: new OA\Schema(type: "integer")
-            )
+                schema: new OA\Schema(type: 'integer')
+            ),
         ],
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: "reason", type: "string", example: "Imprevisto pessoal")
+                    new OA\Property(property: 'reason', type: 'string', example: 'Imprevisto pessoal'),
                 ]
             )
         ),
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Consulta cancelada",
-                content: new OA\JsonContent(type: "object")
+                description: 'Consulta cancelada',
+                content: new OA\JsonContent(type: 'object')
             ),
-            new OA\Response(response: 403, description: "Não autorizado"),
-            new OA\Response(response: 422, description: "Cancelamento não permitido (menos de 12h de antecedência)")
+            new OA\Response(response: 403, description: 'Não autorizado'),
+            new OA\Response(response: 422, description: 'Cancelamento não permitido (menos de 12h de antecedência)'),
         ]
     )]
     public function cancel(UpdateAppointmentStatusRequest $request, Appointment $appointment): JsonResponse
@@ -266,37 +265,37 @@ class AppointmentController extends Controller
     }
 
     #[OA\Post(
-        path: "/appointments/{id}/reschedule",
-        summary: "Remarcar consulta",
-        description: "Remarca uma consulta para nova data/horário. Máximo de 2 remarcações por consulta. Requer antecedência mínima de 12h.",
-        tags: ["Consultas"],
-        security: [["bearerAuth" => []]],
+        path: '/appointments/{id}/reschedule',
+        summary: 'Remarcar consulta',
+        description: 'Remarca uma consulta para nova data/horário. Máximo de 2 remarcações por consulta. Requer antecedência mínima de 12h.',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(
-                name: "id",
-                in: "path",
+                name: 'id',
+                in: 'path',
                 required: true,
-                schema: new OA\Schema(type: "integer")
-            )
+                schema: new OA\Schema(type: 'integer')
+            ),
         ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["scheduled_at"],
+                required: ['scheduled_at'],
                 properties: [
-                    new OA\Property(property: "scheduled_at", type: "string", format: "date-time", example: "2025-12-05 15:00:00"),
-                    new OA\Property(property: "duration_minutes", type: "integer", example: 30)
+                    new OA\Property(property: 'scheduled_at', type: 'string', format: 'date-time', example: '2025-12-05 15:00:00'),
+                    new OA\Property(property: 'duration_minutes', type: 'integer', example: 30),
                 ]
             )
         ),
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Consulta remarcada",
-                content: new OA\JsonContent(type: "object")
+                description: 'Consulta remarcada',
+                content: new OA\JsonContent(type: 'object')
             ),
-            new OA\Response(response: 403, description: "Não autorizado"),
-            new OA\Response(response: 422, description: "Limite de remarcações atingido ou dados inválidos")
+            new OA\Response(response: 403, description: 'Não autorizado'),
+            new OA\Response(response: 422, description: 'Limite de remarcações atingido ou dados inválidos'),
         ]
     )]
     public function reschedule(RescheduleAppointmentRequest $request, Appointment $appointment): JsonResponse
@@ -312,7 +311,4 @@ class AppointmentController extends Controller
     {
         return $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
     }
-
 }
-
-

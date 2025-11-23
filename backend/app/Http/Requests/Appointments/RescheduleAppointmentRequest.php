@@ -19,5 +19,3 @@ class RescheduleAppointmentRequest extends FormRequest
         ];
     }
 }
-
-

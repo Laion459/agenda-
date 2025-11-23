@@ -36,5 +36,3 @@ class HealthInsurance extends Model
             ->withTimestamps();
     }
 }
-
-

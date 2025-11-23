@@ -65,5 +65,3 @@ class NotificationPreferenceController extends Controller
         ]);
     }
 }
-
-

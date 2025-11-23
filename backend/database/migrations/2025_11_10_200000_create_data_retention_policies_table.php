@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('data_retention_policies', function (Blueprint $table) {
@@ -22,5 +23,3 @@ return new class extends Migration {
         Schema::dropIfExists('data_retention_policies');
     }
 };
-
-

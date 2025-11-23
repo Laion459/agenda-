@@ -5,13 +5,12 @@ namespace App\Providers;
 use App\Application\Notifications\NotificationDispatcher;
 use App\Domain\Appointments\AppointmentStatusWorkflow;
 use App\Infrastructure\Cache\CacheManager;
-use App\Services\Notifications\SmsProviderInterface;
 use App\Services\Notifications\NullSmsProvider;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\URL;
+use App\Services\Notifications\SmsProviderInterface;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\PermissionRegistrar;
@@ -27,12 +26,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->alias(NotificationDispatcher::class, 'notifications.dispatcher');
         $this->app->bind(SmsProviderInterface::class, NullSmsProvider::class);
         $this->app->singleton(AppointmentStatusWorkflow::class);
-        
+
         // Registrar CacheManager como singleton
         $this->app->singleton(CacheManager::class, function ($app) {
-            return new CacheManager();
+            return new CacheManager;
         });
-        
+
         // Registrar serviços de Appointment
         $this->app->singleton(\App\Application\Appointments\AppointmentCreationService::class);
         $this->app->singleton(\App\Application\Appointments\AppointmentValidationService::class);

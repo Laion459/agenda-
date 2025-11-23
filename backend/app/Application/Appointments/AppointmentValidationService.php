@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Serviço responsável pelas validações de consultas
- * 
+ *
  * Centraliza todas as regras de validação de negócio
  */
 class AppointmentValidationService
@@ -98,7 +98,7 @@ class AppointmentValidationService
 
         // Query compatível com SQLite e PostgreSQL
         $isPostgres = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql';
-        
+
         $hasConflict = \App\Models\Appointment::query()
             ->when($ignoreAppointmentId, fn ($query) => $query->where('id', '!=', $ignoreAppointmentId))
             ->where(function ($query) use ($doctor, $patient) {
@@ -126,7 +126,7 @@ class AppointmentValidationService
                     // Conflito: nova consulta está completamente dentro de outra
                     ->orWhere(function ($builder) use ($scheduledAt, $endTime, $isPostgres) {
                         $builder->where('scheduled_at', '<', $scheduledAt);
-                        
+
                         if ($isPostgres) {
                             $builder->whereRaw(
                                 "scheduled_at + (duration_minutes || ' minutes')::interval > ?",
@@ -211,4 +211,3 @@ class AppointmentValidationService
         }
     }
 }
-

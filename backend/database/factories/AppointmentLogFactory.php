@@ -31,5 +31,3 @@ class AppointmentLogFactory extends Factory
         ];
     }
 }
-
-

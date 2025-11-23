@@ -17,5 +17,3 @@ class DoctorSummaryResource extends JsonResource
         ];
     }
 }
-
-

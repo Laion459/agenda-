@@ -6,13 +6,15 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Value Object para duração em minutos
- * 
+ *
  * Garante que a duração seja válida (positiva e dentro de limites razoáveis)
  */
 class Duration
 {
     private const MIN_DURATION = 15; // 15 minutos mínimo
+
     private const MAX_DURATION = 240; // 4 horas máximo
+
     private const DEFAULT_DURATION = 30; // 30 minutos padrão
 
     public function __construct(
@@ -70,6 +72,7 @@ class Duration
     public function subtract(Duration $other): self
     {
         $result = $this->minutes - $other->minutes;
+
         return new self(max(self::MIN_DURATION, $result));
     }
 
@@ -108,4 +111,3 @@ class Duration
         return (string) $this->minutes;
     }
 }
-

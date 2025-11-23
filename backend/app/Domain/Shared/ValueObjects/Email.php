@@ -31,4 +31,3 @@ class Email
         return $this->value === $other->value;
     }
 }
-

@@ -97,4 +97,3 @@ class AppointmentPolicy
         return $this->update($user, $appointment);
     }
 }
-

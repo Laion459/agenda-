@@ -14,5 +14,3 @@ class DataRetentionPolicy extends Model
         'retention_days',
     ];
 }
-
-

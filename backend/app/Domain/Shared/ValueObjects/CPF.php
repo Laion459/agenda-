@@ -33,9 +33,9 @@ class CPF
     {
         $cpf = preg_replace('/[^0-9]/', '', $this->value);
 
-        return substr($cpf, 0, 3) . '.' .
-               substr($cpf, 3, 3) . '.' .
-               substr($cpf, 6, 3) . '-' .
+        return substr($cpf, 0, 3).'.'.
+               substr($cpf, 3, 3).'.'.
+               substr($cpf, 6, 3).'-'.
                substr($cpf, 9, 2);
     }
 
@@ -69,4 +69,3 @@ class CPF
         return true;
     }
 }
-

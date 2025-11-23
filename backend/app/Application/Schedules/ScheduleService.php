@@ -131,6 +131,7 @@ class ScheduleService
             ->sum(function (Schedule $schedule) {
                 $start = $this->parseTimeString($schedule->start_time);
                 $end = $this->parseTimeString($schedule->end_time);
+
                 return $start->diffInMinutes($end);
             });
 
@@ -194,5 +195,3 @@ class ScheduleService
         return $value % 7;
     }
 }
-
-

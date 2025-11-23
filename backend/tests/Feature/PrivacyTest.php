@@ -17,11 +17,11 @@ class PrivacyTest extends TestCase
             'role' => UserRole::PATIENT,
             'privacy_policy_accepted_at' => null,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
-        
+
         $response = $this->postJson('/api/privacy/accept');
 
         $response->assertStatus(200);
@@ -35,11 +35,11 @@ class PrivacyTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
-        
+
         $response = $this->getJson('/api/privacy/export');
 
         $response->assertStatus(200)
@@ -53,11 +53,11 @@ class PrivacyTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::PATIENT,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         $this->authAs($user);
-        
+
         $response = $this->postJson('/api/privacy/request-erasure');
 
         $response->assertStatus(200);
@@ -66,4 +66,3 @@ class PrivacyTest extends TestCase
         $this->assertNotNull($user->data_erasure_requested_at);
     }
 }
-

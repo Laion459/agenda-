@@ -54,5 +54,3 @@ class AnonymizeUserJob implements ShouldQueue
         }
     }
 }
-
-

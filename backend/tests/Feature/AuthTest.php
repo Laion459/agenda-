@@ -160,4 +160,3 @@ class AuthTest extends TestCase
         ]);
     }
 }
-

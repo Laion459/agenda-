@@ -30,5 +30,3 @@ class RequestMetricsMiddleware
         return $response;
     }
 }
-
-

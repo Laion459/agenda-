@@ -28,5 +28,3 @@ class RegisterPatientRequest extends FormRequest
         ];
     }
 }
-
-

@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 
 class ArchiveOldReports extends Command
 {
@@ -28,6 +27,7 @@ class ArchiveOldReports extends Command
 
         if (! is_dir($reportsPath)) {
             $this->info('Diretório de relatórios não encontrado. Nada para arquivar.');
+
             return Command::SUCCESS;
         }
 
@@ -60,4 +60,3 @@ class ArchiveOldReports extends Command
         return Command::SUCCESS;
     }
 }
-

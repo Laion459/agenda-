@@ -17,5 +17,3 @@ class PatientSummaryResource extends JsonResource
         ];
     }
 }
-
-

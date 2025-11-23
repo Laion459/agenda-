@@ -15,22 +15,22 @@ class AdminDoctorTest extends TestCase
     public function test_admin_pode_cadastrar_medico(): void
     {
         $admin = $this->createAdmin();
-        
+
         // Debug: verificar se o role foi atribuído para o guard sanctum
         $this->assertTrue($admin->hasRole(UserRole::ADMIN->value, 'sanctum'));
         $this->assertTrue($admin->hasAnyRole([UserRole::ADMIN->value], 'sanctum'));
 
         $this->authAs($admin);
-        
+
         $response = $this->postJson('/api/admin/doctors', [
-                'name' => 'Dr. João Silva',
-                'email' => 'joao.medico@test.com',
-                'phone' => '(11) 99999-9999',
-                'password' => 'password123',
-                'crm' => 'CRM123456',
-                'specialty' => 'Cardiologia',
-                'qualification' => 'Especialista em Cardiologia',
-            ]);
+            'name' => 'Dr. João Silva',
+            'email' => 'joao.medico@test.com',
+            'phone' => '(11) 99999-9999',
+            'password' => 'password123',
+            'crm' => 'CRM123456',
+            'specialty' => 'Cardiologia',
+            'qualification' => 'Especialista em Cardiologia',
+        ]);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -55,11 +55,11 @@ class AdminDoctorTest extends TestCase
     public function test_admin_pode_listar_medicos(): void
     {
         $admin = $this->createAdmin();
-        
+
         Doctor::factory()->count(5)->create();
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/admin/doctors');
 
         $response->assertStatus(200)
@@ -75,11 +75,11 @@ class AdminDoctorTest extends TestCase
     public function test_crm_deve_ser_unico(): void
     {
         $admin = $this->createAdmin();
-        
+
         Doctor::factory()->create(['crm' => 'CRM123456']);
 
         $this->authAs($admin);
-        
+
         $response = $this->postJson('/api/admin/doctors', [
             'name' => 'Outro Médico',
             'email' => 'outro@test.com',
@@ -99,10 +99,10 @@ class AdminDoctorTest extends TestCase
         $doctor = Doctor::factory()->create(['is_active' => true]);
 
         $this->authAs($admin);
-        
+
         $response = $this->putJson("/api/admin/doctors/{$doctor->id}", [
-                'is_active' => false,
-            ]);
+            'is_active' => false,
+        ]);
 
         $response->assertStatus(200);
 
@@ -116,10 +116,9 @@ class AdminDoctorTest extends TestCase
             'role' => UserRole::ADMIN,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::ADMIN);
-        
+
         return $user;
     }
 }
-

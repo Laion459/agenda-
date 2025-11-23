@@ -66,5 +66,3 @@ class NotificationController extends Controller
         abort_if($notification->user_id !== $request->user()->id, 403);
     }
 }
-
-

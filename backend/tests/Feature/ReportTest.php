@@ -21,7 +21,7 @@ class ReportTest extends TestCase
     public function test_admin_pode_gerar_relatorio_de_consultas(): void
     {
         $admin = $this->createAdmin();
-        
+
         // Criar appointments com horários diferentes para evitar constraint única
         for ($i = 0; $i < 10; $i++) {
             Appointment::factory()->create([
@@ -31,7 +31,7 @@ class ReportTest extends TestCase
         }
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/admin/reports/appointments');
 
         $response->assertStatus(200)
@@ -49,7 +49,7 @@ class ReportTest extends TestCase
     public function test_relatorio_usa_cache(): void
     {
         $admin = $this->createAdmin();
-        
+
         Appointment::factory()->count(5)->create();
 
         Cache::shouldReceive('remember')
@@ -63,7 +63,7 @@ class ReportTest extends TestCase
             ]);
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/admin/reports/appointments');
 
         $response->assertStatus(200);
@@ -73,7 +73,7 @@ class ReportTest extends TestCase
     {
         $admin = $this->createAdmin();
         $doctor = $this->createActiveDoctor();
-        
+
         // Criar appointments com horários diferentes para evitar constraint única
         for ($i = 0; $i < 5; $i++) {
             Appointment::factory()->create([
@@ -84,7 +84,7 @@ class ReportTest extends TestCase
         }
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/admin/reports/doctor-occupancy');
 
         $response->assertStatus(200)
@@ -106,7 +106,7 @@ class ReportTest extends TestCase
     {
         $admin = $this->createAdmin();
         $doctor = $this->createActiveDoctor();
-        
+
         // Criar appointments com horários diferentes para evitar constraint única
         for ($i = 0; $i < 5; $i++) {
             Appointment::factory()->create([
@@ -117,7 +117,7 @@ class ReportTest extends TestCase
         }
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/admin/reports/billing');
 
         $response->assertStatus(200)
@@ -140,15 +140,15 @@ class ReportTest extends TestCase
         $admin = $this->createAdmin();
         $insurance = HealthInsurance::factory()->create();
         $patient = $this->createActivePatient();
-        
+
         $patient->healthInsurances()->attach($insurance->id);
-        
+
         Appointment::factory()->create([
             'patient_id' => $patient->id,
         ]);
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/admin/reports/insurance-usage');
 
         $response->assertStatus(200)
@@ -168,7 +168,7 @@ class ReportTest extends TestCase
         $patient = $this->createActivePatient();
 
         $this->authAs($patient->user);
-        
+
         $response = $this->getJson('/api/admin/reports/appointments');
 
         $response->assertStatus(403);
@@ -177,11 +177,11 @@ class ReportTest extends TestCase
     public function test_admin_pode_gerar_pdf_de_relatorio(): void
     {
         $admin = $this->createAdmin();
-        
+
         Appointment::factory()->count(5)->create();
 
         $this->authAs($admin);
-        
+
         $response = $this->get('/api/admin/reports/appointments/pdf');
 
         $response->assertStatus(200)
@@ -194,9 +194,9 @@ class ReportTest extends TestCase
             'role' => UserRole::ADMIN,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::ADMIN);
-        
+
         return $user;
     }
 
@@ -206,7 +206,7 @@ class ReportTest extends TestCase
             'role' => UserRole::DOCTOR,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::DOCTOR);
 
         return Doctor::factory()->create([
@@ -221,7 +221,7 @@ class ReportTest extends TestCase
             'role' => UserRole::PATIENT,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::PATIENT);
 
         return Patient::factory()->create([
@@ -230,4 +230,3 @@ class ReportTest extends TestCase
         ]);
     }
 }
-

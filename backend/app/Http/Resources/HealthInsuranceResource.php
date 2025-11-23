@@ -31,5 +31,3 @@ class HealthInsuranceResource extends JsonResource
         ];
     }
 }
-
-

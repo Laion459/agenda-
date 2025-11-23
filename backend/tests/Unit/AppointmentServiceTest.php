@@ -11,7 +11,6 @@ use App\Domain\Shared\Enums\AppointmentStatus;
 use App\Domain\Shared\Enums\UserRole;
 use App\Infrastructure\Cache\CacheManager;
 use App\Models\Appointment;
-use App\Models\AppointmentLog;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\User;
@@ -28,11 +27,17 @@ class AppointmentServiceTest extends TestCase
     use RefreshDatabase;
 
     private AppointmentService $service;
+
     private $notificationDispatcher;
+
     private $db;
+
     private $statusWorkflow;
+
     private $cacheManager;
+
     private $creationService;
+
     private $validationService;
 
     protected function setUp(): void
@@ -307,4 +312,3 @@ class AppointmentServiceTest extends TestCase
         $this->assertEquals(AppointmentStatus::PENDING, $result->status);
     }
 }
-

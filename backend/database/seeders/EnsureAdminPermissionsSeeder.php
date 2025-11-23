@@ -36,10 +36,9 @@ class EnsureAdminPermissionsSeeder extends Seeder
 
         // Garante que todos os usuários admin tenham o role e permissões
         User::where('role', UserRole::ADMIN->value)->each(function (User $user) use ($adminRole) {
-            if (!$user->hasRole($adminRole)) {
+            if (! $user->hasRole($adminRole)) {
                 $user->assignRole($adminRole);
             }
         });
     }
 }
-

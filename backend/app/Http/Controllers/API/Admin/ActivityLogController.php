@@ -21,7 +21,7 @@ class ActivityLogController extends Controller
     public function export(Request $request)
     {
         $query = $this->buildQuery($request);
-        $fileName = 'activity-logs-' . now()->format('Y-m-d-His') . '.csv';
+        $fileName = 'activity-logs-'.now()->format('Y-m-d-His').'.csv';
 
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');
@@ -65,5 +65,3 @@ class ActivityLogController extends Controller
             ->orderByDesc('created_at');
     }
 }
-
-

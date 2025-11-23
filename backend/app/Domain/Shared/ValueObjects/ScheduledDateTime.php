@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Value Object para data/hora agendada
- * 
+ *
  * Garante que a data/hora seja válida e futura
  */
 class ScheduledDateTime
@@ -63,6 +63,7 @@ class ScheduledDateTime
     public function diffInHours(?CarbonInterface $date = null): int
     {
         $date = $date ?? now();
+
         return $this->value->diffInHours($date, false);
     }
 
@@ -110,4 +111,3 @@ class ScheduledDateTime
         return $this->toDateTimeString();
     }
 }
-

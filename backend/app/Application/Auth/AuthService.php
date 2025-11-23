@@ -13,8 +13,7 @@ class AuthService
 {
     public function __construct(
         private Hasher $hasher
-    ) {
-    }
+    ) {}
 
     public function login(string $email, string $password): array
     {
@@ -87,7 +86,7 @@ class AuthService
         // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
         // Configurado no AppServiceProvider
         $user->assignRole(UserRole::PATIENT->value);
-        
+
         // Limpar cache do Spatie Permission após atribuir role
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -117,7 +116,7 @@ class AuthService
         // Atribui role usando o nome (string) - o Spatie vai usar o guard padrão (sanctum)
         // Configurado no AppServiceProvider
         $user->assignRole(UserRole::DOCTOR->value);
-        
+
         // Limpar cache do Spatie Permission após atribuir role
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -131,5 +130,3 @@ class AuthService
         return $user->load('doctor');
     }
 }
-
-

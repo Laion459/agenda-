@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class BackupCommandTest extends TestCase
@@ -17,7 +15,7 @@ class BackupCommandTest extends TestCase
         // O comando pode falhar se pg_dump não estiver disponível, mas isso é aceitável em testes
         // Em ambiente de teste, aceitamos tanto sucesso quanto falha por falta de pg_dump
         $result = $this->artisan('backup:database', ['--retention' => 30]);
-        
+
         // Aceita código de saída 0 (sucesso) ou 1 (falha por falta de pg_dump)
         // Não lançamos exceção, apenas verificamos que o comando foi executado
         $this->assertTrue(true, 'Comando executado (sucesso ou falha aceitável em testes)');
@@ -26,9 +24,8 @@ class BackupCommandTest extends TestCase
     public function test_comando_arquivamento_pode_ser_executado(): void
     {
         $result = $this->artisan('reports:archive', ['--months' => 6]);
-        
+
         // O comando deve executar sem erros (mesmo que não encontre relatórios)
         $result->assertExitCode(0);
     }
 }
-

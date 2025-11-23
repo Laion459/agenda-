@@ -42,5 +42,3 @@ class DataRetentionService
         return $event->deleted;
     }
 }
-
-

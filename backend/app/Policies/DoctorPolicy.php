@@ -57,4 +57,3 @@ class DoctorPolicy
         return $role === UserRole::ADMIN;
     }
 }
-

@@ -53,11 +53,11 @@ class AdminPatientTest extends TestCase
     public function test_admin_pode_listar_pacientes(): void
     {
         $admin = $this->createAdmin();
-        
+
         Patient::factory()->count(5)->create();
 
         $this->authAs($admin);
-        
+
         $response = $this->getJson('/api/admin/patients');
 
         $response->assertStatus(200)
@@ -76,11 +76,11 @@ class AdminPatientTest extends TestCase
         $patient = Patient::factory()->create();
 
         $this->authAs($admin);
-        
+
         $response = $this->putJson("/api/admin/patients/{$patient->id}", [
-                'name' => 'Nome Atualizado',
-                'phone' => '(11) 88888-8888',
-            ]);
+            'name' => 'Nome Atualizado',
+            'phone' => '(11) 88888-8888',
+        ]);
 
         $response->assertStatus(200);
 
@@ -91,11 +91,11 @@ class AdminPatientTest extends TestCase
     public function test_cpf_deve_ser_unico(): void
     {
         $admin = $this->createAdmin();
-        
+
         Patient::factory()->create(['cpf' => '12345678901']);
 
         $this->authAs($admin);
-        
+
         $response = $this->postJson('/api/admin/patients', [
             'name' => 'Outro Paciente',
             'email' => 'outro@test.com',
@@ -115,14 +115,14 @@ class AdminPatientTest extends TestCase
         ]);
 
         $this->authAs($patient);
-        
+
         $response = $this->postJson('/api/admin/patients', [
-                'name' => 'Teste',
-                'email' => 'test@test.com',
-                'phone' => '(11) 99999-9999',
-                'cpf' => '12345678901',
-                'birth_date' => '1990-01-01',
-            ]);
+            'name' => 'Teste',
+            'email' => 'test@test.com',
+            'phone' => '(11) 99999-9999',
+            'cpf' => '12345678901',
+            'birth_date' => '1990-01-01',
+        ]);
 
         $response->assertStatus(403);
     }
@@ -133,10 +133,9 @@ class AdminPatientTest extends TestCase
             'role' => UserRole::ADMIN,
             'is_active' => true,
         ]);
-        
+
         $this->assignRoleToUser($user, UserRole::ADMIN);
-        
+
         return $user;
     }
 }
-

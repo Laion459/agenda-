@@ -25,5 +25,3 @@ class CreateAppointmentRequest extends FormRequest
         ];
     }
 }
-
-

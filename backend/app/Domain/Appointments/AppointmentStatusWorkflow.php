@@ -85,4 +85,3 @@ class AppointmentStatusWorkflow
         return $status->isFinal();
     }
 }
-

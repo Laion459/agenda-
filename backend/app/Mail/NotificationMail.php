@@ -11,9 +11,7 @@ class NotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Notification $notification)
-    {
-    }
+    public function __construct(public Notification $notification) {}
 
     public function build(): self
     {
@@ -23,5 +21,3 @@ class NotificationMail extends Mailable
             ]);
     }
 }
-
-

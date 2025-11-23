@@ -14,5 +14,3 @@ enum AppointmentStatus: string
         return in_array($this, [self::COMPLETED, self::CANCELLED], true);
     }
 }
-
-

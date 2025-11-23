@@ -16,5 +16,3 @@ class NullSmsProvider implements SmsProviderInterface
         return true;
     }
 }
-
-

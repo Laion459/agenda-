@@ -2,14 +2,14 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Throwable;
 
@@ -68,7 +68,6 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $e
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function render($request, Throwable $e)
@@ -169,7 +168,7 @@ class Handler extends ExceptionHandler
     protected function handleGenericException(Throwable $e): JsonResponse
     {
         $statusCode = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
-        
+
         $response = [
             'message' => __('Erro ao processar requisição.'),
         ];
@@ -184,4 +183,3 @@ class Handler extends ExceptionHandler
         return response()->json($response, $statusCode);
     }
 }
-

@@ -38,5 +38,3 @@ class EnforceDataRetentionCommand extends Command
         return self::SUCCESS;
     }
 }
-
-
