@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, Menu, Calendar, Bell, User, Stethoscope, Users, FileText, TrendingUp, ScrollText, ShieldCheck, LayoutDashboard, CalendarClock, CalendarCheck, NotebookText } from 'lucide-react';
+import { X, Menu, Calendar, Bell, Stethoscope, Users, TrendingUp, ScrollText, ShieldCheck, LayoutDashboard, CalendarClock, CalendarCheck, NotebookText } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuthStore } from '@/store/auth-store';
-import { Button } from '@/components/ui/button';
 
 interface NavItem {
   href: string;
@@ -22,6 +21,7 @@ export function MobileMenu() {
   // Fechar menu ao mudar de rota
   useEffect(() => {
     setIsOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // Prevenir scroll do body quando menu está aberto

@@ -10,7 +10,7 @@ interface UseAsyncReturn<T> {
   data: T | null;
   loading: boolean;
   error: Error | null;
-  execute: (...args: any[]) => Promise<T | undefined>;
+  execute: (...args: unknown[]) => Promise<T | undefined>;
   reset: () => void;
 }
 
@@ -19,7 +19,7 @@ interface UseAsyncReturn<T> {
  * Padroniza o tratamento de loading, error e data
  */
 export function useAsync<T>(
-  asyncFunction: (...args: any[]) => Promise<T>,
+  asyncFunction: (...args: unknown[]) => Promise<T>,
   immediate = false
 ): UseAsyncReturn<T> {
   const [state, setState] = useState<UseAsyncState<T>>({
@@ -29,7 +29,7 @@ export function useAsync<T>(
   });
 
   const execute = useCallback(
-    async (...args: any[]) => {
+    async (...args: unknown[]) => {
       setState({ data: null, loading: true, error: null });
       try {
         const data = await asyncFunction(...args);
