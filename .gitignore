@@ -69,7 +69,11 @@ test-results/
 .tsbuildinfo
 
 # Composer/NPM
-composer.lock
+# Allow backend/composer.lock for Docker builds
+!backend/composer.lock
+# Ignore composer.lock in other locations
+**/composer.lock
+!backend/composer.lock
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
