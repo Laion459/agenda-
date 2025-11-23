@@ -1,40 +1,39 @@
 'use client';
 
 import { clsx } from "clsx";
+import { getStatusBadgeClasses, getStatusColors } from "@/constants/colors";
 
 interface StatusBadgeProps {
   status: string;
+  className?: string;
 }
-
-const STATUS_CLASSES: Record<string, string> = {
-  PENDING: "bg-amber-50 text-amber-700",
-  CONFIRMED: "bg-emerald-50 text-emerald-700",
-  COMPLETED: "bg-blue-50 text-blue-700",
-  CANCELLED: "bg-rose-50 text-rose-700",
-};
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pendente",
   CONFIRMED: "Confirmada",
   COMPLETED: "Concluída",
   CANCELLED: "Cancelada",
+  BLOCKED: "Bloqueada",
 };
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
-      className={clsx(
-        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-        STATUS_CLASSES[status] ?? "bg-slate-100 text-slate-600"
-      )}
+      className={clsx(getStatusBadgeClasses(status), className)}
+      role="status"
+      aria-label={`Status: ${getStatusLabel(status)}`}
     >
-      {STATUS_LABELS[status] ?? status}
+      {getStatusLabel(status)}
     </span>
   );
 }
 
 export function getStatusLabel(status: string): string {
-  return STATUS_LABELS[status] ?? status;
+  return STATUS_LABELS[status.toUpperCase()] ?? status;
+}
+
+export function getStatusColorClasses(status: string) {
+  return getStatusColors(status);
 }
 
 

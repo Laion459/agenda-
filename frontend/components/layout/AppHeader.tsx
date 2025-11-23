@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Calendar, LogOut } from "lucide-react";
+import { Calendar, LogOut, Bell } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { MobileMenu } from "@/components/layout/MobileMenu";
 import { logout as logoutRequest } from "@/services/auth-service";
 import { fetchNotifications } from "@/services/notification-service";
 import { useAuthStore } from "@/store/auth-store";
@@ -70,7 +71,10 @@ export function AppHeader() {
 
   const unreadBadge =
     unreadCount > 0 ? (
-      <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+      <span 
+        className="absolute -right-1 -top-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white"
+        aria-label={`${unreadCount} notificações não lidas`}
+      >
         {unreadCount > 99 ? "99+" : unreadCount}
       </span>
     ) : null;
@@ -89,30 +93,70 @@ export function AppHeader() {
   };
 
   return (
-    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-      <Link href="/dashboard" className="flex items-center gap-3 text-slate-900" aria-label="Ir para o dashboard">
-        <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
-          <Calendar className="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <span className="text-lg font-bold tracking-tight block">Agenda+</span>
-          {getRoleLabel() && (
-            <span className="text-xs text-slate-600 block">{getRoleLabel()}</span>
-          )}
-        </div>
-      </Link>
-      <div className="flex items-center gap-3 text-sm text-slate-700">
-        <Link href="/notifications" className="relative">
-          <Button variant="ghost">Notificações</Button>
+    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 py-4">
+      <div className="flex items-center gap-3">
+        {/* Menu Mobile */}
+        <MobileMenu />
+        
+        {/* Logo */}
+        <Link 
+          href="/dashboard" 
+          className="flex items-center gap-2 sm:gap-3 text-slate-900" 
+          aria-label="Ir para o dashboard"
+        >
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          </div>
+          <div className="hidden sm:block">
+            <span className="text-base sm:text-lg font-bold tracking-tight block">Agenda+</span>
+            {getRoleLabel() && (
+              <span className="text-xs text-slate-600 block">{getRoleLabel()}</span>
+            )}
+          </div>
+        </Link>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 sm:gap-3 text-sm text-slate-700">
+        {/* Notificações - oculto em mobile muito pequeno */}
+        <Link 
+          href="/notifications" 
+          className="relative hidden xs:block"
+          aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
+        >
+          <Button 
+            variant="ghost" 
+            className="hidden sm:flex items-center gap-2"
+            aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
+          >
+            <Bell className="h-4 w-4" />
+            <span className="hidden md:inline">Notificações</span>
+          </Button>
+          <Button 
+            variant="ghost" 
+            className="sm:hidden p-2"
+            aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
+          >
+            <Bell className="h-5 w-5" />
+          </Button>
           {unreadBadge}
         </Link>
-        <div className="text-right">
+
+        {/* Informações do usuário - oculto em mobile */}
+        <div className="hidden md:block text-right">
           <p className="font-medium">{user?.name}</p>
           <p className="text-xs text-slate-500">{user?.role}</p>
         </div>
-        <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
+
+        {/* Botão Sair */}
+        <Button 
+          variant="ghost" 
+          onClick={handleLogout} 
+          className="flex items-center gap-2 p-2 sm:px-4"
+          aria-label="Sair da conta"
+        >
           <LogOut className="h-4 w-4" />
-          Sair
+          <span className="hidden sm:inline">Sair</span>
         </Button>
       </div>
     </header>

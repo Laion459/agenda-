@@ -29,9 +29,9 @@ export default function ProtectedLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <AppHeader />
-      <div className="flex flex-1 bg-slate-100">
+      <div className="flex flex-1 bg-slate-50">
         <AppSidebar />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto">{children}</main>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { fetchAppointments } from '@/services/appointment-service';
 import { Appointment } from '@/types';
 import { handleApiError } from '@/lib/handle-api-error';
+import { getStatusColors } from '@/constants/colors';
 import {
   formatDate,
   startOfMonth,
@@ -88,18 +89,8 @@ export default function DoctorDashboardPage() {
   );
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'CONFIRMED':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'BLOCKED':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-slate-100 text-slate-800 border-slate-200';
-    }
+    const colors = getStatusColors(status);
+    return `${colors.bg} ${colors.text} ${colors.border}`;
   };
 
   const getStatusIcon = (status: string) => {
