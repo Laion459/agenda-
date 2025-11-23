@@ -90,7 +90,7 @@ export function ResponsiveTable<T>({
                     key={column.key}
                     className={`px-4 py-3 text-slate-700 ${column.className || ''}`}
                   >
-                    {column.render ? column.render(item) : (item as Record<string, unknown>)[column.key]}
+                    {column.render ? column.render(item) : String((item as Record<string, unknown>)[column.key] ?? '')}
                   </td>
                 ))}
               </tr>
@@ -109,7 +109,7 @@ export function ResponsiveTable<T>({
           >
             <div className="space-y-3">
               {columns.map((column) => {
-                const value = column.render ? column.render(item) : (item as Record<string, unknown>)[column.key];
+                const value = column.render ? column.render(item) : String((item as Record<string, unknown>)[column.key] ?? '');
                 const label = column.mobileLabel || column.label;
                 
                 return (
