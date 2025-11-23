@@ -118,12 +118,10 @@ jobs:
         working-directory: ./frontend
         run: |
           if [ -f package-lock.json ]; then
-            npm ci --include=optional
+            npm ci
           else
-            npm install --include=optional
+            npm install
           fi
-          # Garantir que binários nativos do lightningcss sejam instalados
-          npm rebuild lightningcss --include=optional || true
 
       - name: Run ESLint
         working-directory: ./frontend
