@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         },
       });
       set({ token, user: data, initializing: false });
-    } catch (error) {
+    } catch {
       clearToken();
       set({ token: null, user: null, initializing: false });
     }

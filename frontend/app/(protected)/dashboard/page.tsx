@@ -13,16 +13,13 @@ import { handleApiError } from "@/lib/handle-api-error";
 import { fetchAppointments } from "@/services/appointment-service";
 import { fetchDoctors } from "@/services/doctor-service";
 import { Appointment, Doctor } from "@/types";
-import { APPOINTMENT_STATUS_OPTIONS } from "@/constants/appointments";
 import { useAuthStore } from "@/store/auth-store";
-import { getRedirectPathByRole } from "@/lib/auth-redirect";
 
 export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const user = useAuthStore((state) => state.user);
-  const role = user?.role;
   const router = useRouter();
 
   // Redireciona médicos para o dashboard específico

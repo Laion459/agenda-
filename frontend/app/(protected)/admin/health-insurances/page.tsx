@@ -133,7 +133,7 @@ export default function HealthInsurancesPage() {
     });
   };
 
-  const handleToggleActive = async (item: HealthInsurance) => {
+  const _handleToggleActive = async (item: HealthInsurance) => {
     const question = item.is_active
       ? "Desativar este convênio? Médicos e pacientes deixarão de vinculá-lo."
       : "Reativar este convênio para uso nas agendas?";

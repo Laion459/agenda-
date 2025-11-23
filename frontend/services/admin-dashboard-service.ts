@@ -1,5 +1,22 @@
 import api from "@/lib/api";
 
+interface DoctorData {
+  is_active: boolean;
+  created_at: string;
+}
+
+interface PatientData {
+  user?: {
+    is_active: boolean;
+  };
+  created_at: string;
+}
+
+interface InsuranceData {
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface DashboardStats {
   total_appointments: number;
   appointments_today: number;
@@ -61,27 +78,26 @@ export async function fetchDashboardStats() {
   const insurancesData = insurances.data.data || [];
 
   // Calcular estatísticas
-  const today = new Date().toISOString().split("T")[0];
   const thisMonth = new Date().getMonth();
   const thisYear = new Date().getFullYear();
 
   const appointmentsToday = 0; // Será calculado quando tivermos endpoint específico
   const appointmentsThisMonth = appointmentsData?.total || 0;
 
-  const activeDoctors = doctorsData.filter((d: any) => d.is_active).length;
-  const newDoctors = doctorsData.filter((d: any) => {
+  const activeDoctors = (doctorsData as DoctorData[]).filter((d) => d.is_active).length;
+  const newDoctors = (doctorsData as DoctorData[]).filter((d) => {
     const created = new Date(d.created_at);
     return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
   }).length;
 
-  const activePatients = patientsData.filter((p: any) => p.user?.is_active).length;
-  const newPatients = patientsData.filter((p: any) => {
+  const activePatients = (patientsData as PatientData[]).filter((p) => p.user?.is_active).length;
+  const newPatients = (patientsData as PatientData[]).filter((p) => {
     const created = new Date(p.created_at);
     return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
   }).length;
 
-  const activeInsurances = insurancesData.filter((i: any) => i.is_active).length;
-  const newInsurances = insurancesData.filter((i: any) => {
+  const activeInsurances = (insurancesData as InsuranceData[]).filter((i) => i.is_active).length;
+  const newInsurances = (insurancesData as InsuranceData[]).filter((i) => {
     const created = new Date(i.created_at);
     return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
   }).length;
@@ -173,8 +189,7 @@ export async function fetchMonthlyAppointments(): Promise<MonthlyAppointments[]>
 }
 
 export async function fetchSpecialtyDistribution(): Promise<SpecialtyDistribution[]> {
-  const response = await api.get("/admin/reports/doctor-occupancy");
-  const data = response.data?.data || [];
+  await api.get("/admin/reports/doctor-occupancy");
   
   // Agrupar por especialidade (precisaríamos de um endpoint específico)
   // Por enquanto retornamos dados mockados baseados na imagem

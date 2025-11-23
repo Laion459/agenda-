@@ -17,7 +17,7 @@ import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import { createPatient, fetchAdminPatients, togglePatientStatus, updatePatient } from "@/services/admin-patient-service";
 import { HealthInsurance, Patient } from "@/types";
-import { Eye, Edit, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { Eye, Edit, Trash2, CheckCircle2 } from "lucide-react";
 
 const patientSchema = z.object({
   name: z.string().min(3, "Informe o nome"),

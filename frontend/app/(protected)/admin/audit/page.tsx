@@ -32,6 +32,11 @@ export default function AuditLogsPage() {
   });
   const [exporting, setExporting] = useState(false);
 
+  const buildFilterParams = useCallback(() => ({
+    action: filters.search || undefined,
+    user_id: filters.user_id || undefined,
+  }), [filters.search, filters.user_id]);
+
   const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
@@ -47,7 +52,7 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, buildFilterParams]);
 
   useEffect(() => {
     void loadLogs();

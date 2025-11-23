@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Stethoscope, Search, Filter, Plus, Edit, Trash2, CheckCircle2, XCircle, Eye } from "lucide-react";
+import { Stethoscope, Search, Plus, Edit, Trash2, CheckCircle2, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,8 @@ export default function AdminDoctorsPage() {
   const [loadingForm, setLoadingForm] = useState(false);
   const [editing, setEditing] = useState<Doctor | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [planFilter, setPlanFilter] = useState<number | "all">("all");
+  const [statusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [planFilter] = useState<number | "all">("all");
 
   const {
     register,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Lock, Plus, CheckCircle2, Clock, User } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,11 +37,7 @@ export default function DoctorDashboardPage() {
   const calendarEnd = endOfWeek(monthEnd);
   const daysInMonth = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  useEffect(() => {
-    loadAppointments();
-  }, [selectedDate, viewMode]);
-
-  async function loadAppointments() {
+  const loadAppointments = useCallback(async () => {
     setLoading(true);
     try {
       const startDate = viewMode === 'daily' 
@@ -63,7 +59,7 @@ export default function DoctorDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [selectedDate, viewMode]);
 
   const getDayAppointments = (date: Date) => {
     return appointments.filter((apt) => {

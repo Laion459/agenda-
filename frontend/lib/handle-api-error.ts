@@ -25,7 +25,7 @@ export function handleApiError(error: unknown, fallback = "Ocorreu um erro inesp
  * Extrai primeira mensagem de erro de validação
  * @deprecated Use errorHandler.getValidationErrors() ou errorHandler.getErrorMessage()
  */
-function extractFirstError(errors?: Record<string, string[] | string>) {
+function _extractFirstError(errors?: Record<string, string[] | string>) {
   if (!errors) return null;
   const firstKey = Object.keys(errors)[0];
   if (!firstKey) return null;

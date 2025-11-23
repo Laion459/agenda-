@@ -43,7 +43,7 @@ api.interceptors.response.use(
     if (error.config?.responseType === 'blob' && error.response?.data) {
       const blob = error.response.data instanceof Blob 
         ? error.response.data 
-        : new Blob([error.response.data], { type: 'application/json' });
+        : new Blob([String(error.response.data)], { type: 'application/json' });
       return Promise.reject({ ...handledError, blob });
     }
     
@@ -68,7 +68,7 @@ function handleApiErrorResponse(error: AxiosError): AxiosError {
   }
 
   const status = error.response.status;
-  const data = error.response.data as any;
+  const data = error.response.data as { message?: string; errors?: Record<string, string | string[]> };
 
   // Tratamento por status HTTP
   switch (status) {
@@ -114,7 +114,7 @@ function handleApiErrorResponse(error: AxiosError): AxiosError {
 /**
  * Extrai mensagens de erro de validação
  */
-function extractValidationErrors(data: any): string | null {
+function extractValidationErrors(data: { errors?: Record<string, string | string[]> }): string | null {
   if (!data?.errors) return null;
 
   const errors = data.errors;

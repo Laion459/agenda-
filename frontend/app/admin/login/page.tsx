@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -42,10 +43,11 @@ export default function AdminLoginPage() {
       setAuth(result);
       // Redireciona para o dashboard administrativo
       router.replace('/admin/doctors');
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
       setError('email', {
         type: 'manual',
-        message: error?.response?.data?.message ?? 'Credenciais inválidas',
+        message: axiosError?.response?.data?.message ?? 'Credenciais inválidas',
       });
     } finally {
       setLoading(false);

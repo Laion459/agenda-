@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +20,7 @@ export function AppHeader() {
   const handleLogout = async () => {
     try {
       await logoutRequest();
-    } catch (error) {
+    } catch {
       // ignora erros ao encerrar sessão
     } finally {
       logout();

@@ -8,6 +8,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { AxiosError } from "axios";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,10 +43,11 @@ export default function LoginPage() {
       const result = await login(values);
       setAuth(result);
       router.replace("/dashboard");
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
       setError("email", {
         type: "manual",
-        message: error?.response?.data?.message ?? "Credenciais inválidas",
+        message: axiosError?.response?.data?.message ?? "Credenciais inválidas",
       });
     } finally {
       setLoading(false);

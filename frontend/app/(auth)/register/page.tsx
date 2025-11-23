@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,10 +60,11 @@ export default function RegisterPage() {
         gender: values.gender,
       });
       router.push('/login');
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
       setError('email', {
         type: 'manual',
-        message: error?.response?.data?.message ?? 'Não foi possível cadastrar',
+        message: axiosError?.response?.data?.message ?? 'Não foi possível cadastrar',
       });
     } finally {
       setLoading(false);

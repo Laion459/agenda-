@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -72,10 +73,11 @@ export default function DoctorRegisterPage() {
       });
       // Sucesso - redireciona para login
       router.push('/login/doctor?registered=true');
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || 
-                          error?.response?.data?.errors?.email?.[0] || 
-                          error?.response?.data?.errors?.crm?.[0] ||
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string; errors?: { email?: string[]; crm?: string[] } }>;
+      const errorMessage = axiosError?.response?.data?.message || 
+                          axiosError?.response?.data?.errors?.email?.[0] || 
+                          axiosError?.response?.data?.errors?.crm?.[0] ||
                           'Não foi possível cadastrar. Verifique os dados informados.';
       setError('email', {
         type: 'manual',

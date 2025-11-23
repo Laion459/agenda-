@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -48,8 +49,9 @@ export default function PatientLoginPage() {
       const result = await login(loginData);
       setAuth(result);
       router.replace(getRedirectPathByRole(result.user));
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.response?.data?.errors?.email?.[0] || 'Credenciais inválidas. Verifique seu e-mail/CPF e senha.';
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string; errors?: { email?: string[] } }>;
+      const errorMessage = axiosError?.response?.data?.message || axiosError?.response?.data?.errors?.email?.[0] || 'Credenciais inválidas. Verifique seu e-mail/CPF e senha.';
       setError('emailOrCpf', {
         type: 'manual',
         message: errorMessage,

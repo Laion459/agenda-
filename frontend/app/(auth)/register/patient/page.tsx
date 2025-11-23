@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -76,10 +77,11 @@ export default function PatientRegisterPage() {
         gender: values.gender as 'M' | 'F' | 'OTHER',
       });
       router.push('/login/patient');
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
       setError('email', {
         type: 'manual',
-        message: error?.response?.data?.message ?? 'Não foi possível cadastrar',
+        message: axiosError?.response?.data?.message ?? 'Não foi possível cadastrar',
       });
     } finally {
       setLoading(false);

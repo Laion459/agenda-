@@ -19,9 +19,6 @@ const LineChart = dynamic(() => import("recharts").then((mod) => mod.LineChart),
 const Line = dynamic(() => import("recharts").then((mod) => mod.Line), { ssr: false });
 const BarChart = dynamic(() => import("recharts").then((mod) => mod.BarChart), { ssr: false });
 const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar), { ssr: false });
-const PieChart = dynamic(() => import("recharts").then((mod) => mod.PieChart), { ssr: false });
-const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie), { ssr: false });
-const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell), { ssr: false });
 const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), { ssr: false });
 const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), { ssr: false });
 const CartesianGrid = dynamic(() => import("recharts").then((mod) => mod.CartesianGrid), { ssr: false });
@@ -42,9 +39,6 @@ import {
   fetchSpecialtyDistribution,
 } from "@/services/admin-dashboard-service";
 import { handleApiError } from "@/lib/handle-api-error";
-import toast from "react-hot-toast";
-
-const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);

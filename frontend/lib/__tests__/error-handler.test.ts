@@ -1,4 +1,4 @@
-import { errorHandler, AppErrorHandler } from '../error-handler';
+import { errorHandler } from '../error-handler';
 
 describe('ErrorHandler', () => {
   describe('getErrorMessage', () => {
