@@ -34,4 +34,9 @@ export function CardDescription({ className, ...props }: HTMLAttributes<HTMLPara
   );
 }
 
+export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={clsx("", className)} {...props} />
+  );
+}
 

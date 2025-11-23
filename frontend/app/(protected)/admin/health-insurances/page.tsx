@@ -6,12 +6,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { handleApiError } from "@/lib/handle-api-error";
+import { Eye, Edit, Trash2, Plus, Search } from "lucide-react";
 import {
   createHealthInsurance,
   deleteHealthInsurance,
@@ -36,7 +38,7 @@ const schema = z.object({
   is_active: z.boolean().default(true),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.input<typeof schema>;
 
 export default function HealthInsurancesPage() {
   const user = useAuthStore((state) => state.user);
@@ -87,26 +89,23 @@ export default function HealthInsurancesPage() {
   const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
     try {
+      // Parse os valores usando o schema para obter os valores transformados
+      const parsed = schema.parse(values);
+      
       if (editing) {
         await updateHealthInsurance(editing.id, {
-          name: values.name,
-          description: values.description,
-          coverage_percentage: values.coverage_percentage,
-          is_active: values.is_active,
-        });
-        await updateHealthInsurance(editing.id, {
-          name: values.name,
-          description: values.description,
-          coverage_percentage: values.coverage_percentage,
-          is_active: values.is_active,
+          name: parsed.name,
+          description: parsed.description,
+          coverage_percentage: parsed.coverage_percentage,
+          is_active: parsed.is_active,
         });
         toast.success("Convênio atualizado");
       } else {
         await createHealthInsurance({
-          name: values.name,
-          description: values.description,
-          coverage_percentage: values.coverage_percentage,
-          is_active: values.is_active,
+          name: parsed.name,
+          description: parsed.description,
+          coverage_percentage: parsed.coverage_percentage,
+          is_active: parsed.is_active,
         });
         toast.success("Convênio cadastrado");
       }
@@ -128,7 +127,7 @@ export default function HealthInsurancesPage() {
     reset({
       id: item.id,
       name: item.name,
-      description: item.description ?? "",
+      description: "",
       coverage_percentage: item.coverage_percentage ? Number(item.coverage_percentage) : undefined,
       is_active: item.is_active,
     });
@@ -181,7 +180,7 @@ export default function HealthInsurancesPage() {
             (statusFilter === "active" && item.is_active) ||
             (statusFilter === "inactive" && !item.is_active)) &&
           (normalizedFilter
-            ? [item.name, item.description, item.coverage_percentage?.toString() ?? ""]
+            ? [item.name, item.coverage_percentage?.toString() ?? ""]
                 .filter(Boolean)
                 .some((value) => value!.toLowerCase().includes(normalizedFilter))
             : true)
@@ -194,7 +193,60 @@ export default function HealthInsurancesPage() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+    <AdminLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Gestão de Convênios</h1>
+          <p className="text-sm text-slate-600 mt-1">Gerencie os convênios e planos de saúde</p>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm font-medium text-slate-600 mb-1">Convênios Ativos</p>
+              <p className="text-3xl font-bold text-slate-900">
+                {items.filter(i => i.is_active).length}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm font-medium text-slate-600 mb-1">Total de Beneficiários</p>
+              <p className="text-3xl font-bold text-slate-900">770</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm font-medium text-slate-600 mb-1">Média por Convênio</p>
+              <p className="text-3xl font-bold text-slate-900">385</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Actions */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center gap-2">
+            <Search className="h-5 w-5 text-slate-400" />
+            <Input
+              placeholder="Buscar por nome, CNPJ ou contato..."
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              className="max-w-md"
+            />
+          </div>
+          <Button
+            onClick={() => {
+              resetForm();
+            }}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Convênio
+          </Button>
+        </div>
+
+      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -261,65 +313,100 @@ export default function HealthInsurancesPage() {
       </Card>
 
       <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Convênios cadastrados</CardTitle>
-          <CardDescription>Gerencie a lista de convênios aceitos.</CardDescription>
-        </CardHeader>
-        <div className="max-h-[540px] overflow-y-auto border-t border-slate-200">
-          {loading ? (
-            <div className="space-y-3 p-6">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-            </div>
-          ) : orderedItems.length === 0 ? (
-            <EmptyState className="m-4">Nenhum convênio cadastrado.</EmptyState>
-          ) : (
-            <ul className="divide-y divide-slate-200">
-              {orderedItems.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex flex-col gap-2 px-6 py-4 text-sm md:flex-row md:items-center md:justify-between"
-                    >
-                  <div>
-                    <p className="font-medium text-slate-900">{item.name}</p>
-                    {item.coverage_percentage && (
-                          <p className="text-xs text-slate-500">
-                            Cobertura média: {Number(item.coverage_percentage).toFixed(1)}%
-                          </p>
-                    )}
-                    {item.description && <p className="text-xs text-slate-500">{item.description}</p>}
-                        <span
-                          className={`mt-2 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            item.is_active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
-                          }`}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Convênio</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beneficiários</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                  </td>
+                </tr>
+              ) : orderedItems.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center">
+                    <EmptyState>Nenhum convênio encontrado.</EmptyState>
+                  </td>
+                </tr>
+              ) : (
+                orderedItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">-</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-500">-</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">-</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          item.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {item.is_active ? "ativo" : "inativo"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleEdit(item)}
+                          className="h-8 w-8 p-0"
+                          title="Ver detalhes"
                         >
-                          {item.is_active ? "Ativo" : "Inativo"}
-                        </span>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <Button variant="secondary" onClick={() => handleEdit(item)}>
-                      Editar
-                    </Button>
-                    <Button variant="ghost" onClick={() => handleToggleActive(item)}>
-                          {item.is_active ? "Desativar" : "Ativar"}
-                    </Button>
-                    <Button
-                      variant="ghost"
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleEdit(item)}
+                          className="h-8 w-8 p-0"
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
                           onClick={() => {
                             void handleDelete(item);
                           }}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                          className="h-8 w-8 p-0"
+                          title="Remover"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
-    </div>
+      </div>
+      </div>
+    </AdminLayout>
   );
 }
 

@@ -56,7 +56,7 @@ export function AppHeader() {
     mountedRef.current = true;
 
     if (typeof window !== "undefined") {
-      window.addEventListener("notifications:updated", handler);
+      window.addEventListener("notifications:updated", handler as EventListener);
     }
 
     void loadUnreadCount();
@@ -64,7 +64,7 @@ export function AppHeader() {
     return () => {
       mountedRef.current = false;
       if (typeof window !== "undefined") {
-        window.removeEventListener("notifications:updated", handler);
+        window.removeEventListener("notifications:updated", handler as EventListener);
       }
     };
   }, []);

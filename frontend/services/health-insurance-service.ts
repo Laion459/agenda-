@@ -10,8 +10,10 @@ type HealthInsuranceResourceResponse = {
 };
 
 type HealthInsurancePayload = Partial<
-  Pick<HealthInsurance, "name" | "description" | "coverage_percentage" | "is_active">
->;
+  Pick<HealthInsurance, "name" | "coverage_percentage" | "is_active">
+> & {
+  description?: string;
+};
 
 type HealthInsuranceCreatePayload = Required<Pick<HealthInsurancePayload, "name">> &
   Omit<HealthInsurancePayload, "name">;

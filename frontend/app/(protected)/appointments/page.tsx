@@ -39,7 +39,7 @@ const patientSchema = z.object({
   notes: z.string().optional(),
 });
 
-type PatientForm = z.infer<typeof patientSchema>;
+type PatientForm = z.input<typeof patientSchema>;
 
 const observationSchema = z.object({
   anamnesis: z.string().min(1, "Informe a anamnese"),
@@ -55,7 +55,7 @@ const rescheduleSchema = z.object({
   duration_minutes: z.coerce.number().min(15).max(240),
 });
 
-type RescheduleForm = z.infer<typeof rescheduleSchema>;
+type RescheduleForm = z.input<typeof rescheduleSchema>;
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -136,7 +136,9 @@ export default function AppointmentsPage() {
 
   const onCreateAppointment = async (values: PatientForm) => {
     try {
-      await createAppointment(values);
+      // Parse os valores usando o schema para obter os valores transformados
+      const parsed = patientSchema.parse(values);
+      await createAppointment(parsed);
       toast.success('Consulta solicitada com sucesso');
       reset({ type: 'PRESENTIAL', duration_minutes: 30 } as Partial<PatientForm>);
       await reloadAppointments();
@@ -191,7 +193,9 @@ export default function AppointmentsPage() {
     if (!selectedReschedule) return;
     setBusyId(selectedReschedule.id);
     try {
-      await rescheduleAppointment(selectedReschedule.id, values);
+      // Parse os valores usando o schema para obter os valores transformados
+      const parsed = rescheduleSchema.parse(values);
+      await rescheduleAppointment(selectedReschedule.id, parsed);
       toast.success('Solicitação de remarcação enviada');
       resetReschedule();
       setSelectedReschedule(null);

@@ -6,10 +6,11 @@ type ApiError = {
   };
 };
 
-export function handleApiError(error: ApiError, fallback = "Ocorreu um erro inesperado.") {
+export function handleApiError(error: unknown, fallback = "Ocorreu um erro inesperado.") {
+  const apiError = error as ApiError;
   const message =
-    error?.response?.data?.message ||
-    extractFirstError(error?.response?.data?.errors) ||
+    apiError?.response?.data?.message ||
+    extractFirstError(apiError?.response?.data?.errors) ||
     fallback;
 
   toast.error(message);

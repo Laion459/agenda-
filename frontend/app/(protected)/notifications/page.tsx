@@ -253,7 +253,6 @@ export default function NotificationsPage() {
                         </span>
                         {!notification.is_read && (
                           <Button
-                            size="sm"
                             variant="secondary"
                             onClick={() => handleMarkAsRead(notification)}
                             disabled={processingId === notification.id}
@@ -296,7 +295,7 @@ export default function NotificationsPage() {
               Object.entries(preferences).map(([channel, types]) => (
                 <div key={channel} className="rounded-lg border border-slate-200 p-4">
                   <h3 className="text-sm font-semibold text-slate-700">
-                    {channelLabels[channel] ?? channel}
+                    {channelLabels[channel as keyof typeof channelLabels] ?? channel}
                   </h3>
                   <div className="mt-3 grid gap-3 md:grid-cols-2">
                     {Object.entries(types).map(([type, enabled]) => (
@@ -304,7 +303,7 @@ export default function NotificationsPage() {
                         key={type}
                         className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm"
                       >
-                        <span>{typeLabels[type] ?? type}</span>
+                        <span>{typeLabels[type as keyof typeof typeLabels] ?? type}</span>
                         <input
                           type="checkbox"
                           checked={enabled}

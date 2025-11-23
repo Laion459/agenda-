@@ -61,7 +61,8 @@ COPY backend/composer.json backend/composer.lock ./
 RUN composer install \
     --prefer-dist \
     --no-progress \
-    --no-interaction
+    --no-interaction \
+    --no-scripts
 
 COPY backend /var/www/html
 

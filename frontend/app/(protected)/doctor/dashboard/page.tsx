@@ -123,7 +123,7 @@ export default function DoctorDashboardPage() {
     selectedDate: Date; 
     appointments: Appointment[];
     getStatusColor: (status: string) => string;
-    getStatusIcon: (status: string) => JSX.Element | null;
+    getStatusIcon: (status: string) => React.ReactElement | null;
   }) {
     const weekStart = startOfWeek(selectedDate);
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -236,7 +236,6 @@ export default function DoctorDashboardPage() {
         <div className="flex items-center space-x-2">
           <Button
             variant={viewMode === 'daily' ? 'default' : 'outline'}
-            size="sm"
             onClick={() => setViewMode('daily')}
             className={viewMode === 'daily' ? 'bg-slate-200 text-slate-900' : ''}
           >
@@ -244,7 +243,6 @@ export default function DoctorDashboardPage() {
           </Button>
           <Button
             variant={viewMode === 'weekly' ? 'default' : 'outline'}
-            size="sm"
             onClick={() => setViewMode('weekly')}
             className={viewMode === 'weekly' ? 'bg-slate-200 text-slate-900' : ''}
           >
@@ -265,14 +263,12 @@ export default function DoctorDashboardPage() {
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={() => setCurrentDate(subMonths(currentDate, 1))}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={() => setCurrentDate(addMonths(currentDate, 1))}
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -432,10 +428,10 @@ export default function DoctorDashboardPage() {
                       )}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" >
                         Detalhes
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" >
                         Reagendar
                       </Button>
                     </div>

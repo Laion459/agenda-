@@ -25,12 +25,12 @@ const schema = z.object({
   start_time: z.string().min(1),
   end_time: z.string().min(1),
   slot_duration_minutes: z.coerce
-    .number({ invalid_type_error: "Informe a duração" })
-    .min(10)
-    .max(120),
+    .number()
+    .min(10, "Duração mínima de 10 minutos")
+    .max(120, "Duração máxima de 120 minutos"),
 });
 
-type ScheduleForm = z.infer<typeof schema>;
+type ScheduleForm = z.input<typeof schema>;
 
 const days = [
   { label: "Segunda", value: "1" },
@@ -84,9 +84,11 @@ export default function DoctorSchedulesPage() {
 
   const onSubmit = async (values: ScheduleForm) => {
     try {
+      // Parse os valores usando o schema para obter os valores transformados
+      const parsed = schema.parse(values);
       await createSchedule({
-        ...values,
-        day_of_week: Number(values.day_of_week),
+        ...parsed,
+        day_of_week: Number(parsed.day_of_week),
       });
       toast.success("Horário registrado com sucesso.");
       reset();

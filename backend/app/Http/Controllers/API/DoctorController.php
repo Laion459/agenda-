@@ -11,7 +11,13 @@ class DoctorController extends Controller
 {
     public function index(): JsonResponse
     {
-        $doctors = Doctor::with(['user', 'healthInsurances'])->active()->paginate(15);
+        $query = Doctor::with(['user', 'healthInsurances'])->active();
+        
+        if (request()->has('crm')) {
+            $query->where('crm', request('crm'));
+        }
+        
+        $doctors = $query->paginate(15);
 
         return DoctorResource::collection($doctors)->response();
     }

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Stethoscope, Search, Filter, Plus, Edit, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { Stethoscope, Search, Filter, Plus, Edit, Trash2, CheckCircle2, XCircle, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import {
@@ -216,72 +217,50 @@ export default function AdminDoctorsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <AdminLayout>
+      <div className="space-y-6">
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <Stethoscope className="h-8 w-8 text-purple-600" />
-            Gerenciar Médicos
-          </h1>
-          <p className="text-sm text-slate-600 mt-1">Cadastre e gerencie os profissionais da clínica</p>
+          <h1 className="text-3xl font-bold text-slate-900">Gestão de Médicos</h1>
+          <p className="text-sm text-slate-600 mt-1">Gerencie os perfis médicos do sistema</p>
         </div>
-      </div>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-slate-400" />
-              <Input
-                placeholder="Buscar por nome, CRM ou e-mail"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="md:max-w-xs"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-slate-400" />
-              <select
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 md:w-36"
-              >
-                <option value="all">Todos</option>
-                <option value="active">Ativos</option>
-                <option value="inactive">Inativos</option>
-              </select>
-              <select
-                value={planFilter === "all" ? "all" : String(planFilter)}
-                onChange={(event) =>
-                  setPlanFilter(event.target.value === "all" ? "all" : Number(event.target.value))
-                }
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 md:w-44"
-              >
-                <option value="all">Todos os convênios</option>
-                {healthInsurances.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Search and Actions */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center gap-2">
+            <Search className="h-5 w-5 text-slate-400" />
+            <Input
+              placeholder="Buscar por nome, CRM ou especialidade..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="max-w-md"
+            />
           </div>
-        </CardHeader>
-      </Card>
+          <Button
+            onClick={() => {
+              resetForm();
+              // Scroll to form
+              document.getElementById('doctor-form')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Médico
+          </Button>
+        </div>
 
-      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-        {/* Formulário */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              {editing ? <Edit className="h-5 w-5 text-purple-600" /> : <Plus className="h-5 w-5 text-purple-600" />}
-              <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
-            </div>
-            <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
+        {/* Formulário e Tabela */}
+        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+          {/* Formulário - Sidebar */}
+          <Card id="doctor-form">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                {editing ? <Edit className="h-5 w-5 text-purple-600" /> : <Plus className="h-5 w-5 text-purple-600" />}
+                <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
+              </div>
+              <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
@@ -366,112 +345,116 @@ export default function AdminDoctorsPage() {
               </Button>
             )}
           </div>
-        </form>
-        </Card>
+            </form>
+          </Card>
 
-        {/* Lista de Médicos */}
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Stethoscope className="h-5 w-5 text-purple-600" />
-              Médicos cadastrados ({filteredDoctors.length})
-            </CardTitle>
-            <CardDescription>Controle dos profissionais ativos e inativos.</CardDescription>
-          </CardHeader>
-        <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
-          {loading ? (
-            <div className="space-y-3 p-6">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
+          {/* Table */}
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CRM</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especialidade</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredDoctors.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center">
+                        <EmptyState>Nenhum médico encontrado.</EmptyState>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDoctors.map((doctor) => {
+                      const active = doctor.user?.is_active ?? doctor.is_active;
+                      return (
+                        <tr key={doctor.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{doctor.name}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{doctor.crm}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{doctor.specialty}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-500">
+                              {doctor.user?.email || 'N/A'}
+                            </div>
+                            <div className="text-sm text-gray-400">
+                              {doctor.user?.phone || ''}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                active
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {active ? "ativo" : "inativo"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleEdit(doctor)}
+                                className="h-8 w-8 p-0"
+                                title="Ver detalhes"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleEdit(doctor)}
+                                className="h-8 w-8 p-0"
+                                title="Editar"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleToggleActive(doctor)}
+                                disabled={loadingForm}
+                                className="h-8 w-8 p-0"
+                                title={active ? "Desativar" : "Ativar"}
+                              >
+                                {active ? (
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                ) : (
+                                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                )}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-          ) : filteredDoctors.length === 0 ? (
-            <EmptyState className="m-4">Nenhum médico encontrado.</EmptyState>
-          ) : (
-            <ul className="divide-y divide-slate-200">
-              {filteredDoctors.map((doctor) => {
-                const active = doctor.user?.is_active ?? doctor.is_active;
-                return (
-                  <li key={doctor.id} className="flex flex-col gap-2 px-6 py-4 text-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-slate-900">{doctor.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {doctor.user?.email ?? "Sem e-mail informado"}
-                        </p>
-                      </div>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-                          active 
-                            ? "bg-green-100 text-green-700" 
-                            : "bg-slate-200 text-slate-600"
-                        }`}
-                      >
-                        {active ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                        {active ? "Ativo" : "Inativo"}
-                      </span>
-                    </div>
-                    <div className="grid gap-1 text-xs text-slate-600 md:grid-cols-2">
-                      <p>
-                        <span className="font-medium">CRM:</span> {doctor.crm}
-                      </p>
-                      <p>
-                        <span className="font-medium">Especialidade:</span> {doctor.specialty}
-                      </p>
-                      <p>
-                        <span className="font-medium">Telefone:</span>{" "}
-                        {doctor.user?.phone ?? "Não informado"}
-                      </p>
-                      <p className="md:col-span-2">
-                        <span className="font-medium">Convênios:</span>{" "}
-                        {(() => {
-                          const plans = doctor.health_insurances;
-                          if (plans && plans.length > 0) {
-                            return plans.map((plan) => plan.name).join(", ");
-                          }
-                          return "Nenhum convênio";
-                        })()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        onClick={() => handleEdit(doctor)}
-                        className="flex items-center gap-1"
-                      >
-                        <Edit className="h-3 w-3" />
-                        Editar
-                      </Button>
-                      <Button
-                        variant={active ? "outline" : "secondary"}
-                        size="sm"
-                        onClick={() => handleToggleActive(doctor)}
-                        disabled={loadingForm}
-                        className={active ? "text-red-600 hover:text-red-700" : ""}
-                      >
-                        {active ? (
-                          <>
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Desativar
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Reativar
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          </Card>
         </div>
-        </Card>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
 

@@ -12,10 +12,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import { createPatient, fetchAdminPatients, togglePatientStatus, updatePatient } from "@/services/admin-patient-service";
 import { HealthInsurance, Patient } from "@/types";
+import { Eye, Edit, Trash2, CheckCircle2, XCircle } from "lucide-react";
 
 const patientSchema = z.object({
   name: z.string().min(3, "Informe o nome"),
@@ -201,7 +203,7 @@ export default function AdminPatientsPage() {
       password: "",
       cpf: patient.cpf,
       birth_date: patient.birth_date ?? "",
-      gender: patient.gender ?? undefined,
+      gender: (patient.gender as "M" | "F" | "OTHER" | undefined) ?? undefined,
       address: patient.address ?? "",
       is_active: patient.user?.is_active ?? true,
     });
@@ -257,7 +259,33 @@ export default function AdminPatientsPage() {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+    <AdminLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Gestão de Pacientes</h1>
+          <p className="text-sm text-slate-600 mt-1">Gerencie os pacientes cadastrados no sistema</p>
+        </div>
+        
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center gap-2">
+            <Input
+              placeholder="Buscar por nome, CPF ou e-mail..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="max-w-md"
+            />
+          </div>
+          <Button
+            onClick={() => {
+              resetForm();
+            }}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            + Novo Paciente
+          </Button>
+        </div>
+
+      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -400,86 +428,115 @@ export default function AdminPatientsPage() {
       </Card>
 
       <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Pacientes cadastrados</CardTitle>
-          <CardDescription>Administre os pacientes ativos e inativos no sistema.</CardDescription>
-        </CardHeader>
-        <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
-          {loading ? (
-            <div className="space-y-3 p-6">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-            </div>
-          ) : filteredPatients.length === 0 ? (
-            <EmptyState className="m-4">Nenhum paciente encontrado.</EmptyState>
-          ) : (
-            <ul className="divide-y divide-slate-200">
-              {filteredPatients.map((patient) => {
-                const active = patient.user?.is_active ?? true;
-                return (
-                  <li key={patient.id} className="flex flex-col gap-2 px-6 py-4 text-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-slate-900">{patient.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {patient.user?.email ?? "Sem e-mail informado"}
-                        </p>
-                      </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
-                        }`}
-                      >
-                        {active ? "Ativo" : "Inativo"}
-                      </span>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Nasc.</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
                     </div>
-                    <div className="grid gap-1 text-xs text-slate-600 md:grid-cols-2">
-                      <p>
-                        <span className="font-medium">Telefone:</span>{" "}
-                        {patient.user?.phone ?? "Não informado"}
-                      </p>
-                      <p>
-                        <span className="font-medium">Nascimento:</span>{" "}
-                        {patient.birth_date
-                          ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
-                          : "Não informado"}
-                      </p>
-                      <p className="md:col-span-2">
-                        <span className="font-medium">Convênios:</span>{" "}
-                        {patient.health_insurances && patient.health_insurances.length > 0
-                          ? patient.health_insurances
-                              .map((plan) => {
-                                const policy = plan.pivot?.policy_number
-                                  ? ` (${plan.pivot.policy_number})`
-                                  : "";
-                                return `${plan.name}${policy}`;
-                              })
-                              .join(", ")
-                          : "Nenhum convênio"}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => handleEdit(patient)}>
-                        Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleActive(patient)}
-                        disabled={loadingForm}
-                      >
-                        {active ? "Desativar" : "Reativar"}
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                  </td>
+                </tr>
+              ) : filteredPatients.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center">
+                    <EmptyState>Nenhum paciente encontrado.</EmptyState>
+                  </td>
+                </tr>
+              ) : (
+                filteredPatients.map((patient) => {
+                  const active = patient.user?.is_active ?? true;
+                  return (
+                    <tr key={patient.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{patient.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{patient.cpf || 'N/A'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-500">
+                          {patient.user?.email || 'N/A'}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          {patient.user?.phone || ''}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {patient.birth_date
+                            ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
+                            : "N/A"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {active ? "ativo" : "inativo"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleEdit(patient)}
+                            className="h-8 w-8 p-0"
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleEdit(patient)}
+                            className="h-8 w-8 p-0"
+                            title="Editar"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleToggleActive(patient)}
+                            disabled={loadingForm}
+                            className="h-8 w-8 p-0"
+                            title={active ? "Desativar" : "Ativar"}
+                          >
+                            {active ? (
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            ) : (
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            )}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
-    </div>
+      </div>
+      </div>
+    </AdminLayout>
   );
 }
 
