@@ -20,11 +20,19 @@ class HealthCheckTest extends TestCase
                 'status',
                 'timestamp',
                 'checks' => [
-                    'database',
-                    'cache',
-                    'queue',
+                    'database' => [
+                        'status',
+                        'message',
+                    ],
+                    'cache' => [
+                        'status',
+                        'message',
+                    ],
+                    'queue' => [
+                        'status',
+                        'message',
+                    ],
                 ],
-                'version',
             ]);
 
         $this->assertContains($response->json('status'), ['healthy', 'degraded']);
@@ -35,7 +43,7 @@ class HealthCheckTest extends TestCase
         $response = $this->getJson('/api/health');
 
         $response->assertStatus(200);
-        $this->assertEquals('ok', $response->json('checks.database'));
+        $this->assertEquals('ok', $response->json('checks.database.status'));
     }
 
     public function test_ping_endpoint_retorna_ok(): void

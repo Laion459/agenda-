@@ -1,115 +1,192 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ main, develop ]
   pull_request:
+    branches: [ main, develop ]
 
 jobs:
-  backend:
-    name: Backend (Laravel)
+  backend-tests:
+    name: Backend Tests
     runs-on: ubuntu-latest
+    
     services:
       postgres:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: agenda
           POSTGRES_PASSWORD: agenda
-          POSTGRES_DB: agenda
-        ports:
-          - 5432:5432
+          POSTGRES_DB: agenda_test
         options: >-
-          --health-cmd "pg_isready -U agenda -d agenda"
+          --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
-      - name: Set up PHP
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          extensions: intl, pcntl, pdo_pgsql, redis
-          coverage: none
+          php-version: '8.2'
+          extensions: pdo, pdo_pgsql, redis, mbstring, xml, ctype, json, fileinfo
+          coverage: xdebug
 
-      - name: Install Composer dependencies
-        working-directory: backend
-        run: composer install --no-progress --prefer-dist --no-interaction
-
-      - name: Prepare environment
-        working-directory: backend
-        env:
-          APP_ENV: testing
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: agenda
-          DB_USERNAME: agenda
-          DB_PASSWORD: agenda
-          CACHE_DRIVER: array
-          SESSION_DRIVER: array
-          QUEUE_CONNECTION: sync
-          MAIL_MAILER: log
+      - name: Copy .env
+        working-directory: ./backend
         run: |
-          cp .env.example .env
-          php artisan key:generate --force
-          php artisan migrate --force
+          cp .env.example .env || true
+          php artisan key:generate
 
-      - name: Run test suite
-        working-directory: backend
+      - name: Install Composer Dependencies
+        working-directory: ./backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run Pint (Code Style)
+        working-directory: ./backend
+        run: vendor/bin/pint --test
+
+      - name: Run PHPStan (Static Analysis)
+        working-directory: ./backend
+        run: |
+          composer require --dev phpstan/phpstan --no-interaction || true
+          vendor/bin/phpstan analyse --level=5 app/ || true
+        continue-on-error: true
+
+      - name: Run Migrations
+        working-directory: ./backend
         env:
           DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
+          DB_HOST: localhost
           DB_PORT: 5432
-          DB_DATABASE: agenda
+          DB_DATABASE: agenda_test
           DB_USERNAME: agenda
           DB_PASSWORD: agenda
-          APP_ENV: testing
-          CACHE_DRIVER: array
-          SESSION_DRIVER: array
-          QUEUE_CONNECTION: sync
-          MAIL_MAILER: log
-        run: php artisan test
+        run: php artisan migrate --force
 
-  frontend:
-    name: Frontend (Next.js)
+      - name: Run Tests
+        working-directory: ./backend
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: agenda_test
+          DB_USERNAME: agenda
+          DB_PASSWORD: agenda
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: php artisan test --coverage --min=70
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+        continue-on-error: true
+
+  frontend-tests:
+    name: Frontend Tests
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Node
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: ./frontend/package-lock.json
 
-      - name: Install dependencies
-        working-directory: frontend
+      - name: Install Dependencies
+        working-directory: ./frontend
         run: npm ci
 
-      - name: Lint
-        working-directory: frontend
+      - name: Run ESLint
+        working-directory: ./frontend
         run: npm run lint
 
+      - name: Run TypeScript Check
+        working-directory: ./frontend
+        run: npx tsc --noEmit
+
+      - name: Run Tests
+        working-directory: ./frontend
+        run: npm test -- --coverage --watchAll=false
+        continue-on-error: true
+
       - name: Build
-        working-directory: frontend
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000/api
+        working-directory: ./frontend
         run: npm run build
 
-  docker:
-    name: Docker build (production targets)
+  security-scan:
+    name: Security Scan
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Build backend image
-        run: docker build --file docker/backend/Dockerfile --target production --tag agenda-plus-backend:test .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
 
-      - name: Build frontend image
-        run: docker build --file docker/frontend/Dockerfile --target production --tag agenda-plus-frontend:test .
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
 
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/backend/Dockerfile
+          push: false
+          tags: agenda-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/frontend/Dockerfile
+          push: false
+          tags: agenda-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 
 import { getStoredToken } from "@/lib/auth-storage";
 
@@ -9,36 +9,121 @@ const normalizedBaseUrl = rawBaseUrl.endsWith("/api")
 
 const api = axios.create({
   baseURL: normalizedBaseUrl,
+  timeout: 30000, // 30 segundos
 });
 
-api.interceptors.request.use((config) => {
-  const token = getStoredToken();
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Interceptor de requisição
+api.interceptors.request.use(
+  (config) => {
+    const token = getStoredToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
-// Interceptor de resposta para garantir que blobs sejam tratados corretamente
+// Interceptor de resposta
 api.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
     // Se a resposta é um blob, retorna diretamente
     if (response.config.responseType === 'blob') {
       return response;
     }
     return response;
   },
-  (error) => {
+  (error: AxiosError) => {
+    // Tratamento centralizado de erros
+    const handledError = handleApiErrorResponse(error);
+    
     // Se o erro é relacionado a blob, tenta converter
     if (error.config?.responseType === 'blob' && error.response?.data) {
       const blob = error.response.data instanceof Blob 
         ? error.response.data 
         : new Blob([error.response.data], { type: 'application/json' });
-      return Promise.reject({ ...error, blob });
+      return Promise.reject({ ...handledError, blob });
     }
-    return Promise.reject(error);
+    
+    return Promise.reject(handledError);
   }
 );
+
+/**
+ * Trata erros da API de forma centralizada
+ */
+function handleApiErrorResponse(error: AxiosError): AxiosError {
+  // Erro de rede (sem resposta do servidor)
+  if (!error.response) {
+    if (error.code === 'ECONNABORTED') {
+      error.message = 'Tempo de requisição excedido. Tente novamente.';
+    } else if (error.request) {
+      error.message = 'Erro de conexão. Verifique sua internet.';
+    } else {
+      error.message = 'Erro inesperado ao processar requisição.';
+    }
+    return error;
+  }
+
+  const status = error.response.status;
+  const data = error.response.data as any;
+
+  // Tratamento por status HTTP
+  switch (status) {
+    case 401:
+      // Não autenticado - redirecionar para login
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      error.message = data?.message || 'Sessão expirada. Faça login novamente.';
+      break;
+
+    case 403:
+      error.message = data?.message || 'Você não tem permissão para realizar esta ação.';
+      break;
+
+    case 404:
+      error.message = data?.message || 'Recurso não encontrado.';
+      break;
+
+    case 422:
+      // Erro de validação
+      const validationErrors = extractValidationErrors(data);
+      error.message = validationErrors || data?.message || 'Dados inválidos. Verifique os campos.';
+      break;
+
+    case 429:
+      error.message = 'Muitas requisições. Aguarde um momento e tente novamente.';
+      break;
+
+    case 500:
+    case 502:
+    case 503:
+      error.message = 'Erro no servidor. Tente novamente mais tarde.';
+      break;
+
+    default:
+      error.message = data?.message || 'Erro inesperado. Tente novamente.';
+  }
+
+  return error;
+}
+
+/**
+ * Extrai mensagens de erro de validação
+ */
+function extractValidationErrors(data: any): string | null {
+  if (!data?.errors) return null;
+
+  const errors = data.errors;
+  const firstKey = Object.keys(errors)[0];
+  if (!firstKey) return null;
+
+  const value = errors[firstKey];
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export default api;
  

@@ -1,21 +1,30 @@
 import toast from "react-hot-toast";
+import { errorHandler } from "./error-handler";
 
-type ApiError = {
-  response?: {
-    data?: { message?: string; errors?: Record<string, string[] | string> };
-  };
-};
-
+/**
+ * Trata erros da API e exibe notificação toast
+ * 
+ * @param error - Erro a ser tratado
+ * @param fallback - Mensagem padrão caso não seja possível extrair mensagem
+ */
 export function handleApiError(error: unknown, fallback = "Ocorreu um erro inesperado.") {
-  const apiError = error as ApiError;
-  const message =
-    apiError?.response?.data?.message ||
-    extractFirstError(apiError?.response?.data?.errors) ||
-    fallback;
-
+  // Usa o sistema centralizado de tratamento de erros
+  errorHandler.handle(error, "API Error");
+  
+  const message = errorHandler.getErrorMessage(error) || fallback;
+  
+  // Se for erro de autenticação, não mostra toast (já redireciona)
+  if (errorHandler.isAuthError(error)) {
+    return;
+  }
+  
   toast.error(message);
 }
 
+/**
+ * Extrai primeira mensagem de erro de validação
+ * @deprecated Use errorHandler.getValidationErrors() ou errorHandler.getErrorMessage()
+ */
 function extractFirstError(errors?: Record<string, string[] | string>) {
   if (!errors) return null;
   const firstKey = Object.keys(errors)[0];
