@@ -61,8 +61,8 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
                       TYPOGRAPHY.body.small,
                       'font-medium',
                       COLORS.text.secondary,
-                      'hover:text-purple-600 transition-colors flex items-center gap-1.5',
-                      'focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded'
+                      'hover:text-blue-600 transition-colors flex items-center gap-1.5',
+                      'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded'
                     )}
                     itemProp="item"
                   >

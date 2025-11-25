@@ -27,12 +27,8 @@ export function AppHeader() {
       // ignora erros ao encerrar sessão
     } finally {
       logout();
-      // Redireciona para home se for admin, senão para login
-      if (user?.role === 'ADMIN') {
-        router.push("/");
-      } else {
-        router.push("/login");
-      }
+      // Redireciona para home
+      router.push("/");
     }
   };
 
@@ -106,7 +102,7 @@ export function AppHeader() {
           className="flex items-center gap-2 sm:gap-3 text-slate-900" 
           aria-label="Ir para o dashboard"
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
           <div className="hidden sm:block">
@@ -119,13 +115,13 @@ export function AppHeader() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 sm:gap-3 text-sm text-slate-700">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Dark Mode Toggle */}
         {mounted && (
           <Button
             variant="ghost"
             onClick={toggleDarkMode}
-            className="p-2"
+            className="p-2 h-9 w-9 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
             aria-label={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
             title={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
           >
@@ -137,23 +133,23 @@ export function AppHeader() {
           </Button>
         )}
         
-        {/* Notificações - oculto em mobile muito pequeno */}
+        {/* Notificações */}
         <Link 
           href="/notifications" 
-          className="relative hidden xs:block"
+          className="relative"
           aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         >
           <Button 
             variant="ghost" 
-            className="hidden sm:flex items-center gap-2"
+            className="hidden sm:flex items-center gap-2 h-9 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
             aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
           >
             <Bell className="h-4 w-4" />
-            <span className="hidden md:inline">Notificações</span>
+            <span className="hidden lg:inline">Notificações</span>
           </Button>
           <Button 
             variant="ghost" 
-            className="sm:hidden p-2"
+            className="sm:hidden p-2 h-9 w-9 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
             aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
           >
             <Bell className="h-5 w-5" />
@@ -161,21 +157,25 @@ export function AppHeader() {
           {unreadBadge}
         </Link>
 
-        {/* Informações do usuário - oculto em mobile */}
-        <div className="hidden md:block text-right">
-          <p className="font-medium">{user?.name}</p>
-          <p className="text-xs text-slate-500">{user?.role}</p>
+        {/* Informações do usuário - oculto em mobile pequeno */}
+        <div className="hidden sm:block text-right min-w-0">
+          <p className="font-medium text-sm text-slate-900 dark:text-white truncate max-w-[120px] lg:max-w-none">
+            {user?.name}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
+            {user?.role?.toLowerCase()}
+          </p>
         </div>
 
         {/* Botão Sair */}
         <Button 
           variant="ghost" 
           onClick={handleLogout} 
-          className="flex items-center gap-2 p-2 sm:px-4"
+          className="flex items-center gap-2 h-9 px-2 sm:px-3 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
           aria-label="Sair da conta"
         >
           <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline">Sair</span>
+          <span className="hidden lg:inline">Sair</span>
         </Button>
       </div>
     </header>

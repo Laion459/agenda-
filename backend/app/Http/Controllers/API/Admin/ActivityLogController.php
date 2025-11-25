@@ -61,7 +61,12 @@ class ActivityLogController extends Controller
         return ActivityLog::query()
             ->with('user')
             ->when($request->input('action'), fn ($query, $action) => $query->where('action', 'like', "%{$action}%"))
-            ->when($request->input('user_id'), fn ($query, $userId) => $query->where('user_id', $userId))
+            ->when($request->input('user_id'), function ($query, $userId) {
+                // Valida e converte user_id para inteiro
+                if (is_numeric($userId)) {
+                    $query->where('user_id', (int) $userId);
+                }
+            })
             ->orderByDesc('created_at');
     }
 }

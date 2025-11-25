@@ -1,22 +1,24 @@
 /**
- * Sistema de Cores Centralizado - Agenda+
+ * Sistema de Cores Profissional para Clínica Médica - Agenda+
  * 
- * Este arquivo define todas as cores usadas no sistema para garantir consistência.
- * Use estas constantes em vez de valores hardcoded.
+ * Paleta sofisticada e respeitosa adequada para ambiente médico:
+ * - Azuis suaves (confiança, tranquilidade, profissionalismo)
+ * - Verdes medicinais (saúde, bem-estar)
+ * - Tons neutros elegantes
  */
 
-// Cor primária do sistema (Purple escolhido como padrão)
+// Cor primária: Azul médico suave (confiança e profissionalismo)
 export const PRIMARY_COLORS = {
-  50: 'purple-50',
-  100: 'purple-100',
-  200: 'purple-200',
-  300: 'purple-300',
-  400: 'purple-400',
-  500: 'purple-500',
-  600: 'purple-600',
-  700: 'purple-700',
-  800: 'purple-800',
-  900: 'purple-900',
+  50: 'blue-50',
+  100: 'blue-100',
+  200: 'blue-200',
+  300: 'blue-300',
+  400: 'blue-400',
+  500: 'blue-500',
+  600: 'blue-600',
+  700: 'blue-700',
+  800: 'blue-800',
+  900: 'blue-900',
 } as const;
 
 // Cor secundária (Blue para ações secundárias)
@@ -54,10 +56,10 @@ export const STATUS_COLORS = {
     badge: 'bg-blue-50 text-blue-700',
   },
   CANCELLED: {
-    bg: 'bg-rose-50',
-    text: 'text-rose-700',
-    border: 'border-rose-200',
-    badge: 'bg-rose-50 text-rose-700',
+    bg: 'bg-slate-100',
+    text: 'text-slate-700',
+    border: 'border-slate-200',
+    badge: 'bg-slate-100 text-slate-700',
   },
   BLOCKED: {
     bg: 'bg-slate-100',
@@ -75,22 +77,25 @@ export const BACKGROUND_COLORS = {
   dark: 'bg-slate-900',
 } as const;
 
-// Cores de texto
+// Cores de texto com excelente contraste
 export const TEXT_COLORS = {
   primary: 'text-slate-900',
-  secondary: 'text-slate-600',
-  tertiary: 'text-slate-500',
+  secondary: 'text-slate-700',
+  tertiary: 'text-slate-600',
+  muted: 'text-slate-500',
   inverse: 'text-white',
-  link: `text-${PRIMARY_COLORS[600]}`,
-  linkHover: `text-${PRIMARY_COLORS[700]}`,
+  link: 'text-blue-600',
+  linkHover: 'text-blue-700',
 } as const;
 
-// Cores de borda
+// Cores de borda sutis
 export const BORDER_COLORS = {
   default: 'border-slate-200',
-  focus: `border-${PRIMARY_COLORS[500]}`,
-  error: 'border-red-500',
+  muted: 'border-slate-300',
+  focus: 'border-blue-500',
+  error: 'border-red-400',
   success: 'border-emerald-500',
+  warning: 'border-amber-400',
 } as const;
 
 /**

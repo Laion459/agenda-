@@ -73,9 +73,9 @@ function handleApiErrorResponse(error: AxiosError): AxiosError {
   // Tratamento por status HTTP
   switch (status) {
     case 401:
-      // Não autenticado - redirecionar para login
+      // Não autenticado - redirecionar para home
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
       error.message = data?.message || 'Sessão expirada. Faça login novamente.';
       break;

@@ -75,7 +75,7 @@ export function MobileMenu() {
       {/* Botão do menu hambúrguer */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden p-2 rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        className="md:hidden p-2 rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Abrir menu de navegação"
         aria-expanded={isOpen}
       >
@@ -94,7 +94,7 @@ export function MobileMenu() {
       {/* Menu lateral */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out md:hidden',
+          'fixed top-0 left-0 h-full w-72 bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
         aria-label="Menu de navegação"
@@ -102,16 +102,21 @@ export function MobileMenu() {
       >
         <div className="flex flex-col h-full">
           {/* Header do menu */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
                 <Calendar className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-slate-900">Agenda+</span>
+              <div>
+                <span className="font-bold text-lg text-slate-900 dark:text-white block">Agenda+</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 block">
+                  {user?.role === 'ADMIN' ? 'Administração' : user?.role === 'DOCTOR' ? 'Portal do Médico' : 'Portal do Paciente'}
+                </span>
+              </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-2 rounded-md text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="p-2 rounded-lg text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
               aria-label="Fechar menu"
             >
               <X className="h-6 w-6" />
@@ -123,22 +128,25 @@ export function MobileMenu() {
             <ul className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || (item.href !== '/dashboard' && item.href !== '/admin' && pathname?.startsWith(item.href));
+                const isActive = pathname === item.href || 
+                  (item.href !== '/admin' && item.href !== '/dashboard' && item.href !== '/doctor/dashboard' && 
+                   pathname?.startsWith(item.href));
 
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       className={clsx(
-                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                         isActive
-                          ? 'bg-purple-50 text-purple-700'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-500'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
                       )}
                       onClick={() => setIsOpen(false)}
                     >
-                      <Icon className="h-5 w-5" />
-                      {item.label}
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span>{item.label}</span>
                     </Link>
                   </li>
                 );
@@ -147,10 +155,10 @@ export function MobileMenu() {
           </nav>
 
           {/* Footer do menu */}
-          <div className="p-4 border-t border-slate-200">
-            <div className="text-sm text-slate-600 mb-2">
-              <p className="font-medium text-slate-900">{user?.name}</p>
-              <p className="text-xs text-slate-500">{user?.role}</p>
+          <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="text-sm">
+              <p className="font-medium text-slate-900 dark:text-white">{user?.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user?.role?.toLowerCase()}</p>
             </div>
           </div>
         </div>

@@ -31,9 +31,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               COMPONENT_TOKENS.input.radius,
               COMPONENT_TOKENS.input.padding,
               COMPONENT_TOKENS.input.fontSize,
-              "text-slate-900",
-              "bg-white",
+              "text-slate-900 dark:text-white",
+              "bg-white dark:bg-slate-800",
               COMPONENT_TOKENS.input.border,
+              "dark:border-slate-700",
               TRANSITIONS.common.all,
               showError
                 ? clsx(COMPONENT_TOKENS.input.error, "pr-10")

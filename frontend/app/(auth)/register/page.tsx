@@ -59,7 +59,7 @@ export default function RegisterPage() {
         address: values.address,
         gender: values.gender,
       });
-      router.push('/login');
+      router.push('/');
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
       setError('email', {
@@ -141,7 +141,7 @@ export default function RegisterPage() {
       </form>
       <p className="text-sm text-slate-600">
         Já possui conta?{' '}
-        <Link className="text-blue-600 hover:underline" href="/login">
+        <Link className="text-blue-600 hover:underline" href="/">
           Entrar
         </Link>
       </p>

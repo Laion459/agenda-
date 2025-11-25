@@ -1,18 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FieldValues, UseFormReturn } from 'react-hook-form';
+import { FieldValues, UseFormReturn, Path, get } from 'react-hook-form';
 
 export function useFormValidation<T extends FieldValues>(
   form: UseFormReturn<T>,
-  fieldName: keyof T
+  fieldName: Path<T>
 ) {
   const [isValidating, setIsValidating] = useState(false);
   const [isValid, setIsValid] = useState<boolean | null>(null);
   
   const value = form.watch(fieldName);
-  const error = form.formState.errors[fieldName];
-  const isDirty = form.formState.dirtyFields[fieldName];
+  const error = get(form.formState.errors, fieldName);
+  const isDirty = get(form.formState.dirtyFields, fieldName);
 
   useEffect(() => {
     if (!isDirty || !value) {

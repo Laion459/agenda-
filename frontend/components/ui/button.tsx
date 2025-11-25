@@ -13,17 +13,17 @@ const base = clsx(
   COMPONENT_TOKENS.button.fontSize,
   COMPONENT_TOKENS.button.fontWeight,
   TRANSITIONS.common.all,
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
   "disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
   ELEVATION.focus
 );
 
 const variants: Record<string, string> = {
   primary: clsx(
-    "bg-purple-600 text-white",
-    "hover:bg-purple-700 hover:shadow-md",
-    "active:bg-purple-800 active:scale-[0.98]",
-    "focus-visible:ring-purple-500"
+    "bg-blue-600 text-white",
+    "hover:bg-blue-700 hover:shadow-md",
+    "active:bg-blue-800 active:scale-[0.98]",
+    "focus-visible:ring-blue-500"
   ),
   secondary: clsx(
     "bg-slate-100 text-slate-900",

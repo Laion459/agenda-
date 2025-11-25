@@ -40,11 +40,33 @@ export class AppErrorHandler implements ErrorHandler {
 
     // Log do erro para monitoramento
     if (process.env.NODE_ENV === 'development') {
-      console.error(`[Error Handler] ${context || 'Erro'}:`, {
-        error,
+      const errorDetails: Record<string, unknown> = {
         message,
-        status: apiError.response?.status,
-      });
+      };
+
+      // Adiciona informações adicionais apenas se estiverem disponíveis
+      if (apiError?.response?.status) {
+        errorDetails.status = apiError.response.status;
+      }
+
+      if (apiError?.response?.data) {
+        errorDetails.responseData = apiError.response.data;
+      }
+
+      if (apiError?.message && apiError.message !== message) {
+        errorDetails.originalMessage = apiError.message;
+      }
+
+      if (apiError?.code) {
+        errorDetails.code = apiError.code;
+      }
+
+      // Se houver um erro real com propriedades, inclui o objeto de erro
+      if (error && typeof error === 'object' && Object.keys(error).length > 0) {
+        errorDetails.error = error;
+      }
+
+      console.error(`[Error Handler] ${context || 'Erro'}:`, errorDetails);
     }
 
     // Em produção, enviar para serviço de monitoramento (Sentry, etc.)

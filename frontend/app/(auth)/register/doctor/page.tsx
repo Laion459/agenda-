@@ -72,7 +72,7 @@ export default function DoctorRegisterPage() {
         specialty: values.specialty,
       });
       // Sucesso - redireciona para login
-      router.push('/login/doctor?registered=true');
+      router.push('/');
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; errors?: { email?: string[]; crm?: string[] } }>;
       const errorMessage = axiosError?.response?.data?.message || 
@@ -233,7 +233,7 @@ export default function DoctorRegisterPage() {
       {/* Already have account */}
       <div className="text-center space-y-3">
         <p className="text-sm text-slate-600">Já tem conta?</p>
-        <Link href="/login/doctor" className="block">
+        <Link href="/" className="block">
           <Button variant="outline" className="w-full border-2 border-purple-200 hover:border-purple-300 hover:bg-purple-50 text-purple-600">
             Fazer login
           </Button>

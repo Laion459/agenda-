@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AppToast } from "@/components/providers/AppToast";
 import { SkipLink } from "@/components/ui/skip-link";
+import { ThemeScript } from "@/components/theme-script";
 
 import "./globals.css";
 
@@ -44,11 +45,14 @@ export const metadata: Metadata = {
     ],
   },
   manifest: "/site.webmanifest",
-  themeColor: "#1d4ed8",
   other: {
     "Content-Security-Policy":
       "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'self';",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1d4ed8",
 };
 
 export default function RootLayout({
@@ -62,6 +66,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} bg-slate-50 antialiased`}
       >
+        <ThemeScript />
         <AuthProvider>
           <AppToast />
           <SkipLink />

@@ -19,7 +19,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push('/');
     toast.success('Logout realizado com sucesso');
   };
 
@@ -72,7 +72,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   href={item.href}
                   className={`px-4 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
                     isActive
-                      ? 'text-slate-900 bg-white border-b-2 border-purple-600'
+                      ? 'text-slate-900 bg-white border-b-2 border-blue-600'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                   }`}
                 >

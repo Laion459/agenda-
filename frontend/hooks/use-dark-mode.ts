@@ -3,23 +3,32 @@
 import { useEffect, useState } from 'react';
 
 export function useDarkMode() {
+  // Inicializa como false (modo claro) - será atualizado no useEffect
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    // Verifica preferência do sistema ou localStorage
+    // Verifica preferência no localStorage
     const darkMode = localStorage.getItem('darkMode');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    const shouldBeDark = darkMode === 'true' || (darkMode === null && prefersDark);
+    // Por padrão, sempre inicia em modo claro
+    const shouldBeDark = darkMode === 'true';
+    
+    // Se não existe, cria como false (claro)
+    if (darkMode === null) {
+      localStorage.setItem('darkMode', 'false');
+    }
+    
     setIsDark(shouldBeDark);
     
+    // Aplica imediatamente no documento
     if (shouldBeDark) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+    
+    setMounted(true);
   }, []);
 
   const toggleDarkMode = () => {
@@ -27,6 +36,7 @@ export function useDarkMode() {
     setIsDark(newValue);
     localStorage.setItem('darkMode', String(newValue));
     
+    // Aplica imediatamente no documento
     if (newValue) {
       document.documentElement.classList.add('dark');
     } else {

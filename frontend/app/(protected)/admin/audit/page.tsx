@@ -32,10 +32,18 @@ export default function AuditLogsPage() {
   });
   const [exporting, setExporting] = useState(false);
 
-  const buildFilterParams = useCallback(() => ({
-    action: filters.search || undefined,
-    user_id: filters.user_id || undefined,
-  }), [filters.search, filters.user_id]);
+  const buildFilterParams = useCallback(() => {
+    const params: Record<string, unknown> = {
+      action: filters.search || undefined,
+    };
+    
+    // Valida que user_id seja numérico antes de enviar
+    if (filters.user_id && !isNaN(Number(filters.user_id))) {
+      params.user_id = Number(filters.user_id);
+    }
+    
+    return params;
+  }, [filters.search, filters.user_id]);
 
   const loadLogs = useCallback(async () => {
     try {

@@ -72,11 +72,11 @@
   
   /* Links com melhor contraste */
   a {
-    @apply text-purple-600 hover:text-purple-700 transition-colors;
+    @apply text-blue-600 hover:text-blue-700 transition-colors;
   }
   
   .dark a {
-    @apply text-purple-400 hover:text-purple-300;
+    @apply text-blue-400 hover:text-blue-300;
   }
   
   /* Scrollbar customizada */
@@ -165,7 +165,7 @@
   
   /* Focus visible melhorado */
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
   }
   
   /* Texto com melhor contraste */

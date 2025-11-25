@@ -85,77 +85,77 @@ export default function DashboardPage() {
 
       {/* Estatísticas Rápidas */}
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow duration-200">
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow duration-200 dark:border-l-blue-400">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Total de Consultas
               </CardTitle>
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-6">
-            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.total}</p>
-            <p className="text-xs text-slate-500">Todas as consultas</p>
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.total}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Todas as consultas</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow duration-200">
+        <Card className="border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow duration-200 dark:border-l-emerald-400">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Confirmadas
               </CardTitle>
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-6">
-            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.confirmed}</p>
-            <p className="text-xs text-slate-500">Consultas confirmadas</p>
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.confirmed}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Consultas confirmadas</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500 hover:shadow-md transition-shadow duration-200">
+        <Card className="border-l-4 border-l-amber-500 hover:shadow-md transition-shadow duration-200 dark:border-l-amber-400">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Pendentes
               </CardTitle>
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Clock className="h-5 w-5 text-amber-600" />
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-6">
-            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.pending}</p>
-            <p className="text-xs text-slate-500">Aguardando confirmação</p>
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.pending}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Aguardando confirmação</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow duration-200">
+        <Card className="border-l-4 border-l-slate-400 hover:shadow-md transition-shadow duration-200 dark:border-l-slate-500">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+              <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Canceladas
               </CardTitle>
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="h-5 w-5 text-red-600" />
+              <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-400" />
               </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-6">
-            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.cancelled}</p>
-            <p className="text-xs text-slate-500">Consultas canceladas</p>
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.cancelled}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Consultas canceladas</p>
           </div>
         </Card>
       </section>
 
       {/* Próximas Consultas e Médicos */}
-      <section className="grid gap-6 lg:grid-cols-3">
+      <section className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
         {/* Próximas Consultas */}
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -164,10 +164,11 @@ export default function DashboardPage() {
                 <CardTitle>Próximas Consultas</CardTitle>
                 <CardDescription>Suas consultas agendadas</CardDescription>
               </div>
-              <Link href="/appointments">
-                <span className="text-sm font-medium text-purple-600 hover:text-purple-700">
-                  Ver todas
-                </span>
+              <Link 
+                href="/appointments"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                Ver todas
               </Link>
             </div>
           </CardHeader>
@@ -192,13 +193,13 @@ export default function DashboardPage() {
                 <Link
                   key={appointment.id}
                   href={`/appointments/${appointment.id}`}
-                  className="block rounded-lg border-2 border-slate-200 bg-white p-4 hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                  className="block rounded-lg border-2 border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 p-4 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-purple-100 rounded-md">
-                          <Stethoscope className="h-4 w-4 text-purple-600" />
+                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-md">
+                          <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <p className="font-semibold text-slate-900 truncate">
                           {appointment.doctor?.name ?? "---"}
@@ -247,10 +248,11 @@ export default function DashboardPage() {
                 <CardTitle>Médicos Disponíveis</CardTitle>
                 <CardDescription>Profissionais cadastrados</CardDescription>
               </div>
-              <Link href="/doctors">
-                <span className="text-sm font-medium text-purple-600 hover:text-purple-700">
-                  Ver todos
-                </span>
+              <Link 
+                href="/doctors"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                Ver todos
               </Link>
             </div>
           </CardHeader>
@@ -270,11 +272,11 @@ export default function DashboardPage() {
                 <Link
                   key={doctor.id}
                   href={`/doctors/${doctor.id}`}
-                  className="block rounded-lg border border-slate-200 p-3 hover:border-purple-300 hover:bg-purple-50/50 transition-colors"
+                  className="block rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                      <User className="h-5 w-5 text-purple-600" />
+                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                      <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-900 truncate">{doctor.name}</p>
@@ -290,40 +292,40 @@ export default function DashboardPage() {
       </section>
 
       {/* Ações Rápidas e Histórico */}
-      <section className="grid gap-6 lg:grid-cols-2">
+      <section className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Ações Rápidas */}
         <Card>
           <CardHeader>
             <CardTitle>Ações Rápidas</CardTitle>
             <CardDescription>Atalhos para as ações mais comuns</CardDescription>
           </CardHeader>
-          <div className="grid grid-cols-2 gap-3 p-6 pt-0">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-6 pt-0">
             <Link
               href="/appointments"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-4 text-center transition hover:border-purple-300 hover:bg-purple-50"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
             >
-              <Calendar className="h-6 w-6 text-purple-600 mb-2" />
+              <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
               <span className="text-sm font-medium text-slate-700">Agendar Consulta</span>
             </Link>
             <Link
               href="/notifications"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-4 text-center transition hover:border-purple-300 hover:bg-purple-50"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
             >
-              <AlertCircle className="h-6 w-6 text-purple-600 mb-2" />
+              <AlertCircle className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
               <span className="text-sm font-medium text-slate-700">Notificações</span>
             </Link>
             <Link
               href="/profile"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-4 text-center transition hover:border-purple-300 hover:bg-purple-50"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
             >
-              <User className="h-6 w-6 text-purple-600 mb-2" />
+              <User className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
               <span className="text-sm font-medium text-slate-700">Meu Perfil</span>
             </Link>
             <Link
               href="/doctors"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-4 text-center transition hover:border-purple-300 hover:bg-purple-50"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
             >
-              <Stethoscope className="h-6 w-6 text-purple-600 mb-2" />
+              <Stethoscope className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
               <span className="text-sm font-medium text-slate-700">Médicos</span>
             </Link>
           </div>

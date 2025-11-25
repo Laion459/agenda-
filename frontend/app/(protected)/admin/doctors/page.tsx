@@ -13,7 +13,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
@@ -218,58 +217,60 @@ export default function AdminDoctorsPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        {/* Breadcrumbs */}
-        <Breadcrumbs
-          items={[
-            { label: 'Administração', href: '/admin' },
-            { label: 'Médicos' },
-          ]}
-        />
-        
-        {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Gestão de Médicos</h1>
-          <p className="text-base text-slate-700">Gerencie os perfis médicos do sistema</p>
-        </div>
+    <div className="space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: 'Resumo', href: '/admin' },
+          { label: 'Médicos' },
+        ]}
+      />
+      
+      {/* Header */}
+      <section className="px-1">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2">
+          Gestão de Médicos
+        </h1>
+        <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300">
+          Gerencie os perfis médicos do sistema
+        </p>
+      </section>
 
-        {/* Search and Actions */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 flex items-center gap-2">
-            <Search className="h-5 w-5 text-slate-400" />
-            <Input
-              placeholder="Buscar por nome, CRM ou especialidade..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="max-w-md"
-            />
-          </div>
-          <Button
-            onClick={() => {
-              resetForm();
-              // Scroll to form
-              document.getElementById('doctor-form')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Médico
-          </Button>
+      {/* Search and Actions */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+          <Search className="h-5 w-5 text-slate-400 flex-shrink-0" />
+          <Input
+            placeholder="Buscar por nome, CRM ou especialidade..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="flex-1 min-w-0"
+          />
         </div>
+        <Button
+          onClick={() => {
+            resetForm();
+            document.getElementById('doctor-form')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Médico
+        </Button>
+      </div>
 
-        {/* Formulário e Tabela */}
-        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-          {/* Formulário - Sidebar */}
-          <Card id="doctor-form">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                {editing ? <Edit className="h-5 w-5 text-purple-600" /> : <Plus className="h-5 w-5 text-purple-600" />}
-                <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
-              </div>
-              <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
-            </CardHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6 pt-0" noValidate>
+      {/* Formulário e Tabela */}
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-[420px_1fr]">
+        {/* Formulário - Sidebar */}
+        <Card id="doctor-form" className="lg:sticky lg:top-24 lg:self-start">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              {editing ? <Edit className="h-5 w-5 text-blue-600" /> : <Plus className="h-5 w-5 text-blue-600" />}
+              <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
+            </div>
+            <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5 p-4 sm:p-6 pt-0" noValidate>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name" required>Nome</Label>
@@ -350,25 +351,25 @@ export default function AdminDoctorsPage() {
           </div>
           <div className="space-y-2">
             <Label>Convênios aceitos</Label>
-            <div className="grid gap-2">
+            <div className="grid gap-2 max-h-48 overflow-y-auto">
               {healthInsurances.map((plan) => {
                 const checked = selectedPlans.includes(plan.id);
                 return (
                   <label
                     key={plan.id}
-                    className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm"
+                    className="flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   >
-                    <div>
-                      <p className="font-medium text-slate-800">{plan.name}</p>
-                      <p className="text-xs text-slate-500">
-                        Cobertura: {plan.coverage_percentage ?? "N/D"}%
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{plan.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Cobertura: {plan.coverage_percentage ? plan.coverage_percentage + "%" : "N/D"}
                       </p>
                     </div>
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => togglePlan(plan.id)}
-                      className="h-4 w-4"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded border-slate-300 dark:border-slate-600"
                     />
                   </label>
                 );
@@ -401,39 +402,39 @@ export default function AdminDoctorsPage() {
               </Button>
             )}
           </div>
-            </form>
-          </Card>
+          </form>
+        </Card>
 
-          {/* Table */}
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full" role="table" aria-label="Lista de médicos">
-                <thead className="bg-slate-50 border-b border-slate-200">
+        {/* Table */}
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto -mx-6 sm:mx-0">
+            <table className="w-full min-w-[640px]" role="table" aria-label="Lista de médicos">
+                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Nome
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       CRM
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden md:table-cell">
                       Especialidade
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden lg:table-cell">
                       Contato
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Status
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Ações
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4">
+                      <td colSpan={6} className="px-4 sm:px-6 py-8">
                         <div className="space-y-2">
                           <Skeleton className="h-4 w-full" />
                           <Skeleton className="h-4 w-full" />
@@ -442,7 +443,7 @@ export default function AdminDoctorsPage() {
                     </tr>
                   ) : filteredDoctors.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12">
+                      <td colSpan={6} className="px-4 sm:px-6 py-12">
                         <EmptyState
                           title="Nenhum médico encontrado"
                           description={search ? "Tente ajustar os filtros de busca." : "Comece cadastrando o primeiro médico."}
@@ -453,50 +454,46 @@ export default function AdminDoctorsPage() {
                     filteredDoctors.map((doctor) => {
                       const active = doctor.user?.is_active ?? doctor.is_active;
                       return (
-                        <tr key={doctor.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{doctor.name}</div>
+                        <tr key={doctor.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="text-sm font-medium text-slate-900 dark:text-white">{doctor.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 md:hidden mt-1">
+                              {doctor.specialty}
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">{doctor.crm}</div>
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="text-sm text-slate-600 dark:text-slate-300">{doctor.crm}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">{doctor.specialty}</div>
+                          <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
+                            <div className="text-sm text-slate-600 dark:text-slate-300">{doctor.specialty}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-500">
+                          <td className="px-4 sm:px-6 py-4 hidden lg:table-cell">
+                            <div className="text-sm text-slate-600 dark:text-slate-300">
                               {doctor.user?.email || 'N/A'}
                             </div>
-                            <div className="text-sm text-gray-400">
+                            <div className="text-xs text-slate-400 dark:text-slate-500">
                               {doctor.user?.phone || ''}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-4">
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 active
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
                               }`}
                             >
                               {active ? "ativo" : "inativo"}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                onClick={() => handleEdit(doctor)}
-                                className="h-8 w-8 p-0"
-                                title="Ver detalhes"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="flex items-center gap-1 sm:gap-2">
                               <Button
                                 variant="ghost"
                                 onClick={() => handleEdit(doctor)}
                                 className="h-8 w-8 p-0"
                                 title="Editar"
+                                aria-label="Editar médico"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -506,11 +503,12 @@ export default function AdminDoctorsPage() {
                                 disabled={loadingForm}
                                 className="h-8 w-8 p-0"
                                 title={active ? "Desativar" : "Ativar"}
+                                aria-label={active ? "Desativar médico" : "Ativar médico"}
                               >
                                 {active ? (
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 ) : (
-                                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                                 )}
                               </Button>
                             </div>
@@ -525,7 +523,6 @@ export default function AdminDoctorsPage() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
   );
 }
 

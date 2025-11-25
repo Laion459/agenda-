@@ -12,7 +12,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
         COMPONENT_TOKENS.card.border,
         COMPONENT_TOKENS.card.padding,
         COMPONENT_TOKENS.card.shadow,
-        "bg-white",
+        "bg-white dark:bg-slate-800 dark:border-slate-700",
         COMPONENT_TOKENS.card.shadowHover,
         className
       )}
@@ -40,6 +40,7 @@ export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingEle
       className={clsx(
         TYPOGRAPHY.heading.h4,
         COLORS.text.primary,
+        "dark:text-white",
         className
       )}
       {...props}

@@ -76,7 +76,7 @@ export default function PatientRegisterPage() {
         address: values.address,
         gender: values.gender as 'M' | 'F' | 'OTHER',
       });
-      router.push('/login/patient');
+      router.push('/');
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
       setError('email', {
@@ -268,7 +268,7 @@ export default function PatientRegisterPage() {
       {/* Already have account */}
       <div className="text-center space-y-3">
         <p className="text-sm text-slate-600">Já tem conta?</p>
-        <Link href="/login/patient" className="block">
+        <Link href="/" className="block">
           <Button variant="outline" className="w-full border-2 border-purple-200 hover:border-purple-300 hover:bg-purple-50 text-purple-600">
             Fazer login
           </Button>

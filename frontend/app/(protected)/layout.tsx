@@ -18,7 +18,7 @@ export default function ProtectedLayout({
 
   useEffect(() => {
     if (!user) {
-      router.replace("/login");
+      router.replace("/");
     }
   }, [user, router]);
 
@@ -27,12 +27,18 @@ export default function ProtectedLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
       <AppHeader />
-      <div className="flex flex-1 bg-slate-50">
+      <div className="flex flex-1 overflow-hidden">
         <AppSidebar />
-        <main id="main-content" className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto" tabIndex={-1}>
-          {children}
+        <main 
+          id="main-content" 
+          className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto" 
+          tabIndex={-1}
+        >
+          <div className="space-y-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>
