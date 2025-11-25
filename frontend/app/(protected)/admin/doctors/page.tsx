@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import {
@@ -219,10 +220,18 @@ export default function AdminDoctorsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'Administração', href: '/admin' },
+            { label: 'Médicos' },
+          ]}
+        />
+        
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestão de Médicos</h1>
-          <p className="text-sm text-slate-600 mt-1">Gerencie os perfis médicos do sistema</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">Gestão de Médicos</h1>
+          <p className="text-base text-slate-700">Gerencie os perfis médicos do sistema</p>
         </div>
 
         {/* Search and Actions */}
@@ -260,47 +269,84 @@ export default function AdminDoctorsPage() {
               </div>
               <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
             </CardHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
-          <div className="grid gap-3 md:grid-cols-2">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6 pt-0" noValidate>
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome</Label>
-              <Input id="name" {...register("name")} />
-              {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+              <Label htmlFor="name" required>Nome</Label>
+              <Input
+                id="name"
+                error={!!errors.name}
+                errorMessage={errors.name?.message}
+                aria-required="true"
+                {...register("name")}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" {...register("email")} />
-              {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+              <Label htmlFor="email" required>E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                error={!!errors.email}
+                errorMessage={errors.email?.message}
+                aria-required="true"
+                {...register("email")}
+              />
             </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" {...register("phone")} />
+              <Input
+                id="phone"
+                type="tel"
+                autoComplete="tel"
+                {...register("phone")}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{editing ? "Senha (opcional)" : "Senha inicial"}</Label>
-              <Input id="password" type="password" {...register("password")} />
-              {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+              <Label htmlFor="password" required={!editing}>
+                {editing ? "Senha (opcional)" : "Senha inicial"}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete={editing ? "new-password" : "new-password"}
+                error={!!errors.password}
+                errorMessage={errors.password?.message}
+                aria-required={!editing}
+                {...register("password")}
+              />
             </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="crm">CRM</Label>
-              <Input id="crm" {...register("crm")} />
-              {errors.crm && <p className="text-xs text-red-500">{errors.crm.message}</p>}
+              <Label htmlFor="crm" required>CRM</Label>
+              <Input
+                id="crm"
+                error={!!errors.crm}
+                errorMessage={errors.crm?.message}
+                aria-required="true"
+                {...register("crm")}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="specialty">Especialidade</Label>
-              <Input id="specialty" {...register("specialty")} />
-              {errors.specialty && (
-                <p className="text-xs text-red-500">{errors.specialty.message}</p>
-              )}
+              <Label htmlFor="specialty" required>Especialidade</Label>
+              <Input
+                id="specialty"
+                error={!!errors.specialty}
+                errorMessage={errors.specialty?.message}
+                aria-required="true"
+                {...register("specialty")}
+              />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="qualification">Qualificações</Label>
-            <Input id="qualification" {...register("qualification")} />
+            <Input
+              id="qualification"
+              {...register("qualification")}
+            />
           </div>
           <div className="space-y-2">
             <Label>Convênios aceitos</Label>
@@ -335,12 +381,22 @@ export default function AdminDoctorsPage() {
               Ativo na plataforma
             </Label>
           </div>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={loadingForm} className="bg-purple-600 hover:bg-purple-700">
-              {loadingForm ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar médico"}
+          <div className="flex gap-2 pt-2">
+            <Button
+              type="submit"
+              loading={loadingForm}
+              disabled={loadingForm}
+              className="flex-1"
+            >
+              {editing ? "Salvar alterações" : "Cadastrar médico"}
             </Button>
             {editing && (
-              <Button type="button" variant="ghost" onClick={resetForm} disabled={loadingForm}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={resetForm}
+                disabled={loadingForm}
+              >
                 Cancelar
               </Button>
             )}
@@ -351,15 +407,27 @@ export default function AdminDoctorsPage() {
           {/* Table */}
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
+              <table className="w-full" role="table" aria-label="Lista de médicos">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CRM</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especialidade</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Nome
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      CRM
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Especialidade
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Contato
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -374,8 +442,11 @@ export default function AdminDoctorsPage() {
                     </tr>
                   ) : filteredDoctors.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center">
-                        <EmptyState>Nenhum médico encontrado.</EmptyState>
+                      <td colSpan={6} className="px-6 py-12">
+                        <EmptyState
+                          title="Nenhum médico encontrado"
+                          description={search ? "Tente ajustar os filtros de busca." : "Comece cadastrando o primeiro médico."}
+                        />
                       </td>
                     </tr>
                   ) : (

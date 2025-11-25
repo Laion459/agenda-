@@ -31,7 +31,9 @@ export default function ProtectedLayout({
       <AppHeader />
       <div className="flex flex-1 bg-slate-50">
         <AppSidebar />
-        <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto">{children}</main>
+        <main id="main-content" className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto" tabIndex={-1}>
+          {children}
+        </main>
       </div>
     </div>
   );

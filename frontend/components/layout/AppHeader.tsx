@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Calendar, LogOut, Bell } from "lucide-react";
+import { Calendar, LogOut, Bell, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { logout as logoutRequest } from "@/services/auth-service";
 import { fetchNotifications } from "@/services/notification-service";
 import { useAuthStore } from "@/store/auth-store";
+import { useDarkMode } from "@/hooks/use-dark-mode";
 
 export function AppHeader() {
   const user = useAuthStore((state) => state.user);
@@ -17,6 +18,7 @@ export function AppHeader() {
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
   const mountedRef = useRef(false);
+  const { isDark, toggleDarkMode, mounted } = useDarkMode();
 
   const handleLogout = async () => {
     try {
@@ -118,6 +120,23 @@ export function AppHeader() {
 
       {/* Actions */}
       <div className="flex items-center gap-2 sm:gap-3 text-sm text-slate-700">
+        {/* Dark Mode Toggle */}
+        {mounted && (
+          <Button
+            variant="ghost"
+            onClick={toggleDarkMode}
+            className="p-2"
+            aria-label={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
+            title={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
+          >
+            {isDark ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
+        )}
+        
         {/* Notificações - oculto em mobile muito pequeno */}
         <Link 
           href="/notifications" 

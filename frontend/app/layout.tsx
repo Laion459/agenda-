@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AppToast } from "@/components/providers/AppToast";
+import { SkipLink } from "@/components/ui/skip-link";
 
 import "./globals.css";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <AppToast />
+          <SkipLink />
           {children}
         </AuthProvider>
       </body>

@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, Clock, User, Stethoscope, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchAppointments } from "@/services/appointment-service";
 import { fetchDoctors } from "@/services/doctor-service";
@@ -67,60 +69,87 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Breadcrumbs */}
+      <Breadcrumbs items={[{ label: 'Dashboard' }]} />
+      
       {/* Header */}
       <section>
-        <h1 className="text-3xl font-bold text-slate-900">Bem-vindo, {user?.name?.split(' ')[0]}!</h1>
-        <p className="text-sm text-slate-600 mt-1">Acompanhe suas consultas e profissionais em um só lugar.</p>
+        <h1 className="text-4xl font-bold text-slate-900 mb-2">
+          Bem-vindo, {user?.name?.split(' ')[0]}!
+        </h1>
+        <p className="text-base text-slate-700">
+          Acompanhe suas consultas e profissionais em um só lugar.
+        </p>
       </section>
 
       {/* Estatísticas Rápidas */}
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-3">
+      <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-slate-600">Total de Consultas</CardTitle>
-              <Calendar className="h-5 w-5 text-blue-500" />
+              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Total de Consultas
+              </CardTitle>
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Calendar className="h-5 w-5 text-blue-600" />
+              </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-4">
-            <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
+          <div className="px-6 pb-6">
+            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.total}</p>
+            <p className="text-xs text-slate-500">Todas as consultas</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-3">
+        <Card className="border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-slate-600">Confirmadas</CardTitle>
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Confirmadas
+              </CardTitle>
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-4">
-            <p className="text-3xl font-bold text-slate-900">{stats.confirmed}</p>
+          <div className="px-6 pb-6">
+            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.confirmed}</p>
+            <p className="text-xs text-slate-500">Consultas confirmadas</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="pb-3">
+        <Card className="border-l-4 border-l-amber-500 hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-slate-600">Pendentes</CardTitle>
-              <Clock className="h-5 w-5 text-yellow-500" />
+              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Pendentes
+              </CardTitle>
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Clock className="h-5 w-5 text-amber-600" />
+              </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-4">
-            <p className="text-3xl font-bold text-slate-900">{stats.pending}</p>
+          <div className="px-6 pb-6">
+            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.pending}</p>
+            <p className="text-xs text-slate-500">Aguardando confirmação</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="pb-3">
+        <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-slate-600">Canceladas</CardTitle>
-              <XCircle className="h-5 w-5 text-red-500" />
+              <CardTitle className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Canceladas
+              </CardTitle>
+              <div className="p-2 bg-red-100 rounded-lg">
+                <XCircle className="h-5 w-5 text-red-600" />
+              </div>
             </div>
           </CardHeader>
-          <div className="px-6 pb-4">
-            <p className="text-3xl font-bold text-slate-900">{stats.cancelled}</p>
+          <div className="px-6 pb-6">
+            <p className="text-4xl font-bold text-slate-900 mb-1">{stats.cancelled}</p>
+            <p className="text-xs text-slate-500">Consultas canceladas</p>
           </div>
         </Card>
       </section>
@@ -149,13 +178,13 @@ export default function DashboardPage() {
                 <Skeleton className="h-20 w-full" />
               </>
             ) : upcomingAppointments.length === 0 ? (
-              <EmptyState className="border-none bg-transparent p-0">
-                <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-                <p className="text-slate-600">Você ainda não possui consultas agendadas.</p>
-                <Link href="/appointments" className="mt-4 inline-block">
-                  <span className="text-sm font-medium text-purple-600 hover:text-purple-700">
-                    Agendar consulta
-                  </span>
+              <EmptyState
+                icon={<AlertCircle className="h-8 w-8 text-slate-400" />}
+                title="Nenhuma consulta agendada"
+                description="Você ainda não possui consultas agendadas. Agende sua primeira consulta agora."
+              >
+                <Link href="/appointments">
+                  <Button size="sm">Agendar consulta</Button>
                 </Link>
               </EmptyState>
             ) : (
@@ -163,19 +192,21 @@ export default function DashboardPage() {
                 <Link
                   key={appointment.id}
                   href={`/appointments/${appointment.id}`}
-                  className="block rounded-lg border border-slate-200 p-4 hover:border-purple-300 hover:bg-purple-50/50 transition-colors"
+                  className="block rounded-lg border-2 border-slate-200 bg-white p-4 hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <Stethoscope className="h-4 w-4 text-purple-600" />
-                        <p className="font-semibold text-slate-900">
+                        <div className="p-1.5 bg-purple-100 rounded-md">
+                          <Stethoscope className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <p className="font-semibold text-slate-900 truncate">
                           {appointment.doctor?.name ?? "---"}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-slate-600">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
+                      <div className="flex items-center gap-4 text-sm text-slate-700 mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4 text-slate-500" />
                           <span>
                             {new Date(appointment.scheduled_at).toLocaleDateString("pt-BR", {
                               day: "2-digit",
@@ -184,8 +215,8 @@ export default function DashboardPage() {
                             })}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-4 w-4 text-slate-500" />
                           <span>
                             {new Date(appointment.scheduled_at).toLocaleTimeString("pt-BR", {
                               hour: "2-digit",
@@ -195,7 +226,9 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       {appointment.doctor?.specialty && (
-                        <p className="text-xs text-slate-500 mt-1">{appointment.doctor.specialty}</p>
+                        <p className="text-xs text-slate-600 font-medium mt-1">
+                          {appointment.doctor.specialty}
+                        </p>
                       )}
                     </div>
                     <StatusBadge status={appointment.status} />
@@ -228,9 +261,10 @@ export default function DashboardPage() {
                 <Skeleton className="h-20 w-full" />
               </>
             ) : doctors.length === 0 ? (
-              <EmptyState className="border-none bg-transparent p-0">
-                <p className="text-sm text-slate-600">Nenhum médico cadastrado até o momento.</p>
-              </EmptyState>
+              <EmptyState
+                title="Nenhum médico disponível"
+                description="Não há médicos cadastrados no momento."
+              />
             ) : (
               doctors.map((doctor) => (
                 <Link
@@ -308,9 +342,10 @@ export default function DashboardPage() {
                 <Skeleton className="h-16 w-full" />
               </>
             ) : pastAppointments.length === 0 ? (
-              <EmptyState className="border-none bg-transparent p-0">
-                <p className="text-sm text-slate-600">Nenhuma consulta realizada ainda.</p>
-              </EmptyState>
+              <EmptyState
+                title="Nenhuma consulta realizada"
+                description="Você ainda não realizou nenhuma consulta."
+              />
             ) : (
               pastAppointments.map((appointment) => (
                 <div

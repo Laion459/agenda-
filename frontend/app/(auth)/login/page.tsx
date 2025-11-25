@@ -63,19 +63,38 @@ export default function LoginPage() {
         <CardTitle className="text-2xl">Entrar</CardTitle>
         <CardDescription>Acesse sua conta Agenda+ para gerenciar consultas.</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
-          <Input id="email" type="email" placeholder="seu@email.com" {...register("email")} />
-          {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+          <Label htmlFor="email" required>
+            E-mail
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="seu@email.com"
+            autoComplete="email"
+            error={!!errors.email}
+            errorMessage={errors.email?.message}
+            aria-required="true"
+            {...register("email")}
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Senha</Label>
-          <Input id="password" type="password" {...register("password")} />
-          {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+          <Label htmlFor="password" required>
+            Senha
+          </Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            error={!!errors.password}
+            errorMessage={errors.password?.message}
+            aria-required="true"
+            {...register("password")}
+          />
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Entrando..." : "Entrar"}
+        <Button type="submit" className="w-full" loading={loading} disabled={loading}>
+          Entrar
         </Button>
       </form>
       <p className="text-sm text-slate-600">
