@@ -58,9 +58,11 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/.next ./.next
 COPY --from=builder /usr/src/app/public ./public
 COPY frontend/next.config.ts ./next.config.ts
-COPY frontend/postcss.config.mjs ./postcss.config.mjs
+COPY frontend/postcss.config.js ./postcss.config.js
+COPY frontend/tailwind.config.js ./tailwind.config.js
 COPY frontend/tsconfig.json ./tsconfig.json
 COPY frontend/next-env.d.ts ./next-env.d.ts
+COPY frontend/app/globals.css ./app/globals.css
 
 EXPOSE 3000
 
