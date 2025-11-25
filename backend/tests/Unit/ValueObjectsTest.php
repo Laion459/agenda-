@@ -80,7 +80,9 @@ class ValueObjectsTest extends TestCase
         $scheduled = ScheduledDateTime::fromString($futureDate->toIso8601String());
 
         $this->assertEquals('14:30', $scheduled->format('H:i'));
-        $this->assertEquals(2, $scheduled->dayOfWeekIso());
+        // Calcula o dia da semana esperado dinamicamente (hoje + 2 dias)
+        $expectedDayOfWeek = $futureDate->dayOfWeekIso;
+        $this->assertEquals($expectedDayOfWeek, $scheduled->dayOfWeekIso());
     }
 
     public function test_scheduled_date_time_can_calculate_difference(): void
