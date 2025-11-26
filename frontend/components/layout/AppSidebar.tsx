@@ -34,7 +34,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const { isOpen, toggle, close } = useSidebarStore();
-  const sidebarRef = useRef<HTMLAsideElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
 
   // Fechar sidebar ao clicar fora em mobile
   useEffect(() => {

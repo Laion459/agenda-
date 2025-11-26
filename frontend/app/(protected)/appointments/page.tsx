@@ -400,7 +400,7 @@ export default function AppointmentsPage() {
       (patient) =>
         patient.name.toLowerCase().includes(search) ||
         patient.cpf?.toLowerCase().includes(search) ||
-        patient.email?.toLowerCase().includes(search)
+        patient.user?.email?.toLowerCase().includes(search)
     );
   }, [patients, patientSearch]);
 
@@ -606,8 +606,7 @@ export default function AppointmentsPage() {
                           )}
                           {errors.doctor_id && <p className="text-xs text-red-500">{errors.doctor_id.message as string}</p>}
                         </div>
-                        {/* Calendário de Dias Disponíveis */}
-                        {watchedDoctorId && (
+                        {!!watchedDoctorId && (
                           <div className="space-y-2 md:col-span-2">
                             <Label>Selecione a Data *</Label>
                             <AppointmentCalendar
@@ -672,9 +671,7 @@ export default function AppointmentsPage() {
                           />
                           {errors.duration_minutes && <p className="text-xs text-red-500">{errors.duration_minutes.message}</p>}
                         </div>
-                        
-                        {/* Horários Disponíveis */}
-                        {watchedDoctorId && watchedDate && (
+                        {!!watchedDoctorId && !!watchedDate && (
                           <div className="space-y-2 md:col-span-2">
                             <Label>Horários Disponíveis</Label>
                             {loadingSlots ? (
@@ -1189,7 +1186,7 @@ function CreatePatientModal({
     phone: z.string().min(10, 'Telefone é obrigatório'),
     cpf: z.string().min(11, 'CPF é obrigatório'),
     birth_date: z.string().min(1, 'Data de nascimento é obrigatória'),
-    gender: z.enum(['M', 'F', 'OTHER'], { required_error: 'Selecione o sexo' }),
+    gender: z.enum(['M', 'F', 'OTHER'], { message: 'Selecione o sexo' }).optional(),
   });
 
   const {
