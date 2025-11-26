@@ -15,6 +15,8 @@ class HealthInsuranceResource extends JsonResource
             'description' => $this->description,
             'coverage_percentage' => $this->coverage_percentage,
             'is_active' => $this->is_active,
+            'beneficiaries_count' => $this->when(isset($this->beneficiaries_count), fn () => $this->beneficiaries_count),
+            'doctors_count' => $this->when(isset($this->doctors_count), fn () => $this->doctors_count),
             'pivot' => $this->whenPivotLoaded(
                 'patient_health_insurance',
                 fn () => [

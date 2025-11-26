@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Search, Plus, Edit, Trash2, CheckCircle2, Eye } from "lucide-react";
+import { Search, Plus, Edit, Trash2, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Modal } from "@/components/ui/modal";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import {
@@ -47,6 +49,7 @@ export default function AdminDoctorsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter] = useState<"all" | "active" | "inactive">("all");
   const [planFilter] = useState<number | "all">("all");
+  const [showFormModal, setShowFormModal] = useState(false);
 
   const {
     register,
@@ -126,6 +129,7 @@ export default function AdminDoctorsPage() {
 
   const resetForm = () => {
     setEditing(null);
+    setShowFormModal(false);
     reset({
       name: "",
       email: "",
@@ -177,6 +181,7 @@ export default function AdminDoctorsPage() {
 
   const handleEdit = (doctor: Doctor) => {
     setEditing(doctor);
+    setShowFormModal(true);
     reset({
       name: doctor.name,
       email: doctor.user?.email ?? "",
@@ -188,6 +193,11 @@ export default function AdminDoctorsPage() {
       is_active: doctor.user?.is_active ?? doctor.is_active,
       health_insurance_ids: doctor.health_insurances?.map((plan) => plan.id) ?? [],
     });
+  };
+
+  const handleNewDoctor = () => {
+    resetForm();
+    setShowFormModal(true);
   };
 
   const handleToggleActive = async (doctor: Doctor) => {
@@ -217,7 +227,8 @@ export default function AdminDoctorsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminLayout>
+      <div className="space-y-6">
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[
@@ -248,10 +259,7 @@ export default function AdminDoctorsPage() {
           />
         </div>
         <Button
-          onClick={() => {
-            resetForm();
-            document.getElementById('doctor-form')?.scrollIntoView({ behavior: 'smooth' });
-          }}
+          onClick={handleNewDoctor}
           className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -259,18 +267,125 @@ export default function AdminDoctorsPage() {
         </Button>
       </div>
 
-      {/* Formulário e Tabela */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-[420px_1fr]">
-        {/* Formulário - Sidebar */}
-        <Card id="doctor-form" className="lg:sticky lg:top-24 lg:self-start">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              {editing ? <Edit className="h-5 w-5 text-blue-600" /> : <Plus className="h-5 w-5 text-blue-600" />}
-              <CardTitle>{editing ? "Editar médico" : "Cadastrar médico"}</CardTitle>
+      {/* Tabela */}
+      <Card className="overflow-hidden">
+          <div className="overflow-x-auto -mx-6 sm:mx-0">
+            <table className="w-full min-w-[640px]" role="table" aria-label="Lista de médicos">
+                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Nome
+                    </th>
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      CRM
+                    </th>
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden md:table-cell">
+                      Especialidade
+                    </th>
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden lg:table-cell">
+                      Contato
+                    </th>
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 sm:px-6 py-8">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredDoctors.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 sm:px-6 py-12">
+                        <EmptyState
+                          title="Nenhum médico encontrado"
+                          description={search ? "Tente ajustar os filtros de busca." : "Comece cadastrando o primeiro médico."}
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDoctors.map((doctor) => {
+                      const active = doctor.user?.is_active ?? doctor.is_active;
+                      return (
+                        <tr key={doctor.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="text-sm font-medium text-slate-900 dark:text-white">{doctor.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 md:hidden mt-1">
+                              {doctor.specialty}
+                            </div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="text-sm text-slate-600 dark:text-slate-300">{doctor.crm}</div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
+                            <div className="text-sm text-slate-600 dark:text-slate-300">{doctor.specialty}</div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 hidden lg:table-cell">
+                            <div className="text-sm text-slate-600 dark:text-slate-300">
+                              {doctor.user?.email || 'N/A'}
+                            </div>
+                            <div className="text-xs text-slate-400 dark:text-slate-500">
+                              {doctor.user?.phone || ''}
+                            </div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                active
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                              }`}
+                            >
+                              {active ? "ativo" : "inativo"}
+                            </span>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Button
+                                variant="outline"
+                                onClick={() => handleEdit(doctor)}
+                                className="flex items-center gap-1.5 h-8 px-3 text-xs"
+                              >
+                                <Edit className="h-3.5 w-3.5" />
+                                <span>Editar</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleToggleActive(doctor)}
+                                disabled={loadingForm}
+                                className="flex items-center gap-1.5 h-8 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Desativar</span>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-            <CardDescription>Gerencie os profissionais da clínica.</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5 p-4 sm:p-6 pt-0" noValidate>
+          </Card>
+
+      {/* Modal do Formulário */}
+      <Modal
+        isOpen={showFormModal}
+        onClose={resetForm}
+        title={editing ? "Editar médico" : "Novo médico"}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name" required>Nome</Label>
@@ -357,11 +472,11 @@ export default function AdminDoctorsPage() {
                 return (
                   <label
                     key={plan.id}
-                    className="flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{plan.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="font-medium text-slate-800 truncate">{plan.name}</p>
+                      <p className="text-xs text-slate-500">
                         Cobertura: {plan.coverage_percentage ? plan.coverage_percentage + "%" : "N/D"}
                       </p>
                     </div>
@@ -369,7 +484,7 @@ export default function AdminDoctorsPage() {
                       type="checkbox"
                       checked={checked}
                       onChange={() => togglePlan(plan.id)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded border-slate-300 dark:border-slate-600"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded border-slate-300"
                     />
                   </label>
                 );
@@ -382,7 +497,7 @@ export default function AdminDoctorsPage() {
               Ativo na plataforma
             </Label>
           </div>
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-4">
             <Button
               type="submit"
               loading={loadingForm}
@@ -391,138 +506,19 @@ export default function AdminDoctorsPage() {
             >
               {editing ? "Salvar alterações" : "Cadastrar médico"}
             </Button>
-            {editing && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={resetForm}
-                disabled={loadingForm}
-              >
-                Cancelar
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={resetForm}
+              disabled={loadingForm}
+            >
+              Cancelar
+            </Button>
           </div>
-          </form>
-        </Card>
-
-        {/* Table */}
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto -mx-6 sm:mx-0">
-            <table className="w-full min-w-[640px]" role="table" aria-label="Lista de médicos">
-                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                  <tr>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Nome
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      CRM
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden md:table-cell">
-                      Especialidade
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden lg:table-cell">
-                      Contato
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 sm:px-6 py-8">
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-full" />
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filteredDoctors.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 sm:px-6 py-12">
-                        <EmptyState
-                          title="Nenhum médico encontrado"
-                          description={search ? "Tente ajustar os filtros de busca." : "Comece cadastrando o primeiro médico."}
-                        />
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredDoctors.map((doctor) => {
-                      const active = doctor.user?.is_active ?? doctor.is_active;
-                      return (
-                        <tr key={doctor.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                          <td className="px-4 sm:px-6 py-4">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white">{doctor.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 md:hidden mt-1">
-                              {doctor.specialty}
-                            </div>
-                          </td>
-                          <td className="px-4 sm:px-6 py-4">
-                            <div className="text-sm text-slate-600 dark:text-slate-300">{doctor.crm}</div>
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
-                            <div className="text-sm text-slate-600 dark:text-slate-300">{doctor.specialty}</div>
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 hidden lg:table-cell">
-                            <div className="text-sm text-slate-600 dark:text-slate-300">
-                              {doctor.user?.email || 'N/A'}
-                            </div>
-                            <div className="text-xs text-slate-400 dark:text-slate-500">
-                              {doctor.user?.phone || ''}
-                            </div>
-                          </td>
-                          <td className="px-4 sm:px-6 py-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                active
-                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                  : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-                              }`}
-                            >
-                              {active ? "ativo" : "inativo"}
-                            </span>
-                          </td>
-                          <td className="px-4 sm:px-6 py-4">
-                            <div className="flex items-center gap-1 sm:gap-2">
-                              <Button
-                                variant="ghost"
-                                onClick={() => handleEdit(doctor)}
-                                className="h-8 w-8 p-0"
-                                title="Editar"
-                                aria-label="Editar médico"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                onClick={() => handleToggleActive(doctor)}
-                                disabled={loadingForm}
-                                className="h-8 w-8 p-0"
-                                title={active ? "Desativar" : "Ativar"}
-                                aria-label={active ? "Desativar médico" : "Ativar médico"}
-                              >
-                                {active ? (
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                ) : (
-                                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                )}
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </div>
+        </form>
+      </Modal>
       </div>
+    </AdminLayout>
   );
 }
 

@@ -40,9 +40,20 @@ class AppointmentValidationService
      */
     public function ensureDoctorAllowsScheduling(Doctor $doctor): void
     {
-        if ($doctor->schedules()->where('is_blocked', true)->count() === $doctor->schedules()->count()) {
+        $totalSchedules = $doctor->schedules()->count();
+        $blockedSchedules = $doctor->schedules()->where('is_blocked', true)->count();
+        
+        // Se não tem nenhum schedule configurado
+        if ($totalSchedules === 0) {
             throw ValidationException::withMessages([
-                'doctor_id' => __('O médico não possui agenda liberada para novos agendamentos.'),
+                'doctor_id' => __('O médico não possui agenda configurada. Configure horários de atendimento antes de agendar consultas.'),
+            ]);
+        }
+        
+        // Se todos os schedules estão bloqueados
+        if ($blockedSchedules === $totalSchedules && $totalSchedules > 0) {
+            throw ValidationException::withMessages([
+                'doctor_id' => __('O médico não possui agenda liberada para novos agendamentos. Todos os horários estão bloqueados.'),
             ]);
         }
     }

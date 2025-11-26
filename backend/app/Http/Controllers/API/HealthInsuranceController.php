@@ -7,6 +7,7 @@ use App\Http\Requests\HealthInsurance\UpdateHealthInsuranceRequest;
 use App\Http\Resources\HealthInsuranceResource;
 use App\Models\HealthInsurance;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Convênios')]
@@ -27,12 +28,64 @@ class HealthInsuranceController extends Controller
     )]
     public function index(): JsonResponse
     {
-        return HealthInsuranceResource::collection(
-            HealthInsurance::query()
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get()
-        )->response();
+        $query = HealthInsurance::query();
+        
+        // Se for admin, pode ver todos (ativos e inativos)
+        if (auth()->check() && auth()->user()?->role === \App\Domain\Shared\Enums\UserRole::ADMIN) {
+            // Admin vê todos
+        } else {
+            // Público vê apenas ativos
+            $query->where('is_active', true);
+        }
+        
+        $insurances = $query->withCount([
+            'patients as beneficiaries_count' => function ($q) {
+                $q->where('patient_health_insurance.is_active', true);
+            },
+            'doctors as doctors_count' => function ($q) {
+                $q->where('doctor_health_insurance.is_active', true);
+            }
+        ])->orderBy('name')->get();
+        
+        return HealthInsuranceResource::collection($insurances)->response();
+    }
+    
+    #[OA\Get(
+        path: '/admin/health-insurances/statistics',
+        summary: 'Estatísticas de convênios',
+        description: 'Retorna estatísticas agregadas sobre convênios (total de beneficiários, média, etc.).',
+        tags: ['Convênios'],
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Estatísticas de convênios',
+                content: new OA\JsonContent(type: 'object')
+            ),
+        ]
+    )]
+    public function statistics(): JsonResponse
+    {
+        $totalBeneficiaries = DB::table('patient_health_insurance')
+            ->where('is_active', true)
+            ->distinct()
+            ->count('patient_id');
+        
+        $activeInsurances = HealthInsurance::where('is_active', true)
+            ->withCount(['patients as beneficiaries_count' => function ($q) {
+                $q->where('patient_health_insurance.is_active', true);
+            }])
+            ->get();
+        
+        $averageBeneficiaries = $activeInsurances->count() > 0
+            ? round($activeInsurances->sum('beneficiaries_count') / $activeInsurances->count(), 2)
+            : 0;
+        
+        return response()->json([
+            'total_beneficiaries' => $totalBeneficiaries,
+            'total_active_insurances' => $activeInsurances->count(),
+            'average_beneficiaries_per_insurance' => $averageBeneficiaries,
+        ]);
     }
 
     #[OA\Post(

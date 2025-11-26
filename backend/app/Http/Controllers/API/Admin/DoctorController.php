@@ -130,4 +130,31 @@ class DoctorController extends Controller
 
         return response()->json(null, 204);
     }
+
+    #[OA\Post(
+        path: '/admin/doctors/{id}/toggle-active',
+        summary: 'Alternar status do médico',
+        description: 'Ativa ou desativa um médico. Quando desativado, não aparecerá na lista de médicos disponíveis para agendamento.',
+        tags: ['Administração'],
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Status alterado', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 404, description: 'Médico não encontrado'),
+        ]
+    )]
+    public function toggleActive(Doctor $doctor): JsonResponse
+    {
+        // Verifica o status atual: está ativo se AMBOS (doctor e user) estiverem ativos
+        $currentlyActive = $doctor->is_active && $doctor->user?->is_active;
+        $newStatus = !$currentlyActive;
+        
+        // Atualiza ambos para garantir sincronização
+        $doctor->update(['is_active' => $newStatus]);
+        if ($doctor->user) {
+            $doctor->user->update(['is_active' => $newStatus]);
+        }
+
+        return DoctorResource::make($doctor->load(['user', 'healthInsurances']))->response();
+    }
 }

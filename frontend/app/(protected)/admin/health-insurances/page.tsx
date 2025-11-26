@@ -12,12 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Modal } from "@/components/ui/modal";
 import { handleApiError } from "@/lib/handle-api-error";
-import { Eye, Edit, Trash2, Plus, Search } from "lucide-react";
+import { Edit, Trash2, Plus, Search, X } from "lucide-react";
 import {
   createHealthInsurance,
   deleteHealthInsurance,
   fetchHealthInsurances,
+  fetchHealthInsuranceStatistics,
   updateHealthInsurance,
 } from "@/services/health-insurance-service";
 import { HealthInsurance } from "@/types";
@@ -48,6 +50,12 @@ export default function HealthInsurancesPage() {
   const [editing, setEditing] = useState<HealthInsurance | null>(null);
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [statistics, setStatistics] = useState<{
+    total_beneficiaries: number;
+    total_active_insurances: number;
+    average_beneficiaries_per_insurance: number;
+  } | null>(null);
 
   const {
     register,
@@ -64,8 +72,13 @@ export default function HealthInsurancesPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await fetchHealthInsurances();
-        setItems(data);
+        setLoading(true);
+        const [insuranceData, statsData] = await Promise.all([
+          fetchHealthInsurances(),
+          fetchHealthInsuranceStatistics(),
+        ]);
+        setItems(insuranceData);
+        setStatistics(statsData);
       } catch (error) {
         handleApiError(error, "Não foi possível carregar os convênios");
       } finally {
@@ -77,12 +90,17 @@ export default function HealthInsurancesPage() {
   }, []);
 
   const reloadItems = useCallback(async () => {
-    const data = await fetchHealthInsurances();
-    setItems(data);
+    const [insuranceData, statsData] = await Promise.all([
+      fetchHealthInsurances(),
+      fetchHealthInsuranceStatistics(),
+    ]);
+    setItems(insuranceData);
+    setStatistics(statsData);
   }, []);
 
   const resetForm = () => {
     setEditing(null);
+    setShowFormModal(false);
     reset({ name: "", description: "", coverage_percentage: undefined, is_active: true });
   };
 
@@ -124,13 +142,19 @@ export default function HealthInsurancesPage() {
 
   const handleEdit = (item: HealthInsurance) => {
     setEditing(item);
+    setShowFormModal(true);
     reset({
       id: item.id,
       name: item.name,
-      description: "",
+      description: item.description || "",
       coverage_percentage: item.coverage_percentage ? Number(item.coverage_percentage) : undefined,
       is_active: item.is_active,
     });
+  };
+
+  const handleNewInsurance = () => {
+    resetForm();
+    setShowFormModal(true);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -181,7 +205,11 @@ export default function HealthInsurancesPage() {
             (statusFilter === "active" && item.is_active) ||
             (statusFilter === "inactive" && !item.is_active)) &&
           (normalizedFilter
-            ? [item.name, item.coverage_percentage?.toString() ?? ""]
+            ? [
+                item.name,
+                item.description,
+                item.coverage_percentage?.toString() ?? "",
+              ]
                 .filter(Boolean)
                 .some((value) => value!.toLowerCase().includes(normalizedFilter))
             : true)
@@ -214,13 +242,19 @@ export default function HealthInsurancesPage() {
           <Card>
             <CardContent className="p-6">
               <p className="text-sm font-medium text-slate-600 mb-1">Total de Beneficiários</p>
-              <p className="text-3xl font-bold text-slate-900">770</p>
+              <p className="text-3xl font-bold text-slate-900">
+                {statistics?.total_beneficiaries ?? 0}
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
               <p className="text-sm font-medium text-slate-600 mb-1">Média por Convênio</p>
-              <p className="text-3xl font-bold text-slate-900">385</p>
+              <p className="text-3xl font-bold text-slate-900">
+                {statistics?.average_beneficiaries_per_insurance 
+                  ? Math.round(statistics.average_beneficiaries_per_insurance)
+                  : 0}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -230,16 +264,14 @@ export default function HealthInsurancesPage() {
           <div className="flex-1 flex items-center gap-2">
             <Search className="h-5 w-5 text-slate-400" />
             <Input
-              placeholder="Buscar por nome, CNPJ ou contato..."
+              placeholder="Buscar por nome, descrição ou cobertura..."
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
               className="max-w-md"
             />
           </div>
           <Button
-            onClick={() => {
-              resetForm();
-            }}
+            onClick={handleNewInsurance}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -247,71 +279,20 @@ export default function HealthInsurancesPage() {
           </Button>
         </div>
 
-      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-      <Card>
-        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <CardTitle>{editing ? "Editar convênio" : "Adicionar convênio"}</CardTitle>
-            <CardDescription>Cadastre ou atualize convênios aceitos na clínica.</CardDescription>
-          </div>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-            <Input
-              placeholder="Buscar por nome, descrição ou cobertura"
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              className="md:max-w-xs"
-            />
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-36"
-            >
-              <option value="all">Todos</option>
-              <option value="active">Ativos</option>
-              <option value="inactive">Inativos</option>
-            </select>
-          </div>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Input id="description" {...register("description")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="coverage_percentage">Cobertura (%)</Label>
-            <Input
-              id="coverage_percentage"
-              type="number"
-              min={0}
-              max={100}
-              step={0.1}
-              {...register("coverage_percentage")}
-            />
-            {errors.coverage_percentage && <p className="text-xs text-red-500">{errors.coverage_percentage.message}</p>}
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="is_active" {...register("is_active")} className="h-4 w-4" />
-            <Label htmlFor="is_active" className="text-sm font-medium">
-              Ativo
-            </Label>
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar convênio"}
-            </Button>
-            {editing && (
-              <Button type="button" variant="ghost" onClick={resetForm}>
-                Cancelar edição
-              </Button>
-            )}
-          </div>
-        </form>
-      </Card>
+      {/* Filtros */}
+      <div className="flex items-center gap-4">
+        <div className="flex-1 flex items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+            className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">Todos</option>
+            <option value="active">Ativos</option>
+            <option value="inactive">Inativos</option>
+          </select>
+        </div>
+      </div>
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
@@ -319,17 +300,18 @@ export default function HealthInsurancesPage() {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Convênio</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cobertura</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beneficiários</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médicos</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4">
+                  <td colSpan={7} className="px-6 py-4">
                     <div className="space-y-2">
                       <Skeleton className="h-4 w-full" />
                       <Skeleton className="h-4 w-full" />
@@ -338,24 +320,37 @@ export default function HealthInsurancesPage() {
                 </tr>
               ) : orderedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center">
+                  <td colSpan={7} className="px-6 py-8 text-center">
                     <EmptyState>Nenhum convênio encontrado.</EmptyState>
                   </td>
                 </tr>
               ) : (
                 orderedItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">{item.name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">-</div>
-                    </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500">-</div>
+                      <div className="text-sm text-gray-500 max-w-xs truncate">
+                        {item.description || '-'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">-</div>
+                      <div className="text-sm text-gray-700">
+                        {item.coverage_percentage !== null && item.coverage_percentage !== undefined
+                          ? `${item.coverage_percentage}%`
+                          : '-'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {item.beneficiaries_count ?? 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {item.doctors_count ?? 0}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -368,33 +363,25 @@ export default function HealthInsurancesPage() {
                         {item.is_active ? "ativo" : "inativo"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
+                    <td className="px-6 py-4 text-sm font-medium">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => handleEdit(item)}
-                          className="h-8 w-8 p-0"
-                          title="Ver detalhes"
+                          className="flex items-center gap-1.5 h-8 px-3 text-xs"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5" />
+                          <span>Editar</span>
                         </Button>
                         <Button
-                          variant="ghost"
-                          onClick={() => handleEdit(item)}
-                          className="h-8 w-8 p-0"
-                          title="Editar"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
+                          variant="outline"
                           onClick={() => {
                             void handleDelete(item);
                           }}
-                          className="h-8 w-8 p-0"
-                          title="Remover"
+                          className="flex items-center gap-1.5 h-8 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
                         >
-                          <Trash2 className="h-4 w-4 text-red-500" />
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>Excluir</span>
                         </Button>
                       </div>
                     </td>
@@ -405,7 +392,53 @@ export default function HealthInsurancesPage() {
           </table>
         </div>
       </Card>
-      </div>
+
+      {/* Modal do Formulário */}
+      <Modal
+        isOpen={showFormModal}
+        onClose={resetForm}
+        title={editing ? "Editar convênio" : "Novo convênio"}
+        size="md"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name" required>Nome</Label>
+            <Input id="name" {...register("name")} />
+            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição</Label>
+            <Input id="description" {...register("description")} placeholder="Descrição do convênio" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="coverage_percentage">Cobertura (%)</Label>
+            <Input
+              id="coverage_percentage"
+              type="number"
+              min={0}
+              max={100}
+              step={0.1}
+              {...register("coverage_percentage")}
+              placeholder="Ex: 80"
+            />
+            {errors.coverage_percentage && <p className="text-xs text-red-500">{errors.coverage_percentage.message}</p>}
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="is_active" {...register("is_active")} className="h-4 w-4" />
+            <Label htmlFor="is_active" className="text-sm font-medium">
+              Ativo
+            </Label>
+          </div>
+          <div className="flex gap-2 pt-4">
+            <Button type="submit" disabled={submitting} className="flex-1">
+              {submitting ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar convênio"}
+            </Button>
+            <Button type="button" variant="ghost" onClick={resetForm} disabled={submitting}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
       </div>
     </AdminLayout>
   );

@@ -37,6 +37,8 @@ Route::get('health/ping', [\App\Http\Controllers\API\HealthController::class, 'p
 
 Route::get('doctors', [DoctorController::class, 'index']);
 Route::get('doctors/{doctor}', [DoctorController::class, 'show']);
+Route::get('doctors/{doctor}/available-slots', [DoctorController::class, 'availableSlots']);
+Route::get('doctors/{doctor}/available-dates', [DoctorController::class, 'availableDates']);
 Route::get('health-insurances', [HealthInsuranceController::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(function () {
@@ -68,11 +70,15 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
     });
 
     Route::middleware('role:ADMIN')->group(function () {
+        Route::get('admin/health-insurances/statistics', [HealthInsuranceController::class, 'statistics']);
         Route::post('health-insurances', [HealthInsuranceController::class, 'store']);
         Route::put('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'update']);
         Route::delete('health-insurances/{health_insurance}', [HealthInsuranceController::class, 'destroy']);
         Route::apiResource('admin/doctors', AdminDoctorController::class);
+        Route::post('admin/doctors/{doctor}/toggle-active', [AdminDoctorController::class, 'toggleActive']);
         Route::apiResource('admin/patients', AdminPatientController::class);
+        Route::post('admin/patients/{patient}/toggle-active', [AdminPatientController::class, 'toggleActive']);
+        Route::post('admin/appointments', [AppointmentController::class, 'storeAsAdmin']);
         Route::get('admin/users', [AdminUserController::class, 'index']);
         Route::get('admin/users/export', [AdminUserController::class, 'export']);
         Route::get('admin/reports/appointments', [AdminReportController::class, 'appointmentSummary']);

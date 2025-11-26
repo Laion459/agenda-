@@ -13,11 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Modal } from "@/components/ui/modal";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import { createPatient, fetchAdminPatients, togglePatientStatus, updatePatient } from "@/services/admin-patient-service";
 import { HealthInsurance, Patient } from "@/types";
-import { Eye, Edit, Trash2, CheckCircle2 } from "lucide-react";
+import { Edit, Trash2, CheckCircle2 } from "lucide-react";
 
 const patientSchema = z.object({
   name: z.string().min(3, "Informe o nome"),
@@ -50,6 +51,7 @@ export default function AdminPatientsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [plans, setPlans] = useState<PlanSelection>({});
+  const [showFormModal, setShowFormModal] = useState(false);
 
   const {
     register,
@@ -133,6 +135,7 @@ export default function AdminPatientsPage() {
 
   const resetForm = () => {
     setEditing(null);
+    setShowFormModal(false);
     reset({
       name: "",
       email: "",
@@ -196,6 +199,7 @@ export default function AdminPatientsPage() {
 
   const handleEdit = (patient: Patient) => {
     setEditing(patient);
+    setShowFormModal(true);
     reset({
       name: patient.name,
       email: patient.user?.email ?? "",
@@ -208,6 +212,11 @@ export default function AdminPatientsPage() {
       is_active: patient.user?.is_active ?? true,
     });
     resetPlans(patient);
+  };
+
+  const handleNewPatient = () => {
+    resetForm();
+    setShowFormModal(true);
   };
 
   const handleToggleActive = async (patient: Patient) => {
@@ -276,157 +285,27 @@ export default function AdminPatientsPage() {
             />
           </div>
           <Button
-            onClick={() => {
-              resetForm();
-            }}
+            onClick={handleNewPatient}
             className="bg-purple-600 hover:bg-purple-700"
           >
             + Novo Paciente
           </Button>
         </div>
 
-      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-      <Card>
-        <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <CardTitle>{editing ? "Editar paciente" : "Cadastrar paciente"}</CardTitle>
-            <CardDescription>Cadastre ou atualize os dados dos pacientes.</CardDescription>
-          </div>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-            <Input
-              placeholder="Buscar por nome, CPF ou e-mail"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="md:max-w-xs"
-            />
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:w-36"
-            >
-              <option value="all">Todos</option>
-              <option value="active">Ativos</option>
-              <option value="inactive">Inativos</option>
-            </select>
-          </div>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 pt-0">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome</Label>
-              <Input id="name" {...register("name")} />
-              {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" {...register("email")} />
-              {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" {...register("phone")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{editing ? "Senha (opcional)" : "Senha inicial"}</Label>
-              <Input id="password" type="password" {...register("password")} />
-              {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF</Label>
-              <Input id="cpf" {...register("cpf")} />
-              {errors.cpf && <p className="text-xs text-red-500">{errors.cpf.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="birth_date">Data de nascimento</Label>
-              <Input id="birth_date" type="date" {...register("birth_date")} />
-              {errors.birth_date && (
-                <p className="text-xs text-red-500">{errors.birth_date.message}</p>
-              )}
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gênero</Label>
-              <select
-                id="gender"
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                {...register("gender")}
-              >
-                <option value="">Não informado</option>
-                <option value="F">Feminino</option>
-                <option value="M">Masculino</option>
-                <option value="OTHER">Outro</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input id="address" {...register("address")} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Convênios do paciente</Label>
-            <div className="grid gap-3">
-              {healthInsurances.map((plan) => {
-                const selection = plans[plan.id] ?? { selected: false, policy_number: "" };
-                return (
-                  <div
-                    key={plan.id}
-                    className="rounded-md border border-slate-200 p-3 text-sm shadow-sm"
-                  >
-                    <label className="flex items-center justify-between gap-2">
-                      <div>
-                        <p className="font-medium text-slate-800">{plan.name}</p>
-                        <p className="text-xs text-slate-500">
-                          Cobertura: {plan.coverage_percentage ?? "N/D"}%
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={selection.selected}
-                        onChange={() => togglePlan(plan.id)}
-                        className="h-4 w-4"
-                      />
-                    </label>
-                    {selection.selected && (
-                      <div className="mt-2 space-y-1">
-                        <Label htmlFor={`policy-${plan.id}`} className="text-xs font-medium">
-                          Número da apólice
-                        </Label>
-                        <Input
-                          id={`policy-${plan.id}`}
-                          value={selection.policy_number}
-                          onChange={(event) => updatePolicyNumber(plan.id, event.target.value)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="is_active" {...register("is_active")} className="h-4 w-4" />
-            <Label htmlFor="is_active" className="text-sm font-medium">
-              Perfil ativo
-            </Label>
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={loadingForm}>
-              {loadingForm ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar paciente"}
-            </Button>
-            {editing && (
-              <Button type="button" variant="ghost" onClick={resetForm} disabled={loadingForm}>
-                Cancelar edição
-              </Button>
-            )}
-          </div>
-        </form>
-      </Card>
+      {/* Filtros */}
+      <div className="flex items-center gap-4">
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">Todos</option>
+          <option value="active">Ativos</option>
+          <option value="inactive">Inativos</option>
+        </select>
+      </div>
 
+      {/* Tabela */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -493,36 +372,24 @@ export default function AdminPatientsPage() {
                           {active ? "ativo" : "inativo"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center gap-2">
+                      <td className="px-6 py-4 text-sm font-medium">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={() => handleEdit(patient)}
-                            className="h-8 w-8 p-0"
-                            title="Ver detalhes"
+                            className="flex items-center gap-1.5 h-8 px-3 text-xs"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Edit className="h-3.5 w-3.5" />
+                            <span>Editar</span>
                           </Button>
                           <Button
-                            variant="ghost"
-                            onClick={() => handleEdit(patient)}
-                            className="h-8 w-8 p-0"
-                            title="Editar"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={() => handleToggleActive(patient)}
                             disabled={loadingForm}
-                            className="h-8 w-8 p-0"
-                            title={active ? "Desativar" : "Ativar"}
+                            className="flex items-center gap-1.5 h-8 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
                           >
-                            {active ? (
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            ) : (
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            )}
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Desativar</span>
                           </Button>
                         </div>
                       </td>
@@ -534,7 +401,128 @@ export default function AdminPatientsPage() {
           </table>
         </div>
       </Card>
-      </div>
+
+      {/* Modal do Formulário */}
+      <Modal
+        isOpen={showFormModal}
+        onClose={resetForm}
+        title={editing ? "Editar paciente" : "Novo paciente"}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome</Label>
+              <Input id="name" {...register("name")} />
+              {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" type="email" {...register("email")} />
+              {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefone</Label>
+              <Input id="phone" {...register("phone")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">{editing ? "Senha (opcional)" : "Senha inicial"}</Label>
+              <Input id="password" type="password" {...register("password")} />
+              {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="cpf">CPF</Label>
+              <Input id="cpf" {...register("cpf")} />
+              {errors.cpf && <p className="text-xs text-red-500">{errors.cpf.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birth_date">Data de nascimento</Label>
+              <Input id="birth_date" type="date" {...register("birth_date")} />
+              {errors.birth_date && (
+                <p className="text-xs text-red-500">{errors.birth_date.message}</p>
+              )}
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gênero</Label>
+              <select
+                id="gender"
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {...register("gender")}
+              >
+                <option value="">Não informado</option>
+                <option value="F">Feminino</option>
+                <option value="M">Masculino</option>
+                <option value="OTHER">Outro</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Endereço</Label>
+              <Input id="address" {...register("address")} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Convênios do paciente</Label>
+            <div className="grid gap-3 max-h-48 overflow-y-auto">
+              {healthInsurances.map((plan) => {
+                const selection = plans[plan.id] ?? { selected: false, policy_number: "" };
+                return (
+                  <div
+                    key={plan.id}
+                    className="rounded-md border border-slate-200 p-3 text-sm shadow-sm"
+                  >
+                    <label className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="font-medium text-slate-800">{plan.name}</p>
+                        <p className="text-xs text-slate-500">
+                          Cobertura: {plan.coverage_percentage ?? "N/D"}%
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={selection.selected}
+                        onChange={() => togglePlan(plan.id)}
+                        className="h-4 w-4"
+                      />
+                    </label>
+                    {selection.selected && (
+                      <div className="mt-2 space-y-1">
+                        <Label htmlFor={`policy-${plan.id}`} className="text-xs font-medium">
+                          Número da apólice
+                        </Label>
+                        <Input
+                          id={`policy-${plan.id}`}
+                          value={selection.policy_number}
+                          onChange={(event) => updatePolicyNumber(plan.id, event.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="is_active" {...register("is_active")} className="h-4 w-4" />
+            <Label htmlFor="is_active" className="text-sm font-medium">
+              Perfil ativo
+            </Label>
+          </div>
+          <div className="flex gap-2 pt-4">
+            <Button type="submit" disabled={loadingForm} className="flex-1">
+              {loadingForm ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar paciente"}
+            </Button>
+            <Button type="button" variant="ghost" onClick={resetForm} disabled={loadingForm}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
       </div>
     </AdminLayout>
   );

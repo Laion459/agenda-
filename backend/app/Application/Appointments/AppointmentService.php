@@ -122,6 +122,31 @@ class AppointmentService
         return $appointment;
     }
 
+    public function createForAdmin(User $user, array $data): Appointment
+    {
+        $patient = Patient::with('user')->findOrFail($data['patient_id']);
+        $doctor = $this->getDoctor($data['doctor_id']);
+        $scheduledAt = Carbon::parse($data['scheduled_at']);
+        $duration = $data['duration_minutes'] ?? 30;
+
+        $this->validateCreation($doctor, $patient, $scheduledAt, $duration);
+
+        $appointment = $this->db->transaction(function () use ($patient, $doctor, $user, $scheduledAt, $duration, $data) {
+            return $this->creationService->create(
+                $patient,
+                $doctor,
+                $user,
+                $scheduledAt,
+                $duration,
+                $data
+            );
+        });
+
+        $this->clearAppointmentCache($patient->id, $doctor->id);
+
+        return $appointment;
+    }
+
     /**
      * Obtém perfil de paciente do usuário
      */

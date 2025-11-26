@@ -1,15 +1,17 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Calendar, LogOut, Bell, Moon, Sun } from "lucide-react";
+import { Calendar, LogOut, Bell, Moon, Sun, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { logout as logoutRequest } from "@/services/auth-service";
 import { fetchNotifications } from "@/services/notification-service";
 import { useAuthStore } from "@/store/auth-store";
+import { useSidebarStore } from "@/store/sidebar-store";
 import { useDarkMode } from "@/hooks/use-dark-mode";
 
 export function AppHeader() {
@@ -90,25 +92,43 @@ export function AppHeader() {
     }
   };
 
+  const getUserInitials = () => {
+    if (!user?.name) return 'U';
+    const names = user.name.trim().split(/\s+/);
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return names[0][0].toUpperCase();
+  };
+
   return (
-    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 py-4">
+    <header className="flex items-center justify-between border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 px-4 sm:px-6 py-4">
       <div className="flex items-center gap-3">
         {/* Menu Mobile */}
-        <MobileMenu />
+        <div className="lg:hidden">
+          <MobileMenu />
+        </div>
         
-        {/* Logo */}
-        <Link 
-          href="/dashboard" 
-          className="flex items-center gap-2 sm:gap-3 text-slate-900" 
+        {/* Logo e Título */}
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 sm:gap-3 text-slate-900 dark:text-white"
           aria-label="Ir para o dashboard"
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <Image
+              src="/logo.png"
+              alt="Agenda+"
+              width={48}
+              height={48}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <div className="hidden sm:block">
             <span className="text-base sm:text-lg font-bold tracking-tight block">Agenda+</span>
             {getRoleLabel() && (
-              <span className="text-xs text-slate-600 block">{getRoleLabel()}</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400 block">{getRoleLabel()}</span>
             )}
           </div>
         </Link>
@@ -121,14 +141,14 @@ export function AppHeader() {
           <Button
             variant="ghost"
             onClick={toggleDarkMode}
-            className="p-2 h-9 w-9 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            className="p-2 h-10 w-10 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
             aria-label={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
             title={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
           >
             {isDark ? (
-              <Sun className="h-5 w-5" />
+              <Sun className="h-6 w-6" />
             ) : (
-              <Moon className="h-5 w-5" />
+              <Moon className="h-6 w-6" />
             )}
           </Button>
         )}
@@ -141,41 +161,32 @@ export function AppHeader() {
         >
           <Button 
             variant="ghost" 
-            className="hidden sm:flex items-center gap-2 h-9 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            className="p-2 h-10 w-10 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
             aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
           >
-            <Bell className="h-4 w-4" />
-            <span className="hidden lg:inline">Notificações</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="sm:hidden p-2 h-9 w-9 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-            aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
-          >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-6 w-6" />
           </Button>
           {unreadBadge}
         </Link>
 
-        {/* Informações do usuário - oculto em mobile pequeno */}
-        <div className="hidden sm:block text-right min-w-0">
-          <p className="font-medium text-sm text-slate-900 dark:text-white truncate max-w-[120px] lg:max-w-none">
-            {user?.name}
-          </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
-            {user?.role?.toLowerCase()}
-          </p>
-        </div>
+        {/* Avatar do usuário */}
+        <Link
+          href="/profile"
+          className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-colors cursor-pointer"
+          aria-label="Ir para o perfil"
+          title="Editar perfil"
+        >
+          {getUserInitials()}
+        </Link>
 
         {/* Botão Sair */}
         <Button 
           variant="ghost" 
           onClick={handleLogout} 
-          className="flex items-center gap-2 h-9 px-2 sm:px-3 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+          className="p-2 h-10 w-10 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
           aria-label="Sair da conta"
         >
-          <LogOut className="h-4 w-4" />
-          <span className="hidden lg:inline">Sair</span>
+          <LogOut className="h-6 w-6" />
         </Button>
       </div>
     </header>

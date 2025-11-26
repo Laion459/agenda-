@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Application\Appointments\AppointmentService;
 use App\Domain\Shared\Enums\UserRole;
+use App\Http\Requests\Appointments\AdminCreateAppointmentRequest;
 use App\Http\Requests\Appointments\CreateAppointmentRequest;
 use App\Http\Requests\Appointments\RescheduleAppointmentRequest;
 use App\Http\Requests\Appointments\UpdateAppointmentStatusRequest;
@@ -110,6 +111,45 @@ class AppointmentController extends Controller
     public function store(CreateAppointmentRequest $request): JsonResponse
     {
         $appointment = $this->service->createForPatient($request->user(), $request->validated());
+
+        return (new AppointmentResource($appointment))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    #[OA\Post(
+        path: '/admin/appointments',
+        summary: 'Criar consulta (Admin)',
+        description: 'Cria um novo agendamento de consulta como administrador, permitindo selecionar paciente e médico.',
+        tags: ['Consultas'],
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['patient_id', 'doctor_id', 'scheduled_at'],
+                properties: [
+                    new OA\Property(property: 'patient_id', type: 'integer', example: 1),
+                    new OA\Property(property: 'doctor_id', type: 'integer', example: 1),
+                    new OA\Property(property: 'scheduled_at', type: 'string', format: 'date-time', example: '2025-12-01 14:00:00'),
+                    new OA\Property(property: 'duration_minutes', type: 'integer', example: 30),
+                    new OA\Property(property: 'type', type: 'string', example: 'PRESENTIAL'),
+                    new OA\Property(property: 'price', type: 'number', format: 'float', example: 150.00),
+                    new OA\Property(property: 'notes', type: 'string', example: 'Consulta de rotina'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Consulta agendada com sucesso',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: 422, description: 'Dados inválidos ou regras de negócio violadas'),
+        ]
+    )]
+    public function storeAsAdmin(AdminCreateAppointmentRequest $request): JsonResponse
+    {
+        $appointment = $this->service->createForAdmin($request->user(), $request->validated());
 
         return (new AppointmentResource($appointment))
             ->response()

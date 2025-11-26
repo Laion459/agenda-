@@ -202,4 +202,25 @@ class PatientController extends Controller
 
         return response()->json(null, 204);
     }
+
+    #[OA\Post(
+        path: '/admin/patients/{id}/toggle-active',
+        summary: 'Alternar status do paciente',
+        description: 'Ativa ou desativa um paciente. Quando desativado, não conseguirá acessar o sistema.',
+        tags: ['Administração'],
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Status alterado', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: 404, description: 'Paciente não encontrado'),
+        ]
+    )]
+    public function toggleActive(Patient $patient): JsonResponse
+    {
+        $newStatus = ! ($patient->user?->is_active ?? true);
+        
+        $patient->user?->update(['is_active' => $newStatus]);
+
+        return PatientResource::make($patient->load(['user', 'healthInsurances']))->response();
+    }
 }

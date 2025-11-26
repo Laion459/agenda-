@@ -65,6 +65,9 @@ class Doctor extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', true)
+            ->whereHas('user', function ($q) {
+                $q->where('is_active', true);
+            });
     }
 }

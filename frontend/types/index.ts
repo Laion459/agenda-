@@ -32,8 +32,11 @@ export interface User {
 export interface HealthInsurance {
   id: number;
   name: string;
+  description?: string | null;
   coverage_percentage: number | string | null;
   is_active: boolean;
+  beneficiaries_count?: number;
+  doctors_count?: number;
   pivot?: {
     policy_number?: string | null;
     is_active?: boolean;

@@ -52,4 +52,13 @@ export async function deleteHealthInsurance(id: number) {
   await api.delete(`${BASE_PATH}/${id}`);
 }
 
+export async function fetchHealthInsuranceStatistics() {
+  const { data } = await api.get<{
+    total_beneficiaries: number;
+    total_active_insurances: number;
+    average_beneficiaries_per_insurance: number;
+  }>('/admin/health-insurances/statistics');
+  return data;
+}
+
 

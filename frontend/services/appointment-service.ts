@@ -20,6 +20,11 @@ export async function createAppointment(payload: Record<string, unknown>) {
   return data.data;
 }
 
+export async function createAdminAppointment(payload: Record<string, unknown>) {
+  const { data } = await api.post<AppointmentResourceResponse>("/admin/appointments", payload);
+  return data.data;
+}
+
 export async function confirmAppointment(id: number) {
   const { data } = await api.post<AppointmentResourceResponse>(`/appointments/${id}/confirm`);
   return data.data;
