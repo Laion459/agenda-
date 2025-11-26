@@ -10,7 +10,7 @@ describe('Button', () => {
   it('deve aplicar variante primary por padrão', () => {
     const { container } = render(<Button>Botão</Button>);
     const button = container.querySelector('button');
-    expect(button).toHaveClass('bg-purple-600');
+    expect(button).toHaveClass('bg-blue-600');
   });
 
   it('deve aplicar variante secondary', () => {
