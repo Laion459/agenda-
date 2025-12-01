@@ -61,7 +61,51 @@ O **Agenda+** é um sistema completo de agendamento médico que permite:
 
 ## 🚀 Instalação
 
-### Usando Docker (Recomendado)
+### Método 1: Usando Makefile (Recomendado - Mais Simples)
+
+O projeto inclui um `Makefile` que automatiza todo o processo de instalação:
+
+1. Clone o repositório:
+```bash
+git clone <repository-url>
+cd "app agenda+"
+```
+
+2. Execute o setup completo:
+```bash
+make install
+```
+
+Este comando irá:
+- Construir as imagens Docker
+- Instalar dependências do backend (Composer)
+- Instalar dependências do frontend (npm)
+- Gerar a chave da aplicação Laravel
+- Executar migrações e seeders do banco de dados
+
+3. Inicie os serviços:
+```bash
+make up
+```
+
+4. Acesse a aplicação:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs (Swagger): http://localhost:8000/api/documentation
+- Mailpit: http://localhost:8025
+
+**Comandos úteis do Makefile:**
+```bash
+make up              # Iniciar todos os serviços
+make down            # Parar e remover containers
+make logs            # Ver logs de todos os serviços
+make test            # Executar todos os testes
+make backend-shell   # Acessar shell do backend
+make frontend-shell  # Acessar shell do frontend
+make bootstrap       # Re-executar migrações e seeders
+```
+
+### Método 2: Usando Docker Compose Manualmente
 
 1. Clone o repositório:
 ```bash
@@ -72,21 +116,33 @@ cd "app agenda+"
 2. Configure as variáveis de ambiente:
 ```bash
 cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
 ```
 
-3. Inicie os containers:
+**Nota:** O frontend não requer arquivo `.env.local` quando usando Docker, pois as variáveis são definidas no `docker-compose.yml`. Se estiver desenvolvendo localmente sem Docker, crie `frontend/.env.local` com:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+3. Construa e inicie os containers:
 ```bash
+docker-compose build
 docker-compose up -d
 ```
 
-4. Execute as migrações:
+4. Instale as dependências e configure o backend:
 ```bash
-docker-compose exec backend php artisan migrate
-docker-compose exec backend php artisan db:seed
+docker-compose exec backend composer install
+docker-compose exec backend php artisan key:generate
+docker-compose exec backend php artisan migrate --seed
 ```
 
-5. Acesse a aplicação:
+5. Instale as dependências do frontend:
+```bash
+docker-compose exec frontend npm install
+```
+
+6. Acesse a aplicação:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
 - API Docs (Swagger): http://localhost:8000/api/documentation
@@ -108,11 +164,22 @@ php artisan serve
 
 #### Frontend
 
+**Pré-requisitos:** Certifique-se de que o backend está rodando primeiro.
+
 ```bash
 cd frontend
 npm install
+
+# Crie o arquivo .env.local se não existir
+cp .env.example .env.local  # Se o arquivo .env.example existir
+# Ou crie manualmente com:
+# NEXT_PUBLIC_API_URL=http://localhost:8000/api
+# NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
 npm run dev
 ```
+
+**Importante:** Para desenvolvimento local sem Docker, você precisará ter PostgreSQL e Redis rodando localmente, ou ajustar as configurações do backend para usar SQLite (não recomendado para produção).
 
 ## ⚙️ Configuração
 
@@ -143,7 +210,10 @@ MAIL_PORT=1025
 #### Frontend (.env.local)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
+
+**Nota:** Quando usando Docker, essas variáveis são definidas automaticamente no `docker-compose.yml`. O arquivo `.env.local` é necessário apenas para desenvolvimento local sem Docker.
 
 ## 🎮 Uso
 
@@ -165,7 +235,22 @@ Consulte a documentação Swagger em `/api/documentation` para todos os endpoint
 
 ## 🧪 Testes
 
-### Backend
+### Usando Docker (Recomendado)
+
+```bash
+# Todos os testes (backend + frontend)
+make test
+
+# Apenas backend
+make test-backend
+
+# Apenas frontend
+make test-frontend
+```
+
+### Desenvolvimento Local
+
+#### Backend
 
 ```bash
 # Todos os testes
@@ -179,7 +264,7 @@ php artisan test --coverage
 php artisan test --filter AppointmentTest
 ```
 
-### Frontend
+#### Frontend
 
 ```bash
 # Todos os testes
@@ -197,6 +282,64 @@ npm run test:watch
 
 - Backend: 70%
 - Frontend: 70%
+
+## 🔧 Troubleshooting
+
+### Problemas Comuns
+
+#### Erro: "Cannot find module" ou dependências não instaladas
+```bash
+# Reinstale as dependências
+make down
+make install
+make up
+```
+
+#### Erro: "Connection refused" ao conectar ao banco
+- Verifique se o container do banco está rodando: `docker-compose ps`
+- Verifique as variáveis de ambiente no `backend/.env`
+- Certifique-se de que `DB_HOST=db` (nome do serviço no docker-compose)
+
+#### Erro: "APP_KEY not set" no Laravel
+```bash
+docker-compose exec backend php artisan key:generate
+# Ou usando Makefile:
+make key
+```
+
+#### Frontend não conecta ao backend
+- Verifique se `NEXT_PUBLIC_API_URL` está correto
+- No Docker: deve ser `http://localhost:8000/api`
+- Verifique se o backend está rodando: `docker-compose ps`
+- Verifique os logs: `docker-compose logs backend`
+
+#### Erro ao executar migrações
+```bash
+# Recrie o banco de dados
+make down
+docker volume rm agenda-plus_db-data  # Remove o volume do banco
+make install
+```
+
+#### Portas já em uso
+Se as portas 3000, 8000, 5432 ou 6379 estiverem em uso:
+- Pare os serviços que estão usando essas portas
+- Ou altere as portas no `docker-compose.yml`
+
+### Verificando o Status dos Serviços
+
+```bash
+# Ver status dos containers
+make ps
+# Ou
+docker-compose ps
+
+# Ver logs
+make logs
+# Ou logs de um serviço específico
+docker-compose logs backend
+docker-compose logs frontend
+```
 
 ## 📚 Documentação
 
@@ -226,10 +369,14 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👥 Autores
 
-- **Equipe de Desenvolvimento** - [GitHub](https://github.com)
+- **Laura**
+- **Kauan**
+- **Leonardo**
+- **Daniel**
 
 ## 🙏 Agradecimentos
 
+- Professora Daniela
 - Laravel Framework
 - Next.js Team
 - Comunidade Open Source
