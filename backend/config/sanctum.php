@@ -45,9 +45,11 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
+    | Configured to 2 hours (120 minutes) as per business requirements.
+    |
     */
 
-    'expiration' => null,
+    'expiration' => env('SANCTUM_EXPIRATION_MINUTES', 120), // 2 horas
 
     /*
     |--------------------------------------------------------------------------

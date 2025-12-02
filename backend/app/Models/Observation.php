@@ -39,4 +39,9 @@ class Observation extends Model
     {
         return $this->belongsTo(Patient::class);
     }
+
+    public function history()
+    {
+        return $this->hasMany(ObservationHistory::class);
+    }
 }

@@ -17,9 +17,22 @@ class SendNotificationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * Número de tentativas antes de falhar permanentemente
+     * Configurado para 3 tentativas conforme requisito
+     */
     public int $tries = 3;
 
+    /**
+     * Tempo de espera entre tentativas (em segundos)
+     * 120 segundos = 2 minutos entre tentativas
+     */
     public int $backoff = 120;
+
+    /**
+     * Tempo máximo de processamento do job (em segundos)
+     */
+    public int $timeout = 60;
 
     public function __construct(private int $notificationId)
     {

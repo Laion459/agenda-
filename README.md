@@ -67,9 +67,11 @@ O projeto inclui um `Makefile` que automatiza todo o processo de instalação:
 
 1. Clone o repositório:
 ```bash
-git clone <repository-url>
+git clone <seu-fork-url>
 cd "app agenda+"
 ```
+
+**💡 Dica:** Se você fez fork, substitua `<seu-fork-url>` pela URL do seu fork no GitHub.
 
 2. Execute o setup completo:
 ```bash
@@ -219,8 +221,22 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 ### Autenticação
 
-1. Acesse `/login`
-2. Use as credenciais do seeder ou crie uma nova conta
+Após executar `make install`, você pode usar estas credenciais de teste:
+
+**Administrador:**
+- Email: `admin@agendaplus.test`
+- Senha: `password`
+
+**Médico:**
+- Email: `dr.responsavel@agendaplus.test`
+- Senha: `password`
+
+**Paciente:**
+- Email: `paciente.demo@agendaplus.test`
+- Senha: `password`
+
+1. Acesse `/login` no frontend (http://localhost:3000/login)
+2. Use uma das credenciais acima ou crie uma nova conta
 3. O token será armazenado automaticamente
 
 ### Endpoints Principais
@@ -343,6 +359,7 @@ docker-compose logs frontend
 
 ## 📚 Documentação
 
+- [🚀 Guia Rápido de Início](./QUICK_START.md) - **Comece aqui se acabou de fazer fork!**
 - [Documentação da API](./backend/AUTENTICACAO.md)
 - [Guia de Testes](./backend/tests/README_TESTS.md)
 - [Documentação de Deploy](./deploy/production/README.md)
