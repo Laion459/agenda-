@@ -76,6 +76,9 @@ class AdminReportService
                     'appointments as completed_appointments_count' => fn ($query) => $query
                         ->whereBetween('scheduled_at', [$start, $end])
                         ->where('status', AppointmentStatus::COMPLETED->value),
+                    'appointments as cancelled_appointments_count' => fn ($query) => $query
+                        ->whereBetween('scheduled_at', [$start, $end])
+                        ->where('status', AppointmentStatus::CANCELLED->value),
                     'appointments as total_appointments_count' => fn ($query) => $query
                         ->whereBetween('scheduled_at', [$start, $end]),
                 ])
@@ -83,16 +86,18 @@ class AdminReportService
                 ->when(! empty($filters['doctor_id']), fn ($builder) => $builder->where('id', $filters['doctor_id']))
                 ->get()
                 ->map(function (Doctor $doctor) {
-                    $total = $doctor->total_appointments_count;
-                    $confirmed = $doctor->confirmed_appointments_count;
-                    $completed = $doctor->completed_appointments_count;
+                    $total = $doctor->total_appointments_count ?? 0;
+                    $confirmed = $doctor->confirmed_appointments_count ?? 0;
+                    $completed = $doctor->completed_appointments_count ?? 0;
+                    $cancelled = $doctor->cancelled_appointments_count ?? 0;
 
                     return [
                         'doctor_id' => $doctor->id,
-                        'doctor_name' => $doctor->user->name,
+                        'doctor_name' => $doctor->user?->name ?? 'Médico sem nome',
                         'total_appointments' => $total,
                         'confirmed' => $confirmed,
                         'completed' => $completed,
+                        'cancelled' => $cancelled,
                         'occupancy_rate' => $total > 0 ? round(($confirmed / $total) * 100, 1) : 0,
                     ];
                 });

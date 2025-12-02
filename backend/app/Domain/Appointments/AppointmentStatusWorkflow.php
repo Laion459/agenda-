@@ -29,8 +29,8 @@ class AppointmentStatusWorkflow
             AppointmentStatus::CANCELLED->value => [],
         ],
         UserRole::DOCTOR->value => [
-            AppointmentStatus::PENDING->value => [AppointmentStatus::CONFIRMED->value],
-            AppointmentStatus::CONFIRMED->value => [AppointmentStatus::COMPLETED->value],
+            AppointmentStatus::PENDING->value => [AppointmentStatus::CONFIRMED->value, AppointmentStatus::CANCELLED->value],
+            AppointmentStatus::CONFIRMED->value => [AppointmentStatus::COMPLETED->value, AppointmentStatus::CANCELLED->value],
             AppointmentStatus::COMPLETED->value => [],
             AppointmentStatus::CANCELLED->value => [],
         ],

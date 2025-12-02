@@ -80,6 +80,15 @@ export default function AdminReportsPage() {
         fetchInsuranceUsage(filters),
       ]);
 
+      // Log para debug (apenas em desenvolvimento)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Reports] Dados carregados:', {
+          summary: summaryData,
+          occupancy: occupancyData,
+          filters,
+        });
+      }
+
       setSummary(summaryData);
       setDoctorOccupancy(occupancyData);
       setInsuranceUsage(insuranceData);
@@ -197,44 +206,63 @@ export default function AdminReportsPage() {
 
   const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
-  // Preparar dados para gráficos
+  // Preparar dados para gráficos - filtrar médicos com consultas e mostrar mais
   const doctorChartData = useMemo(() => {
-    return doctorOccupancy.slice(0, 4).map((doc) => ({
-      name: doc.doctor_name.split(' ').slice(-2).join(' '), // Últimos 2 nomes
-      Confirmadas: doc.confirmed,
-      Canceladas: doc.total_appointments - doc.confirmed,
-    }));
+    // Filtrar apenas médicos que têm consultas no período
+    const doctorsWithAppointments = doctorOccupancy
+      .filter((doc) => doc.total_appointments > 0)
+      .sort((a, b) => b.total_appointments - a.total_appointments) // Ordenar por total de consultas
+      .slice(0, 10); // Mostrar até 10 médicos
+    
+    return doctorsWithAppointments.map((doc) => {
+      // Calcular canceladas: total - confirmadas - concluídas, ou usar cancelled se disponível
+      const cancelled = doc.cancelled ?? (doc.total_appointments - doc.confirmed - doc.completed);
+      
+      return {
+        name: doc.doctor_name.length > 20 
+          ? doc.doctor_name.split(' ').slice(-2).join(' ') // Últimos 2 nomes se muito longo
+          : doc.doctor_name,
+        Confirmadas: doc.confirmed,
+        Canceladas: Math.max(0, cancelled), // Garantir que não seja negativo
+        Concluídas: doc.completed,
+      };
+    });
   }, [doctorOccupancy]);
 
   const specialtyChartData = useMemo(() => {
-    // Agrupar por especialidade (simplificado - idealmente viria do backend)
+    // Agrupar por especialidade usando dados reais dos médicos
     const specialtyMap: Record<string, number> = {};
+    
+    // Buscar especialidades dos médicos que têm consultas
     doctorOccupancy.forEach((doc) => {
-      // Assumindo que temos acesso à especialidade - pode precisar ajuste
-      const specialty = 'Cardiologia'; // Placeholder
-      specialtyMap[specialty] = (specialtyMap[specialty] || 0) + doc.total_appointments;
+      const doctor = doctors.find(d => d.id === doc.doctor_id);
+      if (doctor && doctor.specialty) {
+        const specialty = doctor.specialty;
+        specialtyMap[specialty] = (specialtyMap[specialty] || 0) + doc.total_appointments;
+      }
     });
     
-    return [
-      { name: 'Cardiologia', value: 140, percentage: 32 },
-      { name: 'Dermatologia', value: 95, percentage: 21 },
-      { name: 'Ortopedia', value: 85, percentage: 19 },
-      { name: 'Pediatria', value: 70, percentage: 17 },
-      { name: 'Outros', value: 45, percentage: 11 },
-    ];
-  }, [doctorOccupancy]);
+    // Calcular total para percentuais
+    const total = Object.values(specialtyMap).reduce((sum, count) => sum + count, 0);
+    
+    // Converter para array e ordenar por quantidade
+    return Object.entries(specialtyMap)
+      .map(([name, value]) => ({
+        name,
+        value,
+        percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10); // Limita a 10 especialidades
+  }, [doctorOccupancy, doctors]);
 
-  const revenueData = useMemo(() => {
-    return insuranceUsage.map((insurance) => ({
-      convenio: insurance.name,
-      consultas: insurance.total_appointments,
-      valorTotal: insurance.total_appointments * 300, // Placeholder
-      valorMedio: 300, // Placeholder
-    }));
-  }, [insuranceUsage]);
-
-  const totalRevenue = revenueData.reduce((sum, item) => sum + item.valorTotal, 0);
-  const totalAppointments = revenueData.reduce((sum, item) => sum + item.consultas, 0);
+  // Calcular taxa de comparecimento baseada em dados reais
+  const attendanceRate = useMemo(() => {
+    if (!summary) return 0;
+    const completed = summary.by_status.COMPLETED?.total || 0;
+    const total = summary.total || 0;
+    return total > 0 ? Math.round((completed / total) * 100 * 10) / 10 : 0;
+  }, [summary]);
 
   return (
     <AdminLayout>
@@ -350,7 +378,7 @@ export default function AdminReportsPage() {
           </div>
 
           {/* Resumo Executivo */}
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <Card className="border-l-4 border-l-blue-500">
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-slate-600 mb-1">Total de Consultas</p>
@@ -360,22 +388,9 @@ export default function AdminReportsPage() {
             <Card className="border-l-4 border-l-green-500">
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-slate-600 mb-1">Taxa de Comparecimento</p>
-                <p className="text-3xl font-bold text-slate-900">89.5%</p>
-              </CardContent>
-            </Card>
-            <Card className="border-l-4 border-l-purple-500">
-              <CardContent className="p-6">
-                <p className="text-sm font-medium text-slate-600 mb-1">Receita Total</p>
-                <p className="text-3xl font-bold text-slate-900">
-                  R$ {totalRevenue.toLocaleString('pt-BR')}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-l-4 border-l-orange-500">
-              <CardContent className="p-6">
-                <p className="text-sm font-medium text-slate-600 mb-1">Ticket Médio</p>
-                <p className="text-3xl font-bold text-slate-900">
-                  R$ {totalAppointments > 0 ? (totalRevenue / totalAppointments).toFixed(0) : 0}
+                <p className="text-3xl font-bold text-slate-900">{attendanceRate}%</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {summary?.by_status.COMPLETED?.total || 0} consultas concluídas
                 </p>
               </CardContent>
             </Card>
@@ -387,21 +402,31 @@ export default function AdminReportsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Consultas por Médico</CardTitle>
-                <CardDescription>Distribuição de consultas confirmadas e canceladas</CardDescription>
+                <CardDescription>Distribuição de consultas por status (máximo 10 médicos com mais consultas)</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <Skeleton className="h-64 w-full" />
                 ) : doctorChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={doctorChartData}>
+                  <ResponsiveContainer width="100%" height={Math.max(300, doctorChartData.length * 40)}>
+                    <BarChart 
+                      data={doctorChartData} 
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
+                      <XAxis type="number" />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        width={100}
+                        tick={{ fontSize: 12 }}
+                      />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="Confirmadas" fill="#3b82f6" />
-                      <Bar dataKey="Canceladas" fill="#ef4444" />
+                      <Bar dataKey="Confirmadas" stackId="a" fill="#3b82f6" />
+                      <Bar dataKey="Concluídas" stackId="a" fill="#10b981" />
+                      <Bar dataKey="Canceladas" stackId="a" fill="#ef4444" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -446,50 +471,48 @@ export default function AdminReportsPage() {
             </Card>
           </div>
 
-          {/* Receita por Convênio */}
+          {/* Consultas por Convênio */}
           <Card>
             <CardHeader>
-              <CardTitle>Receita por Convênio</CardTitle>
-              <CardDescription>Análise financeira por plano de saúde</CardDescription>
+              <CardTitle>Consultas por Convênio</CardTitle>
+              <CardDescription>Distribuição de consultas por plano de saúde</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <Skeleton className="h-64 w-full" />
-              ) : revenueData.length > 0 ? (
+              ) : insuranceUsage.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Convênio</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Número de Consultas</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Total</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Médio</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Percentual</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {revenueData.map((item, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {item.convenio}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.consultas}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            R$ {item.valorTotal.toLocaleString('pt-BR')}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            R$ {item.valorMedio.toLocaleString('pt-BR')}
-                          </td>
-                        </tr>
-                      ))}
+                      {insuranceUsage.map((item) => {
+                        const percentage = summary?.total ? Math.round((item.total_appointments / summary.total) * 100 * 10) / 10 : 0;
+                        return (
+                          <tr key={item.health_insurance_id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {item.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {item.total_appointments}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {percentage}%
+                            </td>
+                          </tr>
+                        );
+                      })}
                       <tr className="bg-gray-50 font-semibold">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Total</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{totalAppointments}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          R$ {totalRevenue.toLocaleString('pt-BR')}
+                          {insuranceUsage.reduce((sum, item) => sum + item.total_appointments, 0)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">100%</td>
                       </tr>
                     </tbody>
                   </table>

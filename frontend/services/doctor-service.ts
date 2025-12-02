@@ -14,8 +14,12 @@ export async function fetchDoctor(id: number) {
 export async function fetchAvailableSlots(
   doctorId: number, 
   date: string, 
-  duration: number = 30
+  duration?: number
 ) {
+  const params: Record<string, unknown> = { date };
+  if (duration) {
+    params.duration = duration;
+  }
   const { data } = await api.get<{
     available_slots: string[];
     date: string;
@@ -25,7 +29,7 @@ export async function fetchAvailableSlots(
       end_time: string;
     };
   }>(`/doctors/${doctorId}/available-slots`, {
-    params: { date, duration },
+    params,
   });
   return data;
 }

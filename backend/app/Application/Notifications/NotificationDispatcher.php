@@ -49,22 +49,31 @@ class NotificationDispatcher
         ?NotificationChannel $channel = null,
         array $metadata = []
     ): Notification {
-        $template = config("notifications.templates.{$templateKey}");
+        // Acessa o array de templates diretamente para evitar problemas com chaves que contêm pontos
+        $templates = config('notifications.templates', []);
+        $template = $templates[$templateKey] ?? null;
 
         if (! $template) {
             // Return a default notification if template not found, to prevent test failures
+            // Log the missing template for debugging
+            \Log::warning("Template de notificação não encontrado: {$templateKey}", [
+                'user_id' => $user->id,
+                'template_key' => $templateKey,
+            ]);
+            
             return $this->dispatch(
                 $user,
                 NotificationType::CONFIRMATION,
-                'Notificação Genérica',
-                'Conteúdo da notificação genérica.',
+                'Notificação do Sistema',
+                'Você recebeu uma notificação do sistema. Por favor, verifique os detalhes no sistema.',
                 $channel ?? NotificationChannel::IN_APP,
                 array_merge($metadata, ['template_missing' => $templateKey])
             );
         }
 
-        /** @var NotificationType $type */
-        $type = Arr::get($template, 'type', NotificationType::CONFIRMATION);
+        // Converte string para enum NotificationType
+        $typeString = Arr::get($template, 'type', 'CONFIRMATION');
+        $type = NotificationType::tryFrom($typeString) ?? NotificationType::CONFIRMATION;
         $subject = $this->interpolate(Arr::get($template, 'subject', ''), $context);
         $message = $this->interpolate(Arr::get($template, 'message', ''), $context);
 

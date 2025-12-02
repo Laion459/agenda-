@@ -61,12 +61,129 @@ export class AppErrorHandler implements ErrorHandler {
         errorDetails.code = apiError.code;
       }
 
-      // Se houver um erro real com propriedades, inclui o objeto de erro
-      if (error && typeof error === 'object' && Object.keys(error).length > 0) {
-        errorDetails.error = error;
+      // Captura informações do erro Axios de forma mais robusta
+      if (error && typeof error === 'object') {
+        // Tenta extrair propriedades do erro Axios
+        const errorObj = error as Record<string, unknown>;
+        
+        if (errorObj.response) {
+          errorDetails.response = {
+            status: (errorObj.response as Record<string, unknown>)?.status,
+            data: (errorObj.response as Record<string, unknown>)?.data,
+            headers: (errorObj.response as Record<string, unknown>)?.headers,
+          };
+        }
+        
+        if (errorObj.request) {
+          errorDetails.request = errorObj.request;
+        }
+        
+        if (errorObj.config) {
+          errorDetails.config = {
+            url: (errorObj.config as Record<string, unknown>)?.url,
+            method: (errorObj.config as Record<string, unknown>)?.method,
+            data: (errorObj.config as Record<string, unknown>)?.data,
+          };
+        }
+        
+        // Se ainda não tem propriedades úteis, tenta serializar o erro completo
+        if (Object.keys(errorDetails).length === 1) {
+          try {
+            errorDetails.errorString = JSON.stringify(error, Object.getOwnPropertyNames(error));
+          } catch {
+            errorDetails.errorString = String(error);
+          }
+        }
+      } else if (error) {
+        errorDetails.errorString = String(error);
       }
 
-      console.error(`[Error Handler] ${context || 'Erro'}:`, errorDetails);
+      // Serializa o erro de forma segura para evitar objetos vazios
+      const serializedDetails: Record<string, unknown> = {};
+      
+      for (const [key, value] of Object.entries(errorDetails)) {
+        try {
+          // Tenta serializar cada valor
+          if (value === null || value === undefined) {
+            serializedDetails[key] = value;
+          } else if (typeof value === 'object') {
+            // Para objetos, tenta serializar de forma segura
+            try {
+              const serialized = JSON.parse(JSON.stringify(value, (k, v) => {
+                // Remove propriedades circulares e funções
+                if (typeof v === 'function') return '[Function]';
+                if (v instanceof Error) return { message: v.message, name: v.name, stack: v.stack };
+                if (v instanceof Date) return v.toISOString();
+                // Remove propriedades que podem causar problemas
+                if (k === 'config' && typeof v === 'object') {
+                  const config = v as Record<string, unknown>;
+                  return {
+                    url: config.url,
+                    method: config.method,
+                    baseURL: config.baseURL,
+                    headers: config.headers,
+                  };
+                }
+                return v;
+              }));
+              // Só adiciona se não for objeto vazio
+              if (serialized && typeof serialized === 'object' && Object.keys(serialized).length > 0) {
+                serializedDetails[key] = serialized;
+              } else if (value && typeof value === 'object') {
+                // Se não conseguiu serializar, tenta extrair propriedades diretamente
+                const obj = value as Record<string, unknown>;
+                const extracted: Record<string, unknown> = {};
+                for (const [k, v] of Object.entries(obj)) {
+                  if (v !== null && v !== undefined && typeof v !== 'function') {
+                    try {
+                      extracted[k] = typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+                    } catch {
+                      extracted[k] = String(v);
+                    }
+                  }
+                }
+                if (Object.keys(extracted).length > 0) {
+                  serializedDetails[key] = extracted;
+                }
+              }
+            } catch {
+              serializedDetails[key] = String(value);
+            }
+          } else {
+            serializedDetails[key] = value;
+          }
+        } catch {
+          serializedDetails[key] = String(value);
+        }
+      }
+      
+      // Se ainda estiver vazio, tenta extrair informações do erro original
+      if (Object.keys(serializedDetails).length === 0 && error) {
+        try {
+          if (error instanceof Error) {
+            serializedDetails.error = {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            };
+          } else if (typeof error === 'object') {
+            const errorObj = error as Record<string, unknown>;
+            for (const [k, v] of Object.entries(errorObj)) {
+              if (k !== 'config' && k !== 'request' && v !== null && v !== undefined) {
+                try {
+                  serializedDetails[k] = typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+                } catch {
+                  serializedDetails[k] = String(v);
+                }
+              }
+            }
+          }
+        } catch {
+          serializedDetails.errorString = String(error);
+        }
+      }
+      
+      console.error(`[Error Handler] ${context || 'Erro'}:`, serializedDetails);
     }
 
     // Em produção, enviar para serviço de monitoramento (Sentry, etc.)
@@ -83,17 +200,34 @@ export class AppErrorHandler implements ErrorHandler {
 
     // Erro de validação
     if (this.isValidationError(error)) {
-      return this.extractValidationMessage(apiError);
+      const validationMsg = this.extractValidationMessage(apiError);
+      if (validationMsg && validationMsg !== "Dados inválidos.") {
+        return validationMsg;
+      }
     }
 
     // Mensagem do servidor
-    if (apiError.response?.data?.message) {
-      return apiError.response.data.message;
+    if (apiError.response?.data) {
+      const data = apiError.response.data as { message?: string; error?: string; errors?: Record<string, unknown> };
+      if (data.message) {
+        return data.message;
+      }
+      if (data.error) {
+        return data.error;
+      }
     }
 
     // Mensagem do erro
     if (apiError.message) {
       return apiError.message;
+    }
+
+    // Tenta extrair mensagem de erro genérico
+    if (error && typeof error === 'object') {
+      const errorObj = error as Record<string, unknown>;
+      if (errorObj.message && typeof errorObj.message === 'string') {
+        return errorObj.message;
+      }
     }
 
     return this.defaultMessage;

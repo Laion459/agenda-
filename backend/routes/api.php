@@ -16,6 +16,8 @@ use App\Http\Controllers\API\ObservationController;
 use App\Http\Controllers\API\PrivacyController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\ScheduleController;
+use App\Http\Controllers\API\ScheduleExceptionController;
+use App\Http\Controllers\API\AvailabilityPeriodController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -97,4 +99,16 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
     Route::post('doctor/schedules', [ScheduleController::class, 'store']);
     Route::put('doctor/schedules/{schedule}', [ScheduleController::class, 'update']);
     Route::delete('doctor/schedules/{schedule}', [ScheduleController::class, 'destroy']);
+    
+    // Exceções de agenda
+    Route::get('doctor/schedule-exceptions', [ScheduleExceptionController::class, 'index']);
+    Route::post('doctor/schedule-exceptions', [ScheduleExceptionController::class, 'store']);
+    Route::put('doctor/schedule-exceptions/{scheduleException}', [ScheduleExceptionController::class, 'update']);
+    Route::delete('doctor/schedule-exceptions/{scheduleException}', [ScheduleExceptionController::class, 'destroy']);
+    
+    // Períodos de disponibilidade
+    Route::get('doctor/availability-periods', [AvailabilityPeriodController::class, 'index']);
+    Route::post('doctor/availability-periods', [AvailabilityPeriodController::class, 'store']);
+    Route::put('doctor/availability-periods/{availabilityPeriod}', [AvailabilityPeriodController::class, 'update']);
+    Route::delete('doctor/availability-periods/{availabilityPeriod}', [AvailabilityPeriodController::class, 'destroy']);
 });

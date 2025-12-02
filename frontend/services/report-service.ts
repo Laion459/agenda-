@@ -14,6 +14,7 @@ export interface DoctorOccupancyItem {
   total_appointments: number;
   confirmed: number;
   completed: number;
+  cancelled?: number;
   occupancy_rate: number;
 }
 

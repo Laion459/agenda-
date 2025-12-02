@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\User;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Validation\ValidationException;
 
@@ -72,6 +73,7 @@ class AppointmentValidationService
 
     /**
      * Valida se a agenda é válida para o horário
+     * Considera exceções de agenda e períodos de disponibilidade
      */
     public function ensureScheduleIsValid(Doctor $doctor, CarbonInterface $scheduledAt, int $duration): void
     {
@@ -81,14 +83,104 @@ class AppointmentValidationService
             ]);
         }
 
-        $schedule = $doctor->schedules()
-            ->where('day_of_week', $scheduledAt->dayOfWeekIso)
-            ->where('is_blocked', false)
-            ->where('start_time', '<=', $scheduledAt->format('H:i:s'))
-            ->where('end_time', '>=', $scheduledAt->copy()->addMinutes($duration)->format('H:i:s'))
+        $dateStr = $scheduledAt->format('Y-m-d');
+        $timeStr = $scheduledAt->format('H:i:s');
+        $endTime = $scheduledAt->copy()->addMinutes($duration);
+        $endTimeStr = $endTime->format('H:i:s');
+
+        // 1. Verifica períodos de disponibilidade
+        $activePeriods = $doctor->availabilityPeriods()
+            ->where('is_active', true)
+            ->get();
+
+        if ($activePeriods->isNotEmpty()) {
+            $isWithinPeriod = $activePeriods->contains(function ($period) use ($scheduledAt) {
+                $periodStart = $period->start_date->copy()->startOfDay();
+                $periodEnd = $period->end_date->copy()->endOfDay();
+                $checkDate = $scheduledAt->copy()->startOfDay();
+                
+                return $checkDate->greaterThanOrEqualTo($periodStart) 
+                    && $checkDate->lessThanOrEqualTo($periodEnd);
+            });
+
+            if (! $isWithinPeriod) {
+                throw ValidationException::withMessages([
+                    'scheduled_at' => __('A data selecionada está fora do período de disponibilidade do médico.'),
+                ]);
+            }
+        }
+
+        // 2. Verifica exceções de agenda
+        $exception = $doctor->scheduleExceptions()
+            ->where('date', $dateStr)
             ->first();
 
-        if (! $schedule) {
+        if ($exception) {
+            if ($exception->type === 'BLOCKED' || $exception->type === 'UNAVAILABLE') {
+                throw ValidationException::withMessages([
+                    'scheduled_at' => __('Esta data está bloqueada na agenda do médico.'),
+                ]);
+            }
+
+            if ($exception->type === 'CUSTOM_HOURS') {
+                if (! $exception->start_time || ! $exception->end_time) {
+                    throw ValidationException::withMessages([
+                        'scheduled_at' => __('Esta data possui horários customizados inválidos.'),
+                    ]);
+                }
+
+                // Usa a data do agendamento, não hoje
+                $customStart = $scheduledAt->copy()->setTimeFromTimeString($exception->start_time);
+                $customEnd = $scheduledAt->copy()->setTimeFromTimeString($exception->end_time);
+                
+                if ($customEnd->lt($customStart)) {
+                    $customEnd->addDay();
+                }
+                
+                // Verifica se o horário de início e fim da consulta estão dentro do horário customizado
+                if ($scheduledAt->lt($customStart) || $endTime->gt($customEnd)) {
+                    throw ValidationException::withMessages([
+                        'scheduled_at' => __('O horário selecionado está fora dos horários disponíveis para esta data.'),
+                    ]);
+                }
+
+                // Se passou todas as validações de exceção customizada, está válido
+                return;
+            }
+        }
+
+        // 3. Verifica schedules padrão do dia da semana
+        $dayOfWeek = $scheduledAt->dayOfWeekIso;
+        $schedules = $doctor->schedules()
+            ->where('day_of_week', $dayOfWeek)
+            ->where('is_blocked', false)
+            ->get();
+
+        if ($schedules->isEmpty()) {
+            throw ValidationException::withMessages([
+                'scheduled_at' => __('O médico não possui agenda disponível neste dia da semana.'),
+            ]);
+        }
+
+        // Verifica se o horário está dentro de algum schedule
+        $isValid = false;
+        foreach ($schedules as $schedule) {
+            // Usa a data do agendamento para criar os horários do schedule
+            $scheduleStart = $scheduledAt->copy()->setTimeFromTimeString($schedule->start_time);
+            $scheduleEnd = $scheduledAt->copy()->setTimeFromTimeString($schedule->end_time);
+            
+            if ($scheduleEnd->lt($scheduleStart)) {
+                $scheduleEnd->addDay();
+            }
+            
+            // Verifica se o horário de início e fim da consulta estão dentro do schedule
+            if ($scheduledAt->gte($scheduleStart) && $endTime->lte($scheduleEnd)) {
+                $isValid = true;
+                break;
+            }
+        }
+
+        if (! $isValid) {
             throw ValidationException::withMessages([
                 'scheduled_at' => __('O médico não possui agenda disponível nesse horário.'),
             ]);

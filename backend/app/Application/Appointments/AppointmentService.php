@@ -102,7 +102,22 @@ class AppointmentService
         $patient = $this->getPatientProfile($user);
         $doctor = $this->getDoctor($data['doctor_id']);
         $scheduledAt = Carbon::parse($data['scheduled_at']);
-        $duration = $data['duration_minutes'] ?? 30;
+        
+        // Se não foi fornecida duração, busca do schedule do médico
+        $duration = $data['duration_minutes'] ?? null;
+        if (! $duration) {
+            $dayOfWeek = $scheduledAt->dayOfWeekIso;
+            $schedule = $doctor->schedules()
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_blocked', false)
+                ->first();
+            
+            if ($schedule) {
+                $duration = $schedule->slot_duration_minutes ?? 30;
+            } else {
+                $duration = 30; // Fallback padrão
+            }
+        }
 
         $this->validateCreation($doctor, $patient, $scheduledAt, $duration);
 
@@ -212,16 +227,37 @@ class AppointmentService
             'changed_at' => now(),
         ]);
 
+        $context = [
+            'patient' => $appointment->patient->user->name,
+            'doctor' => $appointment->doctor->user->name,
+            'date' => $appointment->scheduled_at->translatedFormat('d/m/Y'),
+            'time' => $appointment->scheduled_at->translatedFormat('H:i'),
+        ];
+
         $this->notifications->dispatchFromTemplate(
             $appointment->patient->user,
             'appointment.confirmed.patient',
-            [
-                'doctor' => $appointment->doctor->user->name,
-                'date' => $appointment->scheduled_at->translatedFormat('d/m/Y'),
-                'time' => $appointment->scheduled_at->translatedFormat('H:i'),
-            ],
+            $context,
             metadata: ['appointment_id' => $appointment->id]
         );
+
+        $this->notifications->dispatchFromTemplate(
+            $appointment->doctor->user,
+            'appointment.confirmed.doctor',
+            $context,
+            metadata: ['appointment_id' => $appointment->id]
+        );
+
+        // Notifica administradores
+        $admins = User::where('role', UserRole::ADMIN->value)->get();
+        foreach ($admins as $admin) {
+            $this->notifications->dispatchFromTemplate(
+                $admin,
+                'appointment.confirmed.admin',
+                $context,
+                metadata: ['appointment_id' => $appointment->id]
+            );
+        }
 
         $this->clearAppointmentCache($appointment->patient_id, $appointment->doctor_id);
 
@@ -258,15 +294,38 @@ class AppointmentService
             'changed_at' => now(),
         ]);
 
+        $context = [
+            'patient' => $appointment->patient->user->name,
+            'doctor' => $appointment->doctor->user->name,
+            'date' => $appointment->scheduled_at->translatedFormat('d/m/Y'),
+            'time' => $appointment->scheduled_at->translatedFormat('H:i'),
+            'reason' => $reason ? $reason : __('Não informado'),
+        ];
+
         $this->notifications->dispatchFromTemplate(
             $appointment->patient->user,
             'appointment.cancelled.patient',
-            [
-                'doctor' => $appointment->doctor->user->name,
-                'reason' => $reason ? $reason : __('Não informado'),
-            ],
+            $context,
             metadata: ['appointment_id' => $appointment->id, 'reason' => $reason]
         );
+
+        $this->notifications->dispatchFromTemplate(
+            $appointment->doctor->user,
+            'appointment.cancelled.doctor',
+            $context,
+            metadata: ['appointment_id' => $appointment->id, 'reason' => $reason]
+        );
+
+        // Notifica administradores
+        $admins = User::where('role', UserRole::ADMIN->value)->get();
+        foreach ($admins as $admin) {
+            $this->notifications->dispatchFromTemplate(
+                $admin,
+                'appointment.cancelled.admin',
+                $context,
+                metadata: ['appointment_id' => $appointment->id, 'reason' => $reason]
+            );
+        }
 
         $this->clearAppointmentCache($appointment->patient_id, $appointment->doctor_id);
 
@@ -306,12 +365,19 @@ class AppointmentService
     public function reschedule(Appointment $appointment, User $user, array $data): Appointment
     {
         $newDate = Carbon::parse($data['scheduled_at']);
-        $duration = $data['duration_minutes'] ?? $appointment->duration_minutes;
-
         $doctor = $appointment->doctor;
         $patient = $appointment->patient;
-
         $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+
+        // Se a duração não foi fornecida, tenta pegar do schedule do médico para o novo dia
+        $duration = $data['duration_minutes'] ?? null;
+        if (! $duration) {
+            $duration = $doctor->schedules()
+                ->where('day_of_week', $newDate->dayOfWeekIso)
+                ->where('is_blocked', false)
+                ->first()
+                ?->slot_duration_minutes ?? $appointment->duration_minutes ?? 30;
+        }
 
         if ($role !== UserRole::ADMIN) {
             $this->validationService->ensureScheduleIsValid($doctor, $newDate, $duration);
@@ -359,6 +425,17 @@ class AppointmentService
             $rescheduleContext,
             metadata: ['appointment_id' => $appointment->id]
         );
+
+        // Notifica administradores
+        $admins = User::where('role', UserRole::ADMIN->value)->get();
+        foreach ($admins as $admin) {
+            $this->notifications->dispatchFromTemplate(
+                $admin,
+                'appointment.rescheduled.admin',
+                $rescheduleContext,
+                metadata: ['appointment_id' => $appointment->id]
+            );
+        }
 
         $this->clearAppointmentCache($appointment->patient_id, $appointment->doctor_id);
 

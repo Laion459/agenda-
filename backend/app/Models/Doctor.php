@@ -63,6 +63,16 @@ class Doctor extends Model
             ->withTimestamps();
     }
 
+    public function scheduleExceptions()
+    {
+        return $this->hasMany(ScheduleException::class);
+    }
+
+    public function availabilityPeriods()
+    {
+        return $this->hasMany(AvailabilityPeriod::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true)

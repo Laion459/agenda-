@@ -39,15 +39,43 @@ api.interceptors.response.use(
     // Tratamento centralizado de erros
     const handledError = handleApiErrorResponse(error);
     
+    // Garante que o erro tenha pelo menos uma mensagem
+    if (!handledError.message) {
+      if (error.response?.data) {
+        const data = error.response.data as { message?: string; errors?: Record<string, unknown> };
+        handledError.message = data.message || 'Erro ao processar requisição';
+      } else if (error.message) {
+        handledError.message = error.message;
+      } else {
+        handledError.message = 'Erro desconhecido ao processar requisição';
+      }
+    }
+    
+    // Preserva informações importantes do erro original
+    const enhancedError = {
+      ...handledError,
+      response: error.response ? {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+      } : undefined,
+      request: error.request,
+      config: error.config ? {
+        url: error.config.url,
+        method: error.config.method,
+        baseURL: error.config.baseURL,
+      } : undefined,
+    };
+    
     // Se o erro é relacionado a blob, tenta converter
     if (error.config?.responseType === 'blob' && error.response?.data) {
       const blob = error.response.data instanceof Blob 
         ? error.response.data 
         : new Blob([String(error.response.data)], { type: 'application/json' });
-      return Promise.reject({ ...handledError, blob });
+      return Promise.reject({ ...enhancedError, blob });
     }
     
-    return Promise.reject(handledError);
+    return Promise.reject(enhancedError);
   }
 );
 

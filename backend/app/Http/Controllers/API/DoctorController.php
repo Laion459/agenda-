@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DoctorResource;
 use App\Models\Appointment;
 use App\Models\Doctor;
+use App\Models\ScheduleException;
+use App\Models\AvailabilityPeriod;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -120,23 +122,66 @@ class DoctorController extends Controller
         ]);
 
         $date = Carbon::parse($validated['date']);
-        $duration = $validated['duration'] ?? 30;
+        $dateStr = $date->format('Y-m-d');
 
-        // Busca o schedule do médico para o dia da semana
-        $dayOfWeek = $date->dayOfWeekIso; // 1 = Segunda, 7 = Domingo
-        
-        $schedule = $doctor->schedules()
-            ->where('day_of_week', $dayOfWeek)
-            ->where('is_blocked', false)
+        // Verifica se há exceção para esta data
+        $exception = $doctor->scheduleExceptions()
+            ->where('date', $dateStr)
             ->first();
 
-        if (! $schedule) {
-            return response()->json([
-                'available_slots' => [],
-                'date' => $date->format('Y-m-d'),
-                'doctor_id' => $doctor->id,
-                'message' => 'O médico não possui agenda disponível neste dia.',
-            ]);
+        $schedule = null;
+        $customStartTime = null;
+        $customEndTime = null;
+        $duration = $validated['duration'] ?? null; // Será definido pelo schedule se não fornecido
+
+        if ($exception) {
+            // Se está bloqueada ou indisponível, retorna vazio
+            if ($exception->type === 'BLOCKED' || $exception->type === 'UNAVAILABLE') {
+                return response()->json([
+                    'available_slots' => [],
+                    'date' => $dateStr,
+                    'doctor_id' => $doctor->id,
+                    'message' => $exception->reason ?? 'Data bloqueada ou indisponível.',
+                ]);
+            }
+            
+            // Se tem horários customizados, usa eles
+            if ($exception->type === 'CUSTOM_HOURS' && $exception->start_time && $exception->end_time) {
+                $customStartTime = $exception->start_time;
+                $customEndTime = $exception->end_time;
+                // Para exceções customizadas, usa duração fornecida ou padrão de 30min
+                $duration = $duration ?? 30;
+            } else {
+                return response()->json([
+                    'available_slots' => [],
+                    'date' => $dateStr,
+                    'doctor_id' => $doctor->id,
+                    'message' => 'Exceção configurada incorretamente.',
+                ]);
+            }
+        } else {
+            // Busca os schedules do médico para o dia da semana
+            $dayOfWeek = $date->dayOfWeekIso; // 1 = Segunda, 7 = Domingo
+            
+            $schedules = $doctor->schedules()
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_blocked', false)
+                ->get();
+
+            if ($schedules->isEmpty()) {
+                return response()->json([
+                    'available_slots' => [],
+                    'date' => $dateStr,
+                    'doctor_id' => $doctor->id,
+                    'message' => 'O médico não possui agenda disponível neste dia.',
+                ]);
+            }
+            
+            // Se não foi fornecida duração, usa a duração do primeiro schedule
+            // (todos os schedules do mesmo dia devem ter a mesma duração)
+            if (! $duration) {
+                $duration = $schedules->first()->slot_duration_minutes ?? 30;
+            }
         }
 
         // Busca consultas já agendadas para essa data
@@ -149,21 +194,57 @@ class DoctorController extends Controller
             ->get();
 
         // Calcula os slots disponíveis
-        $availableSlots = $this->calculateAvailableSlots(
-            $schedule,
-            $date,
-            $duration,
-            $appointments
-        );
+        if ($customStartTime && $customEndTime) {
+            // Cria um schedule temporário para usar com horários customizados
+            $tempSchedule = (object) [
+                'start_time' => $customStartTime,
+                'end_time' => $customEndTime,
+                'slot_duration_minutes' => $duration,
+            ];
+            $availableSlots = $this->calculateAvailableSlots(
+                $tempSchedule,
+                $date,
+                $duration,
+                $appointments
+            );
+        } else {
+            // Se há múltiplos schedules no mesmo dia, calcula slots para todos e combina
+            $allSlots = [];
+            foreach ($schedules as $schedule) {
+                $scheduleSlots = $this->calculateAvailableSlots(
+                    $schedule,
+                    $date,
+                    $duration,
+                    $appointments
+                );
+                $allSlots = array_merge($allSlots, $scheduleSlots);
+            }
+            // Remove duplicatas e ordena
+            $availableSlots = array_unique($allSlots);
+            sort($availableSlots);
+        }
 
+        // Prepara informações do schedule para retorno
+        $scheduleInfo = null;
+        if ($customStartTime && $customEndTime) {
+            $scheduleInfo = [
+                'start_time' => $customStartTime,
+                'end_time' => $customEndTime,
+            ];
+        } elseif ($schedules->isNotEmpty()) {
+            // Retorna informações do primeiro schedule (ou todos se necessário)
+            $firstSchedule = $schedules->first();
+            $scheduleInfo = [
+                'start_time' => $firstSchedule->start_time,
+                'end_time' => $firstSchedule->end_time,
+            ];
+        }
+        
         return response()->json([
             'available_slots' => $availableSlots,
             'date' => $date->format('Y-m-d'),
             'doctor_id' => $doctor->id,
-            'schedule' => [
-                'start_time' => $schedule->start_time,
-                'end_time' => $schedule->end_time,
-            ],
+            'schedule' => $scheduleInfo,
         ]);
     }
 
@@ -285,42 +366,192 @@ class DoctorController extends Controller
             ]);
         }
         
+        // Busca exceções e períodos de disponibilidade
+        $exceptions = $doctor->scheduleExceptions()
+            ->whereBetween('date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
+            ->get()
+            ->keyBy(function ($exception) {
+                return $exception->date->format('Y-m-d');
+            });
+        
+        $activePeriods = $doctor->availabilityPeriods()
+            ->where('is_active', true)
+            ->get();
+        
+        // Log para debug (apenas em desenvolvimento)
+        $debugInfo = [
+            'doctor_id' => $doctor->id,
+            'month' => $month,
+            'schedules_count' => $schedules->count(),
+            'exceptions_count' => $exceptions->count(),
+            'active_periods_count' => $activePeriods->count(),
+            'start_of_month' => $startOfMonth->format('Y-m-d'),
+            'end_of_month' => $endOfMonth->format('Y-m-d'),
+            'min_date' => now()->addDay()->startOfDay()->format('Y-m-d'),
+        ];
+        
+        if (app()->environment(['local', 'testing'])) {
+            \Log::debug('Available dates calculation', $debugInfo);
+        }
+        
         $availableDates = [];
         $minDate = now()->addDay()->startOfDay();
         $currentDate = $startOfMonth->copy();
+        $rejectedDates = [];
         
         while ($currentDate->lte($endOfMonth)) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $rejectionReason = null;
+            
             // Verifica se já passou o mínimo de 24h
-            if ($currentDate->gte($minDate)) {
+            if ($currentDate->lt($minDate)) {
+                $rejectionReason = 'before_min_date';
+                $rejectedDates[$dateStr] = $rejectionReason;
+                $currentDate->addDay();
+                continue;
+            }
+            
+            // 1. Verifica se está dentro de algum período de disponibilidade ativo
+            // IMPORTANTE: Se não há períodos cadastrados, todas as datas são permitidas (assumindo schedules)
+            // Se há períodos cadastrados, apenas datas dentro dos períodos são permitidas
+            $isWithinPeriod = true; // Por padrão, permite se não houver períodos
+            
+            if ($activePeriods->isNotEmpty()) {
+                // Se há períodos cadastrados, verifica se a data está dentro de algum
+                $isWithinPeriod = $activePeriods->contains(function ($period) use ($currentDate) {
+                    // start_date e end_date já são Carbon devido ao cast no model
+                    $periodStart = $period->start_date->copy()->startOfDay();
+                    $periodEnd = $period->end_date->copy()->endOfDay();
+                    $checkDate = $currentDate->copy()->startOfDay();
+                    
+                    return $checkDate->greaterThanOrEqualTo($periodStart) 
+                        && $checkDate->lessThanOrEqualTo($periodEnd);
+                });
+            }
+            
+            if (! $isWithinPeriod) {
+                $rejectionReason = 'outside_period';
+                $rejectedDates[$dateStr] = $rejectionReason;
+                $currentDate->addDay();
+                continue;
+            }
+            
+            // 2. Verifica se há exceção para esta data
+            $exception = $exceptions->get($dateStr);
+            $daySchedule = null;
+            $scheduleStart = null;
+            $scheduleEnd = null;
+            
+            if ($exception) {
+                // Se está bloqueada ou indisponível, pula
+                if ($exception->type === 'BLOCKED' || $exception->type === 'UNAVAILABLE') {
+                    $rejectionReason = 'blocked_exception';
+                    $rejectedDates[$dateStr] = $rejectionReason;
+                    $currentDate->addDay();
+                    continue;
+                }
+                
+                // Se tem horários customizados, usa eles
+                if ($exception->type === 'CUSTOM_HOURS' && $exception->start_time && $exception->end_time) {
+                    $scheduleStart = Carbon::parse($exception->start_time);
+                    $scheduleEnd = Carbon::parse($exception->end_time);
+                    // Para horários customizados, usa duração padrão de 30 minutos
+                    $slotDuration = 30;
+                } else {
+                    // Exceção inválida, pula
+                    $rejectionReason = 'invalid_exception';
+                    $rejectedDates[$dateStr] = $rejectionReason;
+                    $currentDate->addDay();
+                    continue;
+                }
+            } else {
+                // 3. Usa horários do template (schedule) para este dia da semana
                 $dayOfWeek = $currentDate->dayOfWeekIso;
                 
-                // Verifica se há schedule para este dia da semana
-                if ($schedules->has($dayOfWeek)) {
-                    // Verifica se há pelo menos um horário disponível nesse dia
-                    $daySchedule = $schedules->get($dayOfWeek)->first();
-                    if ($daySchedule) {
-                        $dateStr = $currentDate->format('Y-m-d');
-                        
-                        // Busca consultas desse dia para verificar se ainda há slots disponíveis
-                        $appointmentsCount = Appointment::where('doctor_id', $doctor->id)
-                            ->whereDate('scheduled_at', $dateStr)
-                            ->whereIn('status', ['PENDING', 'CONFIRMED'])
-                            ->count();
-                        
-                        // Se tem menos consultas do que slots possíveis, adiciona o dia
-                        $scheduleStart = Carbon::parse($daySchedule->start_time);
-                        $scheduleEnd = Carbon::parse($daySchedule->end_time);
-                        $totalMinutes = $scheduleEnd->diffInMinutes($scheduleStart);
-                        $possibleSlots = floor($totalMinutes / 30); // slots de 30min
-                        
-                        if ($appointmentsCount < $possibleSlots) {
-                            $availableDates[] = $dateStr;
-                        }
-                    }
+                if (! $schedules->has($dayOfWeek)) {
+                    $rejectionReason = 'no_schedule_for_day';
+                    $rejectedDates[$dateStr] = $rejectionReason;
+                    $currentDate->addDay();
+                    continue;
                 }
+                
+                $daySchedules = $schedules->get($dayOfWeek);
+                if ($daySchedules->isEmpty()) {
+                    $rejectionReason = 'no_schedule_found';
+                    $rejectedDates[$dateStr] = $rejectionReason;
+                    $currentDate->addDay();
+                    continue;
+                }
+                
+                // Calcula slots totais de todos os schedules do dia
+                $totalPossibleSlots = 0;
+                $slotDuration = 30; // Padrão
+                
+                foreach ($daySchedules as $daySchedule) {
+                    // Parse dos horários (são do tipo time, então precisamos criar datas do mesmo dia)
+                    $scheduleStart = Carbon::today()->setTimeFromTimeString($daySchedule->start_time);
+                    $scheduleEnd = Carbon::today()->setTimeFromTimeString($daySchedule->end_time);
+                    
+                    // Se end_time for menor que start_time, significa que passa da meia-noite
+                    // (não é o caso normal, mas vamos tratar)
+                    if ($scheduleEnd->lt($scheduleStart)) {
+                        $scheduleEnd->addDay();
+                    }
+                    
+                    $scheduleSlotDuration = $daySchedule->slot_duration_minutes ?? 30;
+                    $slotDuration = $scheduleSlotDuration; // Usa a duração do último schedule (ou padroniza)
+                    
+                    // diffInMinutes pode retornar negativo dependendo da ordem, então usamos abs()
+                    // ou garantimos que end > start
+                    $scheduleMinutes = abs($scheduleStart->diffInMinutes($scheduleEnd));
+                    $scheduleSlots = floor($scheduleMinutes / $scheduleSlotDuration);
+                    $totalPossibleSlots += $scheduleSlots;
+                }
+                
+                // 4. Verifica se há slots disponíveis
+                $appointmentsCount = Appointment::where('doctor_id', $doctor->id)
+                    ->whereDate('scheduled_at', $dateStr)
+                    ->whereIn('status', ['PENDING', 'CONFIRMED'])
+                    ->count();
+                
+                if ($appointmentsCount >= $totalPossibleSlots) {
+                    $rejectionReason = 'no_available_slots';
+                    $rejectedDates[$dateStr] = $rejectionReason;
+                } else {
+                    $availableDates[] = $dateStr;
+                }
+                
+                $currentDate->addDay();
+                continue;
+            }
+            
+            // Se chegou aqui, é exceção com horários customizados
+            // 4. Verifica se há slots disponíveis para exceção customizada
+            $appointmentsCount = Appointment::where('doctor_id', $doctor->id)
+                ->whereDate('scheduled_at', $dateStr)
+                ->whereIn('status', ['PENDING', 'CONFIRMED'])
+                ->count();
+            
+            // Garante que a diferença seja positiva (end sempre maior que start)
+            $totalMinutes = abs($scheduleEnd->diffInMinutes($scheduleStart));
+            $possibleSlots = floor($totalMinutes / $slotDuration);
+            
+            if ($appointmentsCount >= $possibleSlots) {
+                $rejectionReason = 'no_available_slots';
+                $rejectedDates[$dateStr] = $rejectionReason;
+            } else {
+                $availableDates[] = $dateStr;
             }
             
             $currentDate->addDay();
+        }
+        
+        // Log detalhado em desenvolvimento
+        if (app()->environment(['local', 'testing'])) {
+            $debugInfo['available_dates_count'] = count($availableDates);
+            $debugInfo['rejected_dates_count'] = count($rejectedDates);
+            $debugInfo['rejection_reasons'] = array_count_values($rejectedDates);
+            \Log::debug('Available dates result', $debugInfo);
         }
         
         return response()->json([

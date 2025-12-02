@@ -14,7 +14,8 @@ interface AppointmentData {
     id: number;
     specialty: string;
   };
-  date_time: string;
+  scheduled_at: string;
+  date_time?: string; // Campo legado, usar scheduled_at
   created_at: string;
 }
 
@@ -88,9 +89,11 @@ export async function fetchDashboardStats() {
   lastDayLastMonth.setHours(23, 59, 59, 999);
 
   // Busca todos os dados (sem filtros do backend que podem não existir)
+  // Para as estatísticas, busca as consultas diretamente da API de appointments
   const [appointmentsResponse, doctorsResponse, patientsResponse, insurancesResponse] = await Promise.all([
-    api.get("/admin/reports/appointments", {
+    api.get("/appointments", {
       params: {
+        per_page: 1000, // Busca todas as consultas
         start_date: firstDayLastMonth.toISOString().split("T")[0],
         end_date: now.toISOString().split("T")[0],
       },
@@ -100,10 +103,11 @@ export async function fetchDashboardStats() {
     api.get("/health-insurances"),
   ]);
 
-  const appointmentsData = appointmentsResponse.data?.data || [];
-  const doctorsData = (doctorsResponse.data?.data || []) as DoctorData[];
-  const patientsData = (patientsResponse.data?.data || []) as PatientData[];
-  const insurancesData = (insurancesResponse.data?.data || []) as InsuranceData[];
+  // A API retorna os dados em data.data ou diretamente em data
+  const appointmentsData = appointmentsResponse.data?.data || appointmentsResponse.data || [];
+  const doctorsData = (doctorsResponse.data?.data || doctorsResponse.data || []) as DoctorData[];
+  const patientsData = (patientsResponse.data?.data || patientsResponse.data || []) as PatientData[];
+  const insurancesData = (insurancesResponse.data?.data || insurancesResponse.data || []) as InsuranceData[];
 
   // Calcular consultas de hoje
   const today = new Date();
@@ -112,22 +116,28 @@ export async function fetchDashboardStats() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   
   const appointmentsToday = appointmentsData.filter((apt: AppointmentData) => {
-    if (!apt.date_time) return false;
-    const aptDate = new Date(apt.date_time);
+    // O campo correto é scheduled_at
+    const dateTime = apt.scheduled_at || apt.date_time;
+    if (!dateTime) return false;
+    const aptDate = new Date(dateTime);
     return aptDate >= today && aptDate < tomorrow;
   }).length;
 
   // Filtrar consultas do mês atual
   const appointmentsThisMonth = appointmentsData.filter((apt: AppointmentData) => {
-    if (!apt.date_time) return false;
-    const aptDate = new Date(apt.date_time);
+    // O campo correto é scheduled_at
+    const dateTime = apt.scheduled_at || apt.date_time;
+    if (!dateTime) return false;
+    const aptDate = new Date(dateTime);
     return aptDate >= firstDayThisMonth && aptDate <= now;
   }).length;
 
   // Filtrar consultas do mês anterior
   const appointmentsLastMonth = appointmentsData.filter((apt: AppointmentData) => {
-    if (!apt.date_time) return false;
-    const aptDate = new Date(apt.date_time);
+    // O campo correto é scheduled_at
+    const dateTime = apt.scheduled_at || apt.date_time;
+    if (!dateTime) return false;
+    const aptDate = new Date(dateTime);
     return aptDate >= firstDayLastMonth && aptDate <= lastDayLastMonth;
   }).length;
 
@@ -201,8 +211,14 @@ export async function fetchDashboardStats() {
   // Crescimento de consultas
   const appointmentsGrowth = calculateGrowth(appointmentsThisMonth, appointmentsLastMonth);
 
-  // Total de consultas (todas)
-  const totalAppointments = appointmentsResponse.data?.total || appointmentsData.length;
+  // Total de consultas (todas) - busca todas as consultas sem filtro de data
+  const allAppointmentsResponse = await api.get("/appointments", {
+    params: {
+      per_page: 1000,
+    },
+  });
+  const allAppointments = allAppointmentsResponse.data?.data || allAppointmentsResponse.data || [];
+  const totalAppointments = allAppointments.length;
 
   return {
     total_appointments: totalAppointments,
@@ -296,26 +312,54 @@ export async function fetchRecentActivities(): Promise<RecentActivity[]> {
 }
 
 export async function fetchMonthlyAppointments(): Promise<MonthlyAppointments[]> {
-  const response = await api.get("/admin/reports/appointments", {
-    params: {
-      start_date: new Date(new Date().setMonth(new Date().getMonth() - 5)).toISOString().split("T")[0],
-      end_date: new Date().toISOString().split("T")[0],
-    },
-  });
+  try {
+    // Busca consultas diretamente da API de appointments para ter controle total
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    
+    const response = await api.get("/appointments", {
+      params: {
+        per_page: 1000, // Busca todas as consultas
+        start_date: sixMonthsAgo.toISOString().split("T")[0],
+        end_date: new Date().toISOString().split("T")[0],
+      },
+    });
 
-  const trend = response.data?.trend || [];
-  
-  // Agrupar por mês
-  const monthly: Record<string, number> = {};
-  trend.forEach((item: { date: string; total: number }) => {
-    const month = new Date(item.date).toLocaleDateString("pt-BR", { month: "short" });
-    monthly[month] = (monthly[month] || 0) + item.total;
-  });
+    const appointments = response.data?.data || response.data || [];
+    
+    // Agrupar por mês
+    const monthly: Record<string, number> = {};
+    appointments.forEach((apt: AppointmentData) => {
+      const dateTime = apt.scheduled_at || apt.date_time;
+      if (!dateTime) return;
+      
+      const date = new Date(dateTime);
+      const monthKey = date.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+      monthly[monthKey] = (monthly[monthKey] || 0) + 1;
+    });
 
-  return Object.entries(monthly).map(([month, total]) => ({
-    month,
-    total,
-  }));
+    // Ordenar por data (mais antigo primeiro)
+    const sortedEntries = Object.entries(monthly).sort((a, b) => {
+      // Converte "nov. 2025" para Date para ordenar corretamente
+      const parseMonth = (str: string) => {
+        const [month, year] = str.split(' ');
+        const monthMap: Record<string, number> = {
+          'jan.': 0, 'fev.': 1, 'mar.': 2, 'abr.': 3, 'mai.': 4, 'jun.': 5,
+          'jul.': 6, 'ago.': 7, 'set.': 8, 'out.': 9, 'nov.': 10, 'dez.': 11
+        };
+        return new Date(parseInt(year), monthMap[month.toLowerCase()] || 0, 1);
+      };
+      return parseMonth(a[0]).getTime() - parseMonth(b[0]).getTime();
+    });
+
+    return sortedEntries.map(([month, total]) => ({
+      month,
+      total,
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar consultas por mês:', error);
+    return [];
+  }
 }
 
 export async function fetchSpecialtyDistribution(): Promise<SpecialtyDistribution[]> {
@@ -325,9 +369,11 @@ export async function fetchSpecialtyDistribution(): Promise<SpecialtyDistributio
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(now.getMonth() - 6);
 
+    // Busca consultas diretamente da API de appointments (não do report)
     const [appointmentsResponse, doctorsResponse] = await Promise.all([
-      api.get("/admin/reports/appointments", {
+      api.get("/appointments", {
         params: {
+          per_page: 1000, // Busca todas as consultas
           start_date: sixMonthsAgo.toISOString().split("T")[0],
           end_date: now.toISOString().split("T")[0],
         },
@@ -335,8 +381,9 @@ export async function fetchSpecialtyDistribution(): Promise<SpecialtyDistributio
       api.get("/admin/doctors"),
     ]);
 
-    const appointments = appointmentsResponse.data?.data || [];
-    const doctors = doctorsResponse.data?.data || [];
+    // A API retorna os dados em data.data ou diretamente em data
+    const appointments = appointmentsResponse.data?.data || appointmentsResponse.data || [];
+    const doctors = doctorsResponse.data?.data || doctorsResponse.data || [];
 
     // Cria um mapa de doctor_id -> specialty
     const doctorSpecialtyMap = new Map<number, string>();

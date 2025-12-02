@@ -97,5 +97,16 @@ class AppointmentCreationService
             $context,
             metadata: ['appointment_id' => $appointment->id]
         );
+
+        // Notifica administradores sobre nova consulta
+        $admins = \App\Models\User::where('role', \App\Domain\Shared\Enums\UserRole::ADMIN->value)->get();
+        foreach ($admins as $admin) {
+            $this->notifications->dispatchFromTemplate(
+                $admin,
+                'appointment.created.admin',
+                $context,
+                metadata: ['appointment_id' => $appointment->id]
+            );
+        }
     }
 }
