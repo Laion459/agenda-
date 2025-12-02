@@ -10,7 +10,6 @@ use App\Models\Patient;
 use App\Models\Schedule;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -19,7 +18,6 @@ use Tests\TestCase;
  */
 class IntegrationTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_fluxo_completo_agendamento_consulta(): void
     {

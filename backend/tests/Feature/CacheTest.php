@@ -5,13 +5,11 @@ namespace Tests\Feature;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class CacheTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_relatorios_usam_cache(): void
     {

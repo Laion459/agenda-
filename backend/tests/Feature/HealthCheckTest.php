@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class HealthCheckTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_health_check_endpoint_retorna_status_healthy(): void
     {

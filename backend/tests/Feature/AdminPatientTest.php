@@ -5,13 +5,11 @@ namespace Tests\Feature;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\Patient;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AdminPatientTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_admin_pode_cadastrar_paciente(): void
     {

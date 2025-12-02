@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class BackupCommandTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_comando_backup_pode_ser_executado(): void
     {

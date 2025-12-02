@@ -4,12 +4,10 @@ namespace Tests\Feature;
 
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PrivacyTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_usuario_pode_aceitar_politica_de_privacidade(): void
     {

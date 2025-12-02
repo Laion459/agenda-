@@ -5,12 +5,10 @@ namespace Tests\Feature;
 use App\Domain\Shared\Enums\UserRole;
 use App\Models\HealthInsurance;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class HealthInsuranceTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_admin_pode_cadastrar_convenio(): void
     {

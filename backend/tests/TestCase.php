@@ -27,7 +27,7 @@ abstract class TestCase extends BaseTestCase
         // Resetar cache de permissões
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        // Garantir que os roles existam
+        // Garantir que os roles existam após o banco estar pronto
         $this->ensureRolesExist();
     }
 
@@ -36,12 +36,11 @@ abstract class TestCase extends BaseTestCase
      */
     protected function ensureRolesExist(): void
     {
-        // Criar roles para ambos os guards (web e sanctum)
         $guards = ['web', 'sanctum'];
         foreach ($guards as $guard) {
-            Role::findOrCreate(UserRole::ADMIN->value, $guard);
-            Role::findOrCreate(UserRole::DOCTOR->value, $guard);
-            Role::findOrCreate(UserRole::PATIENT->value, $guard);
+            Role::firstOrCreate(['name' => UserRole::ADMIN->value, 'guard_name' => $guard]);
+            Role::firstOrCreate(['name' => UserRole::DOCTOR->value, 'guard_name' => $guard]);
+            Role::firstOrCreate(['name' => UserRole::PATIENT->value, 'guard_name' => $guard]);
         }
     }
 

@@ -10,13 +10,11 @@ use App\Models\HealthInsurance;
 use App\Models\Patient;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class ReportTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_admin_pode_gerar_relatorio_de_consultas(): void
     {

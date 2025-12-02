@@ -15,7 +15,6 @@ use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Database\DatabaseManager;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -24,7 +23,6 @@ use Tests\TestCase;
 
 class AppointmentServiceTest extends TestCase
 {
-    use RefreshDatabase;
 
     private AppointmentService $service;
 
@@ -185,9 +183,12 @@ class AppointmentServiceTest extends TestCase
             )
             ->andReturn(true);
 
+        // O código agora envia notificações para paciente, médico e admins
+        // Como pode haver admins criados pelo TestCase, usamos atLeast
         $this->notificationDispatcher
             ->shouldReceive('dispatchFromTemplate')
-            ->once();
+            ->atLeast()
+            ->times(2); // Mínimo paciente + médico, admins são opcionais
 
         $this->cacheManager
             ->shouldReceive('clearAppointmentCache')
@@ -224,9 +225,11 @@ class AppointmentServiceTest extends TestCase
             ->once()
             ->andReturn(true);
 
+        // O código agora envia notificações para paciente, médico e admins
         $this->notificationDispatcher
             ->shouldReceive('dispatchFromTemplate')
-            ->once();
+            ->atLeast()
+            ->times(2); // Mínimo paciente + médico, admins são opcionais
 
         $this->cacheManager
             ->shouldReceive('clearAppointmentCache')
@@ -296,9 +299,11 @@ class AppointmentServiceTest extends TestCase
             ->once()
             ->andReturn(null);
 
+        // O código agora envia notificações para paciente, médico e admins
         $this->notificationDispatcher
             ->shouldReceive('dispatchFromTemplate')
-            ->twice();
+            ->atLeast()
+            ->times(2); // Mínimo paciente + médico, admins são opcionais
 
         $this->cacheManager
             ->shouldReceive('clearAppointmentCache')

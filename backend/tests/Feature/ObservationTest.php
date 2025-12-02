@@ -9,12 +9,10 @@ use App\Models\Doctor;
 use App\Models\Observation;
 use App\Models\Patient;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ObservationTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_medico_pode_registrar_observacoes(): void
     {

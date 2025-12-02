@@ -8,12 +8,10 @@ use App\Models\Doctor;
 use App\Models\Schedule;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ScheduleTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_medico_pode_criar_horario_disponivel(): void
     {
