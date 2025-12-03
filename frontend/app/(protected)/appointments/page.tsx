@@ -374,22 +374,7 @@ export default function AppointmentsPage() {
           const minutes = String(dateTime.getMinutes()).padStart(2, '0');
           parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:00`;
         }
-        
-        // Formato enviado ao backend: 'Y-m-d H:i:s'
-            dateTimeISO: dateTime.toISOString(),
-            dateTimeLocal: dateTime.toLocaleString('pt-BR'),
-            availableSlots: availableSlots.slice(0, 5), // Primeiros 5 slots
-            matchingSlot: matchingSlot || 'NÃO ENCONTRADO',
-            isInAvailableSlots: !!matchingSlot,
-          });
-        }
       }
-      
-      // Duração é definida pelo médico/admin via schedule, não pelo paciente
-      if (isPatient) {
-        delete parsed.duration_minutes;
-      }
-      
       
       const toastId = toast.loading('Criando consulta...', { id: 'creating-appointment' });
       
@@ -1084,23 +1069,14 @@ export default function AppointmentsPage() {
                                       key={slot}
                                       type="button"
                                       onClick={() => {
-                                        const match = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
-                                          // Seleciona horário
-                                            datetimeValue,
-                                            slotOriginal: slot,
-                                            slotMatch: match,
-                                            extracted: match ? `${match[1]}T${match[2]}` : 'FALHOU',
-                                          });
-                                        }
                                         setValue('scheduled_at', datetimeValue, { shouldValidate: true });
                                       }}
-                                      className={`
-                                        px-3 py-2 text-sm rounded-md border transition-colors
-                                        ${isSelected 
-                                          ? 'bg-blue-500 text-white border-blue-500 dark:bg-blue-600 dark:border-blue-500' 
-                                          : 'bg-white text-slate-700 border-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:border-blue-400 dark:hover:bg-blue-900/20'
-                                        }
-                                      `}
+                                      className={clsx(
+                                        "px-3 py-2 text-sm rounded-md border transition-colors",
+                                        isSelected
+                                          ? "bg-blue-500 text-white border-blue-500 dark:bg-blue-600 dark:border-blue-500"
+                                          : "bg-white text-slate-700 border-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:border-blue-400 dark:hover:bg-blue-900/20"
+                                      )}
                                     >
                                       <Clock className="h-3 w-3 inline mr-1" />
                                       {timeStr}

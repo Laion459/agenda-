@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, ArrowLeft, Search, FileQuestion, AlertCircle } from 'lucide-react';
+import { Home, ArrowLeft, Search, FileQuestion, AlertCircle, LogIn, UserPlus, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TYPOGRAPHY, COLORS, SPACING, ELEVATION } from '@/constants/design-tokens';
 import { clsx } from 'clsx';
+import { useAuthStore } from '@/store/auth-store';
 
 export default function NotFound() {
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = !!user;
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-3xl w-full">
@@ -99,35 +102,81 @@ export default function NotFound() {
               COLORS.text.secondary,
               "mb-4 font-medium"
             )}>
-              Páginas úteis:
+              {isAuthenticated ? 'Páginas úteis:' : 'Acesso rápido:'}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/"
-                className={clsx(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-lg",
-                  "text-sm font-medium transition-all duration-200",
-                  "text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400",
-                  "hover:bg-blue-50 dark:hover:bg-blue-900/20",
-                  "border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
-                )}
-              >
-                <Home className="h-4 w-4" />
-                Início
-              </Link>
-              <Link
-                href="/appointments"
-                className={clsx(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-lg",
-                  "text-sm font-medium transition-all duration-200",
-                  "text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400",
-                  "hover:bg-blue-50 dark:hover:bg-blue-900/20",
-                  "border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
-                )}
-              >
-                <Search className="h-4 w-4" />
-                Consultas
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className={clsx(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-lg",
+                      "text-sm font-medium transition-all duration-200",
+                      "text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400",
+                      "hover:bg-blue-50 dark:hover:bg-blue-900/20",
+                      "border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
+                    )}
+                  >
+                    <Home className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    className={clsx(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-lg",
+                      "text-sm font-medium transition-all duration-200",
+                      "text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400",
+                      "hover:bg-blue-50 dark:hover:bg-blue-900/20",
+                      "border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
+                    )}
+                  >
+                    <Search className="h-4 w-4" />
+                    Consultas
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/"
+                    className={clsx(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-lg",
+                      "text-sm font-medium transition-all duration-200",
+                      "text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400",
+                      "hover:bg-blue-50 dark:hover:bg-blue-900/20",
+                      "border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
+                    )}
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Fazer login
+                  </Link>
+                  <Link
+                    href="/register/patient"
+                    className={clsx(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-lg",
+                      "text-sm font-medium transition-all duration-200",
+                      "text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400",
+                      "hover:bg-blue-50 dark:hover:bg-blue-900/20",
+                      "border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
+                    )}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Criar conta
+                  </Link>
+                  <Link
+                    href="/register/doctor"
+                    className={clsx(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-lg",
+                      "text-sm font-medium transition-all duration-200",
+                      "text-slate-700 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400",
+                      "hover:bg-blue-50 dark:hover:bg-blue-900/20",
+                      "border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600"
+                    )}
+                  >
+                    <Stethoscope className="h-4 w-4" />
+                    Sou médico
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
