@@ -96,9 +96,9 @@ export default function AdminUsersPage() {
       ) : undefined;
       
       // Se não há filtros, aumenta o per_page para mostrar mais usuários
-      const params = cleanPayload || {};
+      const params: Record<string, unknown> = cleanPayload || {};
       if (!params.per_page && Object.keys(params).length === 0) {
-        params.per_page = 100; // Mostra até 100 usuários quando não há filtros
+        params.per_page = "100";
       }
       
       const response = await fetchAdminUsers(params);
@@ -144,8 +144,8 @@ export default function AdminUsersPage() {
   const onSubmit = async (values: FilterForm) => {
     const sanitized: FilterForm = {
       search: values.search?.trim() || undefined,
-      role: values.role && values.role !== "" ? values.role : undefined,
-      is_active: values.is_active && values.is_active !== "" ? values.is_active : undefined,
+      role: values.role === "" ? undefined : values.role,
+      is_active: values.is_active === "" ? undefined : values.is_active,
       created_from: values.created_from || undefined,
       created_to: values.created_to || undefined,
     };
@@ -393,7 +393,7 @@ export default function AdminUsersPage() {
               {["ADMIN", "DOCTOR", "PATIENT"].map((role) => (
                 <span key={role} className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-700 px-2 py-1">
                   <strong className="mr-1 text-slate-800 dark:text-slate-200">{roleLabels[role] ?? role}:</strong>
-                  {summary.byRole[role] ?? 0}
+                  {(summary.byRole as Record<string, number>)[role] ?? 0}
                 </span>
               ))}
             </div>
@@ -499,7 +499,8 @@ export default function AdminUsersPage() {
               <Input
                 id="edit-name"
                 {...registerEdit("name")}
-                error={errorsEdit.name?.message}
+                error={!!errorsEdit.name}
+                errorMessage={errorsEdit.name?.message}
               />
             </div>
 
@@ -509,7 +510,8 @@ export default function AdminUsersPage() {
                 id="edit-email"
                 type="email"
                 {...registerEdit("email")}
-                error={errorsEdit.email?.message}
+                error={!!errorsEdit.email}
+                errorMessage={errorsEdit.email?.message}
               />
             </div>
 
@@ -518,7 +520,8 @@ export default function AdminUsersPage() {
               <Input
                 id="edit-phone"
                 {...registerEdit("phone")}
-                error={errorsEdit.phone?.message}
+                error={!!errorsEdit.phone}
+                errorMessage={errorsEdit.phone?.message}
               />
             </div>
 

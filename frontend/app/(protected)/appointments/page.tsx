@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import toast from "react-hot-toast";
+import { clsx } from "clsx";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -252,7 +253,7 @@ export default function AppointmentsPage() {
       return;
     }
 
-    const doctorId = selectedReschedule.doctor_id;
+    const doctorId = selectedReschedule.doctor?.id;
     if (!doctorId) return;
 
     const loadRescheduleDates = async () => {
@@ -278,7 +279,7 @@ export default function AppointmentsPage() {
       return;
     }
 
-    const doctorId = selectedReschedule.doctor_id;
+    const doctorId = selectedReschedule.doctor?.id;
     if (!doctorId) return;
 
     const dateOnly = watchedRescheduleDate?.split('T')[0];
@@ -1388,8 +1389,8 @@ export default function AppointmentsPage() {
                 currentMonth={currentMonthReschedule}
                 onMonthChange={(month) => {
                   setCurrentMonthReschedule(month);
-                  if (selectedReschedule.doctor_id) {
-                    fetchAvailableDates(selectedReschedule.doctor_id, month).then(response => {
+                  if (selectedReschedule.doctor?.id) {
+                    fetchAvailableDates(selectedReschedule.doctor.id, month).then(response => {
                       setAvailableDatesReschedule(response.available_dates || []);
                       setDoctorHasNoSchedulesReschedule(response.has_schedules === false);
                     }).catch(() => {

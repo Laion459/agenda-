@@ -116,9 +116,9 @@ export default function AdminAdminsPage() {
         Object.entries(payload).filter(([_, value]) => value !== "" && value !== undefined && value !== null)
       ) : undefined;
       
-      const params = cleanPayload || {};
+      const params: Record<string, unknown> = cleanPayload || {};
       if (!params.per_page && Object.keys(params).length === 0) {
-        params.per_page = 100;
+        params.per_page = "100";
       }
       
       const response = await fetchAdminAdmins(params);
@@ -165,7 +165,7 @@ export default function AdminAdminsPage() {
   const onSubmit = async (values: FilterForm) => {
     const sanitized: FilterForm = {
       search: values.search?.trim() || undefined,
-      is_active: values.is_active && values.is_active !== "" ? values.is_active : undefined,
+      is_active: values.is_active === "" ? undefined : values.is_active,
       created_from: values.created_from && values.created_from !== "" ? values.created_from : undefined,
       created_to: values.created_to && values.created_to !== "" ? values.created_to : undefined,
     };

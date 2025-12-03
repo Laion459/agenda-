@@ -310,7 +310,6 @@ export default function AdminDashboardPage() {
                         borderRadius: '8px',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                       }}
-                      className="dark:bg-slate-800 dark:border-slate-700"
                     />
                     <Legend />
                     <Line 
@@ -372,7 +371,6 @@ export default function AdminDashboardPage() {
                         borderRadius: '8px',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                       }}
-                      className="dark:bg-slate-800 dark:border-slate-700"
                     />
                     <Legend />
                     <Bar 

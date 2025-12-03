@@ -52,27 +52,25 @@ api.interceptors.response.use(
     }
     
     // Preserva informações importantes do erro original de forma serializável
-    const enhancedError: AxiosError & { 
-      response?: { status: number; statusText: string; data: unknown };
-      request?: unknown;
-      config?: { url?: string; method?: string; baseURL?: string };
-    } = {
+    const enhancedError = {
       ...handledError,
       name: handledError.name || 'AxiosError',
       message: handledError.message,
       stack: handledError.stack,
       response: error.response ? {
+        ...error.response,
         status: error.response.status,
         statusText: error.response.statusText,
         data: error.response.data,
       } : undefined,
       request: error.request,
       config: error.config ? {
+        ...error.config,
         url: error.config.url,
         method: error.config.method,
         baseURL: error.config.baseURL,
       } : undefined,
-    };
+    } as AxiosError;
     
     // Se o erro é relacionado a blob, tenta converter
     if (error.config?.responseType === 'blob' && error.response?.data) {
