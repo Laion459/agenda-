@@ -4,6 +4,19 @@
 **Última Atualização:** 2025-12-02  
 **Objetivo:** Transformar a aplicação em um produto extremamente profissional, sofisticado e moderno com design system consistente.
 
+## 🔧 Correções Críticas Implementadas (2025-12-02)
+
+### Sistema de Agendamento
+- ✅ **Correção de Timezone**: Extração direta de slots do backend sem conversão de timezone
+- ✅ **Formato de Data/Hora**: Correção do formato enviado ao backend ('Y-m-d H:i:s')
+- ✅ **Duração de Consultas**: Removida seleção de duração para pacientes (definida pelo médico/admin)
+- ✅ **Validação de Horários**: Correção da validação para corresponder exatamente aos slots disponíveis
+
+### Tratamento de Erros
+- ✅ **Error Handling**: Melhorias no `handleApiError` e `errorHandler` com serialização robusta
+- ✅ **Logs Detalhados**: Logs melhorados para debugging de problemas de agendamento
+- ✅ **Mensagens de Erro**: Melhor exibição de mensagens de erro para o usuário
+
 ## 🎉 Resumo Final
 
 Todas as melhorias principais foram implementadas com sucesso! A aplicação agora possui:
@@ -310,18 +323,23 @@ Todas as melhorias principais foram implementadas com sucesso! A aplicação ago
 
 ### Consultas (Appointments)
 
-#### 1. Appointments List
+#### 1. Appointments List ✅ (melhorias aplicadas + correções críticas)
 **Arquivo:** `app/(protected)/appointments/page.tsx`
 
-**Status:** 🟡 Pendente  
-**Melhorias:**
-- [ ] Melhorar filtros (mais visíveis, melhor UX)
-- [ ] Adicionar busca avançada
-- [ ] Melhorar cards de consulta (mais informações)
-- [ ] Adicionar ações rápidas (confirmar, cancelar)
-- [ ] Melhorar estados vazios
-- [ ] Adicionar paginação visual melhor
-- [ ] Melhorar loading states
+**Status:** ✅ Melhorado + Corrigido  
+**Melhorias Implementadas:**
+- [x] Correção crítica: Extração direta de slots do backend (formato 'Y-m-d H:i:s') sem problemas de timezone
+- [x] Correção: Removida seleção de duração para pacientes (duração definida pelo médico/admin via schedule)
+- [x] Melhorias nos botões de ação (Confirmar, Cancelar, Remarcar, Ver detalhes) com ícones e estados
+- [x] Modal moderno para visualização de detalhes da consulta
+- [x] Tabs organizadas no modal (Resumo, Observações, Histórico)
+- [x] Melhor tratamento de erros com logs detalhados
+- [x] Validação de horários disponíveis corrigida
+- [x] Formato de data/hora corrigido para envio ao backend
+- [ ] Melhorar filtros (mais visíveis, melhor UX) - Futuro
+- [ ] Adicionar busca avançada - Futuro
+- [ ] Melhorar cards de consulta (mais informações) - Futuro
+- [ ] Adicionar paginação visual melhor - Futuro
 
 ### Médicos (Doctors)
 
