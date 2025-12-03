@@ -2,6 +2,7 @@
 
 import { HTMLAttributes, ReactNode, useState } from 'react';
 import { clsx } from 'clsx';
+import { COMPONENT_TOKENS } from '@/constants/design-tokens';
 
 interface TooltipProps {
   content: ReactNode;
@@ -54,7 +55,13 @@ export function Tooltip({ content, children, position = 'top', delay = 200 }: To
         <div
           role="tooltip"
           className={clsx(
-            'absolute z-50 px-2 py-1 text-xs font-medium text-white bg-slate-900 rounded-md shadow-lg whitespace-nowrap pointer-events-none',
+            'absolute z-50 whitespace-nowrap pointer-events-none',
+            COMPONENT_TOKENS.tooltip.bg,
+            COMPONENT_TOKENS.tooltip.text,
+            COMPONENT_TOKENS.tooltip.padding,
+            COMPONENT_TOKENS.tooltip.radius,
+            COMPONENT_TOKENS.tooltip.shadow,
+            'animate-fade-in',
             positionClasses[position]
           )}
         >
@@ -62,7 +69,8 @@ export function Tooltip({ content, children, position = 'top', delay = 200 }: To
           <div
             className={clsx(
               'absolute w-0 h-0 border-4',
-              arrowClasses[position]
+              arrowClasses[position],
+              'dark:border-slate-800'
             )}
           />
         </div>

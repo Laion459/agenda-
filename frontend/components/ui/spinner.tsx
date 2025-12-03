@@ -15,8 +15,8 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  primary: 'text-purple-600',
-  secondary: 'text-slate-600',
+  primary: 'text-blue-600 dark:text-blue-400',
+  secondary: 'text-slate-600 dark:text-slate-400',
   white: 'text-white',
 };
 

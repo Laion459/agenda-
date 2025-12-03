@@ -111,7 +111,7 @@ export function AppSidebar() {
         ref={sidebarRef}
         className={clsx(
           "hidden lg:flex fixed lg:sticky top-0 left-0 h-screen z-30 flex-col border-r border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700",
-          "transition-all duration-300 ease-in-out shadow-lg lg:shadow-none",
+          "transition-all duration-300 ease-in-out shadow-lg lg:shadow-none backdrop-blur-sm bg-white/95 dark:bg-slate-900/95",
           isOpen
             ? "w-64 translate-x-0"
             : "-translate-x-full lg:translate-x-0 lg:w-20"
@@ -153,13 +153,17 @@ export function AppSidebar() {
                   "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
                   "group relative",
                   active
-                    ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-500"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800",
+                    ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-500 shadow-sm"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 hover:translate-x-1",
                   !isOpen && "lg:justify-center lg:px-2"
                 )}
                 title={!isOpen ? link.label : undefined}
               >
-                <Icon className="h-5 w-5 flex-shrink-0" />
+                <Icon className={clsx(
+                  "h-5 w-5 flex-shrink-0 transition-transform duration-200",
+                  active && "scale-110",
+                  !active && "group-hover:scale-110"
+                )} />
                 <span
                   className={clsx(
                     "transition-all duration-300 whitespace-nowrap",
@@ -172,7 +176,7 @@ export function AppSidebar() {
                 </span>
                 {/* Tooltip quando fechado */}
                 {!isOpen && (
-                  <span className="absolute left-full ml-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-200 bg-slate-900 dark:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs z-50 whitespace-nowrap shadow-xl border border-slate-700">
+                  <span className="absolute left-full ml-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-200 bg-slate-900 dark:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs z-50 whitespace-nowrap shadow-xl border border-slate-700 animate-fade-in">
                     {link.label}
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full border-4 border-transparent border-r-slate-900 dark:border-r-slate-800" />
                   </span>

@@ -287,6 +287,109 @@ export const COLORS = {
 } as const;
 
 // ============================================
+// OPACIDADE E BACKDROP
+// ============================================
+export const OPACITY = {
+  // Opacidades para overlays e backgrounds
+  overlay: {
+    light: 'bg-black/10',
+    medium: 'bg-black/30',
+    dark: 'bg-black/50',
+    darker: 'bg-black/70',
+  },
+  
+  // Opacidades para elementos
+  element: {
+    disabled: 'opacity-50',
+    hover: 'opacity-90',
+    active: 'opacity-80',
+  },
+  
+  // Backdrop blur
+  backdrop: {
+    sm: 'backdrop-blur-sm',
+    md: 'backdrop-blur-md',
+    lg: 'backdrop-blur-lg',
+  },
+} as const;
+
+// ============================================
+// GRADIENTES
+// ============================================
+export const GRADIENTS = {
+  // Gradientes sutis para backgrounds
+  subtle: {
+    blue: 'bg-gradient-to-br from-blue-50 to-blue-100/50',
+    purple: 'bg-gradient-to-br from-purple-50 to-purple-100/50',
+    emerald: 'bg-gradient-to-br from-emerald-50 to-emerald-100/50',
+    amber: 'bg-gradient-to-br from-amber-50 to-amber-100/50',
+  },
+  
+  // Gradientes para overlays
+  overlay: {
+    dark: 'bg-gradient-to-b from-black/0 via-black/20 to-black/60',
+    light: 'bg-gradient-to-b from-white/0 via-white/20 to-white/60',
+  },
+} as const;
+
+// ============================================
+// CORES SEMÂNTICAS EXPANDIDAS
+// ============================================
+export const SEMANTIC_COLORS = {
+  // Info
+  info: {
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    text: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800',
+    icon: 'text-blue-600 dark:text-blue-400',
+  },
+  
+  // Success
+  success: {
+    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-800',
+    icon: 'text-emerald-600 dark:text-emerald-400',
+  },
+  
+  // Warning
+  warning: {
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    text: 'text-amber-700 dark:text-amber-300',
+    border: 'border-amber-200 dark:border-amber-800',
+    icon: 'text-amber-600 dark:text-amber-400',
+  },
+  
+  // Error
+  error: {
+    bg: 'bg-red-50 dark:bg-red-900/20',
+    text: 'text-red-700 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800',
+    icon: 'text-red-600 dark:text-red-400',
+  },
+} as const;
+
+// ============================================
+// LOADING & SKELETON
+// ============================================
+export const LOADING = {
+  skeleton: {
+    base: 'bg-slate-200 dark:bg-slate-700',
+    shimmer: 'bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700',
+    animation: 'animate-shimmer bg-[length:200%_100%]',
+  },
+  
+  spinner: {
+    size: {
+      sm: 'h-4 w-4',
+      md: 'h-6 w-6',
+      lg: 'h-8 w-8',
+    },
+    color: 'text-blue-600 dark:text-blue-400',
+  },
+} as const;
+
+// ============================================
 // COMPONENTES ESPECÍFICOS
 // ============================================
 export const COMPONENT_TOKENS = {
@@ -298,23 +401,28 @@ export const COMPONENT_TOKENS = {
     fontSize: 'text-sm',
     fontWeight: 'font-medium',
     transition: TRANSITIONS.common.all,
+    focus: 'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
   },
   
   input: {
     padding: 'px-3 py-2',
     radius: 'rounded-md',
     fontSize: 'text-sm',
-    border: 'border border-slate-200',
-    focus: 'focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20',
-    error: 'border-red-500 focus:ring-red-500/20',
+    border: 'border border-slate-200 dark:border-slate-700',
+    focus: 'focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:focus:border-blue-400',
+    error: 'border-red-500 focus:ring-red-500/20 dark:border-red-400',
+    disabled: 'bg-slate-50 dark:bg-slate-800 cursor-not-allowed',
   },
   
   card: {
     padding: SPACING.card.padding,
+    paddingCompact: SPACING.card.paddingCompact,
+    paddingLoose: SPACING.card.paddingLoose,
     radius: BORDERS.radius.xl,
-    border: 'border border-slate-200',
+    border: 'border border-slate-200 dark:border-slate-700',
     shadow: ELEVATION.sm,
     shadowHover: ELEVATION.hover.md,
+    interactive: 'cursor-pointer hover:shadow-md transition-all duration-200',
   },
   
   badge: {
@@ -322,6 +430,20 @@ export const COMPONENT_TOKENS = {
     radius: 'rounded-full',
     fontSize: 'text-xs',
     fontWeight: 'font-medium',
+  },
+  
+  modal: {
+    overlay: 'bg-black/50 backdrop-blur-sm',
+    content: 'bg-white dark:bg-slate-800 rounded-xl shadow-2xl',
+    padding: 'p-6',
+  },
+  
+  tooltip: {
+    bg: 'bg-slate-900 dark:bg-slate-800',
+    text: 'text-white text-xs',
+    padding: 'px-3 py-2',
+    radius: 'rounded-lg',
+    shadow: ELEVATION.lg,
   },
 } as const;
 

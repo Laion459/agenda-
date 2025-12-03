@@ -28,6 +28,7 @@ const ResponsiveContainer = dynamic(() => import("recharts").then((mod) => mod.R
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { clsx } from "clsx";
 import {
   DashboardStats,
   RecentActivity,
@@ -89,15 +90,15 @@ export default function AdminDashboardPage() {
   const getActivityColor = (color: string) => {
     switch (color) {
       case 'green':
-        return 'bg-green-100 text-green-600';
+        return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
       case 'blue':
-        return 'bg-blue-100 text-blue-600';
+        return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
       case 'orange':
-        return 'bg-orange-100 text-orange-600';
+        return 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400';
       case 'red':
-        return 'bg-red-100 text-red-600';
+        return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
     }
   };
 
@@ -119,11 +120,13 @@ export default function AdminDashboardPage() {
       {/* KPI Cards */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {/* Total de Consultas */}
-          <Card>
+          <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-slate-600">Total de Consultas</CardTitle>
-                <Calendar className="h-5 w-5 text-blue-500" />
+                <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Total de Consultas</CardTitle>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg transition-transform duration-200 hover:scale-110">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -147,13 +150,13 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Médicos Cadastrados */}
-          <Card className="border-l-4 border-l-blue-500 dark:border-l-blue-400">
+          <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in" style={{ animationDelay: '50ms' }}>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                   Médicos Cadastrados
                 </CardTitle>
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg transition-transform duration-200 hover:scale-110">
                   <Stethoscope className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
@@ -181,13 +184,13 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Pacientes Cadastrados */}
-          <Card className="border-l-4 border-l-emerald-500 dark:border-l-emerald-400">
+          <Card variant="interactive" className="border-l-4 border-l-emerald-500 dark:border-l-emerald-400 animate-fade-in" style={{ animationDelay: '100ms' }}>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                   Pacientes Cadastrados
                 </CardTitle>
-                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg transition-transform duration-200 hover:scale-110">
                   <Users className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
               </div>
@@ -215,13 +218,13 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Convênios Ativos */}
-          <Card className="border-l-4 border-l-amber-500 dark:border-l-amber-400">
+          <Card variant="interactive" className="border-l-4 border-l-amber-500 dark:border-l-amber-400 animate-fade-in" style={{ animationDelay: '150ms' }}>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                   Convênios Ativos
                 </CardTitle>
-                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg transition-transform duration-200 hover:scale-110">
                   <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />
                 </div>
               </div>
@@ -313,11 +316,22 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {activities.map((activity) => {
+                {activities.map((activity, index) => {
                   const activityColorClass = getActivityColor(activity.color);
                   return (
-                    <div key={activity.id} className="flex items-start gap-4 p-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${activityColorClass}`}>
+                    <div 
+                      key={activity.id} 
+                      className={clsx(
+                        "flex items-start gap-4 p-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0",
+                        "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150",
+                        "animate-fade-in"
+                      )}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className={clsx(
+                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-200 hover:scale-110",
+                        activityColorClass
+                      )}>
                         {getActivityIcon(activity.icon)}
                       </div>
                       <div className="flex-1 min-w-0">

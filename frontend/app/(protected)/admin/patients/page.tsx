@@ -19,6 +19,7 @@ import { fetchHealthInsurances } from "@/services/health-insurance-service";
 import { createPatient, fetchAdminPatients, togglePatientStatus, updatePatient } from "@/services/admin-patient-service";
 import { HealthInsurance, Patient } from "@/types";
 import { Edit, Trash2, CheckCircle2 } from "lucide-react";
+import { clsx } from "clsx";
 
 const patientSchema = z.object({
   name: z.string().min(3, "Informe o nome"),
@@ -271,8 +272,8 @@ export default function AdminPatientsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestão de Pacientes</h1>
-          <p className="text-sm text-slate-600 mt-1">Gerencie os pacientes cadastrados no sistema</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2">Gestão de Pacientes</h1>
+          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300">Gerencie os pacientes cadastrados no sistema</p>
         </div>
         
         <div className="flex items-center justify-between gap-4">
@@ -309,17 +310,17 @@ export default function AdminPatientsPage() {
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Nasc.</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Nome</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">CPF</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Contato</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Data Nasc.</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-4">
@@ -336,26 +337,34 @@ export default function AdminPatientsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredPatients.map((patient) => {
+                filteredPatients.map((patient, index) => {
                   const active = patient.user?.is_active ?? true;
                   return (
-                    <tr key={patient.id} className="hover:bg-gray-50">
+                    <tr 
+                      key={patient.id} 
+                      className={clsx(
+                        "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150",
+                        index % 2 === 0 ? "bg-white dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50",
+                        "animate-fade-in"
+                      )}
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{patient.name}</div>
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">{patient.name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{patient.cpf || 'N/A'}</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-300">{patient.cpf || 'N/A'}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-600 dark:text-slate-300">
                           {patient.user?.email || 'N/A'}
                         </div>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           {patient.user?.phone || ''}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-600 dark:text-slate-300">
                           {patient.birth_date
                             ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
                             : "N/A"}
@@ -363,11 +372,12 @@ export default function AdminPatientsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          className={clsx(
+                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200",
                             active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                              : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                          )}
                         >
                           {active ? "ativo" : "inativo"}
                         </span>

@@ -4,16 +4,32 @@ import { HTMLAttributes } from "react";
 import { clsx } from "clsx";
 import { COMPONENT_TOKENS, ELEVATION, TYPOGRAPHY, SPACING, COLORS } from "@/constants/design-tokens";
 
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'elevated' | 'interactive' | 'bordered';
+}
+
+export function Card({ className, variant = 'default', ...props }: CardProps) {
   return (
     <div
       className={clsx(
         COMPONENT_TOKENS.card.radius,
         COMPONENT_TOKENS.card.border,
         COMPONENT_TOKENS.card.padding,
-        COMPONENT_TOKENS.card.shadow,
         "bg-white dark:bg-slate-800 dark:border-slate-700",
-        COMPONENT_TOKENS.card.shadowHover,
+        variant === 'elevated' && clsx(
+          ELEVATION.md,
+          "hover:shadow-lg transition-shadow duration-200"
+        ),
+        variant === 'interactive' && clsx(
+          COMPONENT_TOKENS.card.shadow,
+          COMPONENT_TOKENS.card.interactive,
+          "cursor-pointer"
+        ),
+        variant === 'bordered' && "border-2",
+        variant === 'default' && clsx(
+          COMPONENT_TOKENS.card.shadow,
+          COMPONENT_TOKENS.card.shadowHover
+        ),
         className
       )}
       {...props}
@@ -77,7 +93,7 @@ export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={clsx(
-        "flex items-center justify-between pt-4 border-t border-slate-200",
+        "flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700",
         className
       )}
       {...props}

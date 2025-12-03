@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Lock, Plus, CheckCircle2, Clock, User } from 'lucide-react';
 import Link from 'next/link';
+import { clsx } from 'clsx';
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -219,8 +220,8 @@ export default function DoctorDashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Minha Agenda</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2">Minha Agenda</h1>
+          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300">
             {formatDate(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy")}
           </p>
         </div>
@@ -293,14 +294,15 @@ export default function DoctorDashboardPage() {
                         setCurrentDate(day);
                       }
                     }}
-                    className={`
-                      aspect-square rounded-lg text-sm transition-colors
-                      ${!isCurrentMonth ? 'text-slate-300' : 'text-slate-900'}
-                      ${isSelected ? 'bg-purple-600 text-white font-bold' : ''}
-                      ${isToday && !isSelected ? 'bg-purple-100 text-purple-900' : ''}
-                      ${!isSelected && !isToday && isCurrentMonth ? 'hover:bg-slate-100' : ''}
-                      ${dayAppointments.length > 0 && !isSelected ? 'font-semibold' : ''}
-                    `}
+                    className={clsx(
+                    "aspect-square rounded-lg text-sm transition-all duration-200",
+                    !isCurrentMonth && "text-slate-300 dark:text-slate-600",
+                    isCurrentMonth && !isSelected && "text-slate-900 dark:text-white",
+                    isSelected && "bg-blue-600 text-white font-bold shadow-md scale-105",
+                    isToday && !isSelected && "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 border-2 border-blue-500",
+                    !isSelected && !isToday && isCurrentMonth && "hover:bg-slate-100 dark:hover:bg-slate-700 hover:scale-105",
+                    dayAppointments.length > 0 && !isSelected && "font-semibold"
+                  )}
                   >
                     {formatDate(day, 'd')}
                   </button>

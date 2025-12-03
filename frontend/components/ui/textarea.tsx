@@ -26,15 +26,16 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
               COMPONENT_TOKENS.input.radius,
               COMPONENT_TOKENS.input.padding,
               COMPONENT_TOKENS.input.fontSize,
-              "text-slate-900",
-              "bg-white",
+              "text-slate-900 dark:text-white",
+              "bg-white dark:bg-slate-800",
               COMPONENT_TOKENS.input.border,
+              "dark:border-slate-700",
               TRANSITIONS.common.all,
               error
                 ? clsx(COMPONENT_TOKENS.input.error, "pr-10")
                 : COMPONENT_TOKENS.input.focus,
-              "placeholder:text-slate-400",
-              "disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed",
+              "placeholder:text-slate-400 dark:placeholder:text-slate-500",
+              "disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed dark:disabled:bg-slate-800 dark:disabled:text-slate-600",
               className
             )}
             aria-invalid={error}
@@ -51,7 +52,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {errorMessage && (
           <p
             id={errorId}
-            className="mt-1.5 text-xs text-red-600 flex items-center gap-1"
+            className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1 animate-fade-in"
             role="alert"
           >
             <AlertCircle className="h-3 w-3 flex-shrink-0" />

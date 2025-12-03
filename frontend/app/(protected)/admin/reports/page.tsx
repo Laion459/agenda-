@@ -28,6 +28,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { clsx } from "clsx";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchAdminDoctors } from "@/services/admin-doctor-service";
@@ -354,11 +355,11 @@ export default function AdminReportsPage() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-4">
-            <Card className="border-blue-200 bg-blue-50/60">
+            <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
               <div className="space-y-1 p-4">
-                <p className="text-xs font-semibold uppercase text-blue-700">Total de consultas</p>
-                <p className="text-2xl font-bold text-blue-900">{summary?.total ?? 0}</p>
-                <p className="text-xs text-blue-700">
+                <p className="text-xs font-semibold uppercase text-blue-700 dark:text-blue-300">Total de consultas</p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{summary?.total ?? 0}</p>
+                <p className="text-xs text-blue-700 dark:text-blue-400">
                   Período:{" "}
                   {summary
                     ? `${summary.start_date} a ${summary.end_date}`
@@ -366,12 +367,12 @@ export default function AdminReportsPage() {
                 </p>
               </div>
             </Card>
-            {statusCards.map((card) => (
-              <Card key={card.label}>
+            {statusCards.map((card, index) => (
+              <Card key={card.label} variant="interactive" className="animate-fade-in" style={{ animationDelay: `${(index + 1) * 50}ms` }}>
                 <div className="space-y-1 p-4">
-                  <p className="text-xs font-semibold uppercase text-slate-500">{card.label}</p>
-                  <p className="text-2xl font-bold text-slate-900">{card.total}</p>
-                  <p className="text-xs text-slate-500">{card.percentage}% do total</p>
+                  <p className="text-xs font-semibold uppercase text-slate-700 dark:text-slate-300">{card.label}</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">{card.total}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">{card.percentage}% do total</p>
                 </div>
               </Card>
             ))}
@@ -379,17 +380,17 @@ export default function AdminReportsPage() {
 
           {/* Resumo Executivo */}
           <div className="grid gap-4 md:grid-cols-2">
-            <Card className="border-l-4 border-l-blue-500">
+            <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
               <CardContent className="p-6">
-                <p className="text-sm font-medium text-slate-600 mb-1">Total de Consultas</p>
-                <p className="text-3xl font-bold text-slate-900">{summary?.total || 0}</p>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Total de Consultas</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{summary?.total || 0}</p>
               </CardContent>
             </Card>
-            <Card className="border-l-4 border-l-green-500">
+            <Card variant="interactive" className="border-l-4 border-l-emerald-500 dark:border-l-emerald-400 animate-fade-in" style={{ animationDelay: '50ms' }}>
               <CardContent className="p-6">
-                <p className="text-sm font-medium text-slate-600 mb-1">Taxa de Comparecimento</p>
-                <p className="text-3xl font-bold text-slate-900">{attendanceRate}%</p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Taxa de Comparecimento</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{attendanceRate}%</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   {summary?.by_status.COMPLETED?.total || 0} consultas concluídas
                 </p>
               </CardContent>
@@ -483,36 +484,44 @@ export default function AdminReportsPage() {
               ) : insuranceUsage.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Convênio</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Número de Consultas</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Percentual</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Convênio</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Número de Consultas</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Percentual</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {insuranceUsage.map((item) => {
+                    <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                      {insuranceUsage.map((item, index) => {
                         const percentage = summary?.total ? Math.round((item.total_appointments / summary.total) * 100 * 10) / 10 : 0;
                         return (
-                          <tr key={item.health_insurance_id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <tr 
+                            key={item.health_insurance_id}
+                            className={clsx(
+                              "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150",
+                              index % 2 === 0 ? "bg-white dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50",
+                              "animate-fade-in"
+                            )}
+                            style={{ animationDelay: `${index * 30}ms` }}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
                               {item.name}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
                               {item.total_appointments}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
                               {percentage}%
                             </td>
                           </tr>
                         );
                       })}
-                      <tr className="bg-gray-50 font-semibold">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Total</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <tr className="bg-slate-100 dark:bg-slate-700 font-semibold">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">Total</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
                           {insuranceUsage.reduce((sum, item) => sum + item.total_appointments, 0)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">100%</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">100%</td>
                       </tr>
                     </tbody>
                   </table>

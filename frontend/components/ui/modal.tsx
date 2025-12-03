@@ -4,7 +4,7 @@ import { HTMLAttributes, ReactNode, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Button } from './button';
-import { Z_INDEX } from '@/constants/design-tokens';
+import { Z_INDEX, COMPONENT_TOKENS, OPACITY } from '@/constants/design-tokens';
 
 interface ModalProps {
   isOpen: boolean;
@@ -59,8 +59,9 @@ export function Modal({
   return (
     <div
       className={clsx(
-        'fixed inset-0 z-50 flex items-center justify-center',
-        Z_INDEX.modal
+        'fixed inset-0 z-50 flex items-center justify-center p-4',
+        Z_INDEX.modal,
+        'animate-fade-in'
       )}
       role="dialog"
       aria-modal="true"
@@ -68,7 +69,11 @@ export function Modal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className={clsx(
+          "fixed inset-0 transition-opacity duration-200",
+          COMPONENT_TOKENS.modal.overlay,
+          OPACITY.backdrop.sm
+        )}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -76,18 +81,21 @@ export function Modal({
       {/* Modal Content */}
       <div
         className={clsx(
-          'relative bg-white rounded-xl shadow-2xl w-full',
+          'relative w-full max-h-[90vh] overflow-y-auto',
+          COMPONENT_TOKENS.modal.content,
+          COMPONENT_TOKENS.modal.padding,
           sizeClasses[size],
-          'max-h-[90vh] overflow-y-auto',
+          'animate-scale-in',
+          'dark:bg-slate-800',
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-slate-200">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-slate-700">
             {title && (
-              <h2 id="modal-title" className="text-xl font-semibold text-slate-900">
+              <h2 id="modal-title" className="text-xl font-semibold text-slate-900 dark:text-white">
                 {title}
               </h2>
             )}
@@ -105,7 +113,7 @@ export function Modal({
         )}
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div>{children}</div>
       </div>
     </div>
   );

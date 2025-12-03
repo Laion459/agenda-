@@ -61,17 +61,18 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
                       TYPOGRAPHY.body.small,
                       'font-medium',
                       COLORS.text.secondary,
-                      'hover:text-blue-600 transition-colors flex items-center gap-1.5',
-                      'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded'
+                      'hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 flex items-center gap-1.5',
+                      'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded',
+                      'hover:underline'
                     )}
                     itemProp="item"
                   >
-                    {isFirst && <Home className="h-4 w-4" />}
+                    {isFirst && <Home className="h-4 w-4 transition-transform duration-200 hover:scale-110" />}
                     <span itemProp="name">{item.label}</span>
                   </Link>
                   <meta itemProp="position" content={String(index + 1)} />
                   <ChevronRight
-                    className="h-4 w-4 text-slate-400"
+                    className="h-4 w-4 text-slate-400 dark:text-slate-500"
                     aria-hidden="true"
                   />
                 </>

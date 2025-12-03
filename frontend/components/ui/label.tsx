@@ -16,6 +16,7 @@ export function Label({ className, required, children, ...props }: LabelProps) {
         "font-semibold",
         COLORS.text.secondary,
         "block mb-1.5",
+        "dark:text-slate-300",
         className
       )}
       {...props}

@@ -33,14 +33,15 @@ import { useAuthStore } from "@/store/auth-store";
 import { handleApiError } from "@/lib/handle-api-error";
 import { APPOINTMENT_STATUS_OPTIONS } from "@/constants/appointments";
 import { Modal } from "@/components/ui/modal";
-import { Plus, Clock, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Clock, Loader2, ChevronLeft, ChevronRight, X, Calendar, CalendarClock, Eye, CheckCircle2, FileText } from "lucide-react";
 
 // Schema base para criação de consultas
 const baseAppointmentSchema = z.object({
   doctor_id: z.coerce.number().min(1, "Selecione um médico"),
   patient_id: z.coerce.number().optional(),
   scheduled_at: z.string().min(1, "Informe data e horário"),
-  duration_minutes: z.coerce.number().min(15, "No mínimo 15 minutos").max(240, "Até 240 minutos").optional(),
+  // duration_minutes: REMOVIDO - pacientes não escolhem duração, é definida pelo médico/admin
+  duration_minutes: z.coerce.number().min(15, "No mínimo 15 minutos").max(240, "Até 240 minutos").optional(), // Apenas para admin
   type: z.enum(["PRESENTIAL", "ONLINE"]),
   notes: z.string().optional(),
 });
@@ -69,6 +70,10 @@ export default function AppointmentsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [successId, setSuccessId] = useState<number | null>(null);
+  const [errorId, setErrorId] = useState<number | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState(false);
   const [selectedObservation, setSelectedObservation] = useState<Appointment | null>(null);
   const [selectedReschedule, setSelectedReschedule] = useState<Appointment | null>(null);
   const [detail, setDetail] = useState<Appointment | null>(null);
@@ -86,6 +91,14 @@ export default function AppointmentsPage() {
   const [loadingDates, setLoadingDates] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [doctorHasNoSchedules, setDoctorHasNoSchedules] = useState(false);
+  
+  // Estados para remarcação
+  const [availableSlotsReschedule, setAvailableSlotsReschedule] = useState<string[]>([]);
+  const [loadingSlotsReschedule, setLoadingSlotsReschedule] = useState(false);
+  const [availableDatesReschedule, setAvailableDatesReschedule] = useState<string[]>([]);
+  const [loadingDatesReschedule, setLoadingDatesReschedule] = useState(false);
+  const [currentMonthReschedule, setCurrentMonthReschedule] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [doctorHasNoSchedulesReschedule, setDoctorHasNoSchedulesReschedule] = useState(false);
   const user = useAuthStore((state) => state.user);
 
   const isDoctor = user?.role === 'DOCTOR';
@@ -203,9 +216,12 @@ export default function AppointmentsPage() {
     formState: { errors: rescheduleErrors },
     reset: resetReschedule,
     setValue: setRescheduleValue,
+    watch: watchReschedule,
   } = useForm<RescheduleForm>({
     resolver: zodResolver(rescheduleSchema),
   });
+  
+  const watchedRescheduleDate = watchReschedule('scheduled_at');
 
   useEffect(() => {
     async function load() {
@@ -241,6 +257,80 @@ export default function AppointmentsPage() {
     }
   }, [watchedDoctorId, currentMonth, isPatient]);
 
+  // Carrega datas e horários disponíveis quando uma consulta é selecionada para remarcação
+  useEffect(() => {
+    if (!selectedReschedule) {
+      setAvailableDatesReschedule([]);
+      setAvailableSlotsReschedule([]);
+      return;
+    }
+
+    const doctorId = selectedReschedule.doctor_id;
+    if (!doctorId) return;
+
+    // Carregar datas disponíveis do mês atual
+    const loadRescheduleDates = async () => {
+      try {
+        setLoadingDatesReschedule(true);
+        const response = await fetchAvailableDates(doctorId, currentMonthReschedule);
+        setAvailableDatesReschedule(response.available_dates || []);
+        setDoctorHasNoSchedulesReschedule(response.has_schedules === false);
+      } catch (error) {
+        setAvailableDatesReschedule([]);
+        setDoctorHasNoSchedulesReschedule(false);
+      } finally {
+        setLoadingDatesReschedule(false);
+      }
+    };
+
+    loadRescheduleDates();
+  }, [selectedReschedule, currentMonthReschedule]);
+
+  // Carrega horários disponíveis quando uma data é selecionada no remarcar
+  useEffect(() => {
+    if (!selectedReschedule) {
+      setAvailableSlotsReschedule([]);
+      return;
+    }
+
+    const doctorId = selectedReschedule.doctor_id;
+    if (!doctorId) return;
+
+    // Pega apenas a data (sem hora) do valor atual
+    // watchedRescheduleDate pode ser "2025-12-05" (só data) ou "2025-12-05T14:30" (data+hora)
+    const dateOnly = watchedRescheduleDate?.split('T')[0];
+    if (!dateOnly || dateOnly.length !== 10) {
+      setAvailableSlotsReschedule([]);
+      return;
+    }
+
+    const loadRescheduleSlots = async () => {
+      try {
+        setLoadingSlotsReschedule(true);
+        const response = await fetchAvailableSlots(doctorId, dateOnly);
+        
+        // Log para debug
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Remarcar] Horários disponíveis carregados:', response.available_slots?.length || 0, 'horários');
+          console.log('[Remarcar] Data consultada:', dateOnly);
+          console.log('[Remarcar] Médico ID:', doctorId);
+          if (response.available_slots && response.available_slots.length > 0) {
+            console.log('[Remarcar] Primeiros horários:', response.available_slots.slice(0, 3));
+          }
+        }
+        
+        setAvailableSlotsReschedule(response.available_slots || []);
+      } catch (error) {
+        console.error('[Remarcar] Erro ao carregar horários:', error);
+        setAvailableSlotsReschedule([]);
+      } finally {
+        setLoadingSlotsReschedule(false);
+      }
+    };
+
+    loadRescheduleSlots();
+  }, [selectedReschedule, watchedRescheduleDate]);
+
   const reloadAppointments = async () => {
     const response = await fetchAppointments({ per_page: 20, status: statusFilter });
     setAppointments(response.data ?? []);
@@ -250,6 +340,11 @@ export default function AppointmentsPage() {
     try {
       // Parse os valores usando o schema para obter os valores transformados
       const parsed = appointmentSchema.parse(values);
+      
+      // Para pacientes: REMOVE duration_minutes - a duração é definida pelo médico/admin via schedule
+      if (isPatient && 'duration_minutes' in parsed) {
+        delete parsed.duration_minutes;
+      }
       
       // Converte datetime para formato que o backend espera
       if (parsed.scheduled_at) {
@@ -277,54 +372,95 @@ export default function AppointmentsPage() {
           return;
         }
         
-        // Valida se o horário está na lista de horários disponíveis (se houver)
-        // Nota: Com o novo sistema de seleção por botões, isso não deveria ser necessário,
-        // mas mantemos como segurança adicional
-        if (availableSlots.length > 0 && !isAdmin) {
-          // Normaliza a data/hora selecionada para comparação (sem timezone)
-          const selectedYear = dateTime.getFullYear();
-          const selectedMonth = String(dateTime.getMonth() + 1).padStart(2, '0');
-          const selectedDay = String(dateTime.getDate()).padStart(2, '0');
-          const selectedHour = String(dateTime.getHours()).padStart(2, '0');
-          const selectedMinute = String(dateTime.getMinutes()).padStart(2, '0');
-          const selectedDateTimeStr = `${selectedYear}-${selectedMonth}-${selectedDay}T${selectedHour}:${selectedMinute}`;
-          
-          // Compara com os slots disponíveis usando timestamp em minutos para evitar problemas de timezone
-          const selectedTimestamp = dateTime.getTime();
-          const tolerance = 60 * 1000; // 1 minuto de tolerância
-          
-          const isAvailable = availableSlots.some(slot => {
-            const slotDate = new Date(slot);
-            const slotTimestamp = slotDate.getTime();
-            // Compara timestamps com tolerância de 1 minuto
-            return Math.abs(slotTimestamp - selectedTimestamp) < tolerance;
+        // Log para debug em desenvolvimento
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Agendar] Processando agendamento:', {
+            scheduled_at_original: parsed.scheduled_at,
+            dateTime_parsed: dateTime.toISOString(),
+            availableSlots_count: availableSlots.length,
           });
-          
-          if (!isAvailable) {
-            toast.error('Este horário não está disponível. Por favor, selecione um horário da lista de disponíveis.');
-            return;
-          }
         }
         
-        // Converte para formato ISO sem timezone (formato que Laravel aceita melhor)
-        const year = dateTime.getFullYear();
-        const month = String(dateTime.getMonth() + 1).padStart(2, '0');
-        const day = String(dateTime.getDate()).padStart(2, '0');
-        const hours = String(dateTime.getHours()).padStart(2, '0');
-        const minutes = String(dateTime.getMinutes()).padStart(2, '0');
-        const seconds = String(dateTime.getSeconds()).padStart(2, '0');
+        // REMOVIDA validação de disponibilidade no frontend
+        // O backend já valida isso no AppointmentValidationService
+        // Deixamos o backend fazer a validação correta
         
-        parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        // Backend espera formato 'Y-m-d H:i:s' (ex: '2025-12-19 19:30:00')
+        // EXTRAI DIRETAMENTE DA STRING ORIGINAL para evitar problemas de timezone
+        // NUNCA usa Date.getHours() ou Date.getMinutes() pois eles podem mudar devido ao timezone
+        if (typeof parsed.scheduled_at === 'string') {
+          if (parsed.scheduled_at.includes('T')) {
+            // Formato ISO: 'YYYY-MM-DDTHH:mm' - extrai componentes diretamente da string
+            const match = parsed.scheduled_at.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+            if (match) {
+              // Usa os valores EXATOS da string, sem conversão de timezone
+              parsed.scheduled_at = `${match[1]}-${match[2]}-${match[3]} ${match[4]}:${match[5]}:00`;
+            } else {
+              // Fallback: tenta parsear
+              const year = dateTime.getFullYear();
+              const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+              const day = String(dateTime.getDate()).padStart(2, '0');
+              const hours = String(dateTime.getHours()).padStart(2, '0');
+              const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+              parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:00`;
+            }
+          } else if (parsed.scheduled_at.includes(' ')) {
+            // Já está no formato 'Y-m-d H:i:s' ou 'Y-m-d H:i'
+            if (parsed.scheduled_at.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) {
+              parsed.scheduled_at = `${parsed.scheduled_at}:00`;
+            }
+            // Se já tem segundos, mantém como está
+          } else {
+            // Fallback: usa Date (último recurso)
+            const year = dateTime.getFullYear();
+            const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+            const day = String(dateTime.getDate()).padStart(2, '0');
+            const hours = String(dateTime.getHours()).padStart(2, '0');
+            const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+            parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:00`;
+          }
+        } else {
+          // Fallback: usa Date (último recurso)
+          const year = dateTime.getFullYear();
+          const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+          const day = String(dateTime.getDate()).padStart(2, '0');
+          const hours = String(dateTime.getHours()).padStart(2, '0');
+          const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+          parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:00`;
+        }
+        
+        // Log para debug
+        if (process.env.NODE_ENV === 'development') {
+          const sentMatch = parsed.scheduled_at.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}):(\d{2})/);
+          const matchingSlot = availableSlots.find(s => {
+            const slotMatch = String(s).match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
+            return slotMatch && sentMatch && 
+                   slotMatch[1] === sentMatch[1] && 
+                   slotMatch[2] === sentMatch[2];
+          });
+          
+          console.log('[Agendar] Formato final enviado ao backend:', {
+            scheduled_at: parsed.scheduled_at,
+            duration_minutes: parsed.duration_minutes,
+            dateTimeISO: dateTime.toISOString(),
+            dateTimeLocal: dateTime.toLocaleString('pt-BR'),
+            availableSlots: availableSlots.slice(0, 5), // Primeiros 5 slots
+            matchingSlot: matchingSlot || 'NÃO ENCONTRADO',
+            isInAvailableSlots: !!matchingSlot,
+          });
+        }
       }
       
-      // Para pacientes, a duração deve vir do schedule do médico, não do formulário
-      // Se não foi fornecida, será definida pelo backend baseado no schedule
-      if (!isAdmin && !parsed.duration_minutes) {
-        // Remove duration_minutes para que o backend use a duração do schedule
+      // Para pacientes: duração é SEMPRE definida pelo médico/admin via schedule
+      // NUNCA enviamos duration_minutes para pacientes - o backend busca do schedule
+      if (isPatient) {
         delete parsed.duration_minutes;
       }
       
       // Log para debug em desenvolvimento
+      
+      // Mostrar toast de loading
+      const toastId = toast.loading('Criando consulta...', { id: 'creating-appointment' });
       
       if (isAdmin) {
         // Admin usa endpoint específico que aceita patient_id
@@ -337,58 +473,85 @@ export default function AppointmentsPage() {
         await createAppointment(parsed);
       }
       
-      toast.success('Consulta agendada com sucesso');
+      // Sucesso com animação
+      toast.success('✅ Consulta agendada com sucesso!', { 
+        id: 'creating-appointment',
+        duration: 3000,
+        icon: '🎉'
+      });
+      
+      setCreateSuccess(true);
       reset({ type: 'PRESENTIAL' } as Partial<PatientForm>);
       setShowCreateDialog(false);
       setPatientSearch('');
       setDoctorSearch('');
+      
+      // Resetar estado de sucesso após 2 segundos
+      setTimeout(() => {
+        setCreateSuccess(false);
+      }, 2000);
+      
       await reloadAppointments();
     } catch (error) {
       // Log detalhado do erro para debug
       if (process.env.NODE_ENV === 'development') {
-        const errorInfo: Record<string, unknown> = {
-          type: error?.constructor?.name || typeof error,
-        };
+        console.error('[onCreateAppointment] Erro capturado:', error);
+        console.error('[onCreateAppointment] Tipo do erro:', typeof error);
+        console.error('[onCreateAppointment] String do erro:', String(error));
         
         if (error && typeof error === 'object') {
           const errorObj = error as Record<string, unknown>;
-          
-          if (errorObj.message) errorInfo.message = errorObj.message;
+          console.error('[onCreateAppointment] Propriedades do erro:', Object.getOwnPropertyNames(errorObj));
+          console.error('[onCreateAppointment] Tem response?', !!errorObj.response);
+          console.error('[onCreateAppointment] Tem message?', !!errorObj.message);
           
           if (errorObj.response) {
             const response = errorObj.response as Record<string, unknown>;
-            errorInfo.responseStatus = response.status;
-            if (response.data) {
-              try {
-                errorInfo.responseData = JSON.parse(JSON.stringify(response.data));
-              } catch {
-                errorInfo.responseData = String(response.data);
-              }
-            }
+            console.error('[onCreateAppointment] Response status:', response.status);
+            console.error('[onCreateAppointment] Response data:', response.data);
           }
-          
-          if (errorObj.config) {
-            const config = errorObj.config as Record<string, unknown>;
-            errorInfo.requestUrl = config.url;
-            errorInfo.requestMethod = config.method;
-          }
-        } else if (error) {
-          errorInfo.errorString = String(error);
         }
-        
       }
+      
+      toast.error('❌ Não foi possível criar a consulta', { 
+        id: 'creating-appointment',
+        duration: 4000
+      });
+      
       handleApiError(error, 'Não foi possível criar a consulta');
+    } finally {
+      setCreating(false);
     }
   };
 
   const handleConfirm = async (id: number) => {
     setBusyId(id);
+    setSuccessId(null);
+    setErrorId(null);
     try {
+      const toastId = toast.loading('Confirmando consulta...', { id: `confirm-${id}` });
       await confirmAppointment(id);
-      toast.success('Consulta confirmada');
+      toast.success('✅ Consulta confirmada com sucesso!', { 
+        id: `confirm-${id}`,
+        duration: 3000,
+        icon: '✓'
+      });
+      setSuccessId(id);
       await reloadAppointments();
+      // Resetar estado de sucesso após 2 segundos
+      setTimeout(() => {
+        setSuccessId(null);
+      }, 2000);
     } catch (error) {
+      toast.error('❌ Falha ao confirmar consulta', { 
+        id: `confirm-${id}`,
+        duration: 4000
+      });
+      setErrorId(id);
       handleApiError(error, 'Falha ao confirmar');
+      setTimeout(() => {
+        setErrorId(null);
+      }, 3000);
     } finally {
       setBusyId(null);
     }
@@ -396,12 +559,32 @@ export default function AppointmentsPage() {
 
   const handleCancel = async (id: number) => {
     setBusyId(id);
+    setSuccessId(null);
+    setErrorId(null);
     try {
+      const toastId = toast.loading('Cancelando consulta...', { id: `cancel-${id}` });
       await cancelAppointment(id);
-      toast.success('Consulta cancelada');
+      toast.success('✅ Consulta cancelada com sucesso', { 
+        id: `cancel-${id}`,
+        duration: 3000,
+        icon: '✓'
+      });
+      setSuccessId(id);
       await reloadAppointments();
+      // Resetar estado de sucesso após 2 segundos
+      setTimeout(() => {
+        setSuccessId(null);
+      }, 2000);
     } catch (error) {
+      toast.error('❌ Erro ao cancelar consulta', { 
+        id: `cancel-${id}`,
+        duration: 4000
+      });
+      setErrorId(id);
       handleApiError(error, 'Erro ao cancelar');
+      setTimeout(() => {
+        setErrorId(null);
+      }, 3000);
     } finally {
       setBusyId(null);
     }
@@ -426,15 +609,69 @@ export default function AppointmentsPage() {
   const onReschedule = async (values: RescheduleForm) => {
     if (!selectedReschedule) return;
     setBusyId(selectedReschedule.id);
+    setSuccessId(null);
+    setErrorId(null);
     try {
+      const toastId = toast.loading('Remarcando consulta...', { id: `reschedule-${selectedReschedule.id}` });
       // Parse os valores usando o schema para obter os valores transformados
       const parsed = rescheduleSchema.parse(values);
       
-      // Converte datetime-local para formato ISO que o backend espera
-      if (parsed.scheduled_at) {
-        const dateTime = new Date(parsed.scheduled_at);
-        parsed.scheduled_at = dateTime.toISOString().slice(0, 19).replace('T', ' ');
+      // Converte para formato que o backend espera (mesmo formato da criação)
+      if (!parsed.scheduled_at) {
+        throw new Error('Data e horário são obrigatórios');
       }
+      
+      // Log para debug
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[onReschedule] Valor recebido do formulário:', parsed.scheduled_at);
+        console.log('[onReschedule] Tipo:', typeof parsed.scheduled_at);
+      }
+      
+      // Garante que o valor tenha formato completo (data + hora)
+      let dateTimeStr = parsed.scheduled_at;
+      
+      // Se só tem data (YYYY-MM-DD), não permite - deve ter horário
+      if (dateTimeStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        throw new Error('Por favor, selecione um horário disponível. Clique em um dos horários mostrados abaixo.');
+      }
+      
+      // Se tem data e hora mas sem segundos, adiciona segundos
+      if (dateTimeStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+        dateTimeStr = `${dateTimeStr}:00`;
+      }
+      
+      // Log para debug
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[onReschedule] DateTimeStr após processamento:', dateTimeStr);
+      }
+      
+      const dateTime = new Date(dateTimeStr);
+      
+      // Valida se a data é válida
+      if (isNaN(dateTime.getTime())) {
+        console.error('[onReschedule] Data inválida:', dateTimeStr);
+        throw new Error(`Data/hora inválida: ${parsed.scheduled_at}. Por favor, selecione novamente a data e horário.`);
+      }
+      
+      // Log para debug
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[onReschedule] DateTime criado:', dateTime);
+        console.log('[onReschedule] DateTime ISO:', dateTime.toISOString());
+      }
+      
+      // Valida se o horário está na lista de horários disponíveis (validação opcional - backend também valida)
+      // Removemos a validação muito restritiva aqui e deixamos o backend validar
+      // Isso evita problemas de timezone e diferenças de formato
+      
+      // Converte para formato ISO sem timezone (formato que Laravel aceita melhor)
+      const year = dateTime.getFullYear();
+      const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+      const day = String(dateTime.getDate()).padStart(2, '0');
+      const hours = String(dateTime.getHours()).padStart(2, '0');
+      const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+      const seconds = String(dateTime.getSeconds()).padStart(2, '0');
+      
+      parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       
       // Remove duration_minutes se for paciente - a duração é definida pelo médico
       if (isPatient && 'duration_minutes' in parsed) {
@@ -442,12 +679,104 @@ export default function AppointmentsPage() {
       }
       
       await rescheduleAppointment(selectedReschedule.id, parsed);
-      toast.success('Solicitação de remarcação enviada');
+      toast.success('✅ Solicitação de remarcação enviada com sucesso!', { 
+        id: `reschedule-${selectedReschedule.id}`,
+        duration: 3000,
+        icon: '✓'
+      });
+      setSuccessId(selectedReschedule.id);
       resetReschedule();
       setSelectedReschedule(null);
       await reloadAppointments();
+      setTimeout(() => {
+        setSuccessId(null);
+      }, 2000);
     } catch (error) {
-      handleApiError(error, 'Erro ao remarcar');
+      // Verifica se é um erro do frontend (lançado por nós) ou da API
+      const isFrontendError = error instanceof Error && 
+        !(error && typeof error === 'object' && 'response' in error);
+      
+      let errorMessage = 'Erro ao remarcar consulta';
+      
+      if (isFrontendError && error instanceof Error) {
+        // Erro do frontend - mostra mensagem diretamente
+        errorMessage = error.message;
+        toast.error(`❌ ${errorMessage}`, { 
+          id: `reschedule-${selectedReschedule.id}`,
+          duration: 5000
+        });
+        setErrorId(selectedReschedule.id);
+        setTimeout(() => {
+          setErrorId(null);
+        }, 3000);
+      } else {
+        // Erro da API - usa handleApiError
+        // Log detalhado do erro para debug
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[onReschedule] Erro da API:', error);
+          
+          if (error && typeof error === 'object') {
+            const errorObj = error as Record<string, unknown>;
+            
+            if (errorObj.response) {
+              const response = errorObj.response as Record<string, unknown>;
+              console.error('[onReschedule] Response status:', response.status);
+              console.error('[onReschedule] Response data:', response.data);
+              
+              // Se for erro de validação, mostra mensagem específica
+              if (response.data && typeof response.data === 'object') {
+                const data = response.data as Record<string, unknown>;
+                if (data.message) {
+                  console.error('[onReschedule] Mensagem do servidor:', data.message);
+                  errorMessage = String(data.message);
+                }
+                if (data.errors) {
+                  console.error('[onReschedule] Erros de validação:', data.errors);
+                  const errors = data.errors as Record<string, string[] | string>;
+                  const firstError = Object.values(errors)[0];
+                  if (Array.isArray(firstError)) {
+                    errorMessage = firstError[0] || errorMessage;
+                  } else if (typeof firstError === 'string') {
+                    errorMessage = firstError;
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          // Em produção, tenta extrair mensagem sem logs excessivos
+          if (error && typeof error === 'object') {
+            const errorObj = error as Record<string, unknown>;
+            if (errorObj.response) {
+              const response = errorObj.response as Record<string, unknown>;
+              if (response.data && typeof response.data === 'object') {
+                const data = response.data as Record<string, unknown>;
+                if (typeof data.message === 'string') {
+                  errorMessage = data.message;
+                } else if (data.errors && typeof data.errors === 'object') {
+                  const errors = data.errors as Record<string, string[] | string>;
+                  const firstError = Object.values(errors)[0];
+                  if (Array.isArray(firstError)) {
+                    errorMessage = firstError[0] || errorMessage;
+                  } else if (typeof firstError === 'string') {
+                    errorMessage = firstError;
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        toast.error(`❌ ${errorMessage}`, { 
+          id: `reschedule-${selectedReschedule.id}`,
+          duration: 5000
+        });
+        setErrorId(selectedReschedule.id);
+        handleApiError(error, errorMessage);
+        setTimeout(() => {
+          setErrorId(null);
+        }, 3000);
+      }
     } finally {
       setBusyId(null);
     }
@@ -612,16 +941,37 @@ export default function AppointmentsPage() {
                   ) : availableSlots.length > 0 ? (
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-md">
                       {availableSlots.map((slot) => {
-                        const slotDate = new Date(slot);
-                        const timeStr = slotDate.toLocaleTimeString('pt-BR', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        });
-                        const datetimeValue = slotDate.toISOString().slice(0, 16);
+                        // Backend retorna slots no formato 'Y-m-d H:i:s' (ex: '2025-12-24 13:00:00')
+                        // Extrai diretamente da string para evitar problemas de timezone
+                        const slotMatch = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
+                        let datetimeValue: string;
+                        let timeStr: string;
+                        
+                        if (slotMatch) {
+                          // Usa os valores EXATOS do slot, sem conversão de timezone
+                          datetimeValue = `${slotMatch[1]}T${slotMatch[2]}`;
+                          timeStr = slotMatch[2]; // HH:mm
+                        } else {
+                          // Fallback: se já estiver no formato ISO
+                          const isoMatch = slot.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+                          if (isoMatch) {
+                            datetimeValue = isoMatch[1];
+                            timeStr = isoMatch[1].split('T')[1]; // HH:mm
+                          } else {
+                            // Último recurso: usa Date (pode ter problema de timezone)
+                            const slotDate = new Date(slot);
+                            datetimeValue = slotDate.toISOString().slice(0, 16);
+                            timeStr = slotDate.toLocaleTimeString('pt-BR', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            });
+                          }
+                        }
+                        
                         const currentScheduled = watch('scheduled_at');
                         const isSelected = currentScheduled && (
                           currentScheduled === datetimeValue || 
-                          currentScheduled.startsWith(slotDate.toISOString().slice(0, 10) + 'T' + slotDate.toTimeString().slice(0, 5))
+                          currentScheduled.startsWith(datetimeValue)
                         );
                         
                         return (
@@ -629,7 +979,15 @@ export default function AppointmentsPage() {
                             key={slot}
                             type="button"
                             onClick={() => {
-                              setValue('scheduled_at', datetimeValue);
+                              // Log para debug
+                              if (process.env.NODE_ENV === 'development') {
+                                console.log('[Agendar] Selecionando horário (paciente):', {
+                                  datetimeValue,
+                                  slotOriginal: slot,
+                                  slotMatch,
+                                });
+                              }
+                              setValue('scheduled_at', datetimeValue, { shouldValidate: true });
                             }}
                             className={`
                               px-3 py-2 text-sm rounded-md border transition-colors
@@ -858,18 +1216,39 @@ export default function AppointmentsPage() {
                                 <span className="ml-2 text-sm text-slate-600">Carregando horários...</span>
                               </div>
                             ) : availableSlots.length > 0 ? (
-                              <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-md">
+                              <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800/50">
                                 {availableSlots.map((slot) => {
-                                  const slotDate = new Date(slot);
-                                  const timeStr = slotDate.toLocaleTimeString('pt-BR', { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                  });
-                                  const datetimeValue = slotDate.toISOString().slice(0, 16);
+                                  // Backend retorna slots no formato 'Y-m-d H:i:s' (ex: '2025-12-24 13:00:00')
+                                  // Extrai diretamente da string para evitar problemas de timezone
+                                  let datetimeValue: string;
+                                  let timeStr: string;
+                                  
+                                  const slotMatch = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
+                                  if (slotMatch) {
+                                    // Usa os valores EXATOS do slot, sem conversão de timezone
+                                    datetimeValue = `${slotMatch[1]}T${slotMatch[2]}`;
+                                    timeStr = slotMatch[2]; // HH:mm para exibição
+                                  } else {
+                                    // Fallback: se já estiver no formato ISO
+                                    const isoMatch = slot.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+                                    if (isoMatch) {
+                                      datetimeValue = isoMatch[1];
+                                      timeStr = isoMatch[1].split('T')[1]; // HH:mm
+                                    } else {
+                                      // Último recurso: usa Date (pode ter problema de timezone)
+                                      const slotDate = new Date(slot);
+                                      datetimeValue = slotDate.toISOString().slice(0, 16);
+                                      timeStr = slotDate.toLocaleTimeString('pt-BR', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                      });
+                                    }
+                                  }
+                                  
                                   const currentScheduled = watch('scheduled_at');
                                   const isSelected = currentScheduled && (
                                     currentScheduled === datetimeValue || 
-                                    currentScheduled.startsWith(slotDate.toISOString().slice(0, 10) + 'T' + slotDate.toTimeString().slice(0, 5))
+                                    currentScheduled.startsWith(datetimeValue)
                                   );
                                   
                                   return (
@@ -877,13 +1256,23 @@ export default function AppointmentsPage() {
                                       key={slot}
                                       type="button"
                                       onClick={() => {
-                                        setValue('scheduled_at', datetimeValue);
+                                        // Log para debug
+                                        if (process.env.NODE_ENV === 'development') {
+                                          const match = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
+                                          console.log('[Agendar] Selecionando horário:', {
+                                            datetimeValue,
+                                            slotOriginal: slot,
+                                            slotMatch: match,
+                                            extracted: match ? `${match[1]}T${match[2]}` : 'FALHOU',
+                                          });
+                                        }
+                                        setValue('scheduled_at', datetimeValue, { shouldValidate: true });
                                       }}
                                       className={`
                                         px-3 py-2 text-sm rounded-md border transition-colors
                                         ${isSelected 
-                                          ? 'bg-blue-500 text-white border-blue-500' 
-                                          : 'bg-white text-slate-700 border-slate-300 hover:border-blue-500 hover:bg-blue-50'
+                                          ? 'bg-blue-500 text-white border-blue-500 dark:bg-blue-600 dark:border-blue-500' 
+                                          : 'bg-white text-slate-700 border-slate-300 hover:border-blue-500 hover:bg-blue-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:border-blue-400 dark:hover:bg-blue-900/20'
                                         }
                                       `}
                                     >
@@ -929,7 +1318,14 @@ export default function AppointmentsPage() {
                           }}>
                             Cancelar
                           </Button>
-                          <Button type="submit">Agendar Consulta</Button>
+                          <Button 
+                            type="submit"
+                            loading={creating}
+                            success={createSuccess}
+                            disabled={creating}
+                          >
+                            Agendar Consulta
+                          </Button>
                         </div>
                       </form>
                     </div>
@@ -982,17 +1378,17 @@ export default function AppointmentsPage() {
               <Skeleton className="h-10 w-full" />
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-800/50">
                 <tr>
-                  <th className="px-4 py-2 text-left font-medium text-slate-600">Data</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-600">Médico</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-600">Paciente</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-600">Status</th>
-                  <th className="px-4 py-2 text-right font-medium text-slate-600">Ações</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs tracking-wider">Data</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs tracking-wider">Médico</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs tracking-wider">Paciente</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs tracking-wider">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
                 {appointments.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-4 py-6">
@@ -1015,62 +1411,100 @@ export default function AppointmentsPage() {
                 const canObserve = (isDoctor || isAdmin) && appointment.status === 'COMPLETED';
 
                 return (
-                  <tr key={appointment.id}>
-                    <td className="px-4 py-2 text-slate-700">{date}</td>
-                    <td className="px-4 py-2 text-slate-700">{appointment.doctor?.name ?? '---'}</td>
-                    <td className="px-4 py-2 text-slate-700">{appointment.patient?.name ?? '---'}</td>
-                    <td className="px-4 py-2">
+                  <tr 
+                    key={appointment.id}
+                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors duration-150"
+                  >
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span className="font-medium">{date}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{appointment.doctor?.name ?? '---'}</td>
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{appointment.patient?.name ?? '---'}</td>
+                    <td className="px-4 py-3">
                       <StatusBadge status={appointment.status} />
                     </td>
-                    <td className="px-4 py-2 text-right">
+                    <td className="px-4 py-3 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
                         {canConfirm && (
                           <Button
                             variant="secondary"
+                            size="sm"
                             onClick={() => handleConfirm(appointment.id)}
+                            loading={busyId === appointment.id}
+                            success={successId === appointment.id}
+                            error={errorId === appointment.id}
                             disabled={busyId === appointment.id}
+                            className="gap-1.5"
                           >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
                             Confirmar
                           </Button>
                         )}
                         {canCancel && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleCancel(appointment.id)}
+                            loading={busyId === appointment.id}
+                            success={successId === appointment.id}
+                            error={errorId === appointment.id}
                             disabled={busyId === appointment.id}
+                            className="gap-1.5 text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:text-red-400 dark:border-red-600 dark:hover:bg-red-900/20"
                           >
+                            <X className="h-3.5 w-3.5" />
                             Cancelar
                           </Button>
                         )}
                         {canReschedule && (
                           <Button
-                            variant="secondary"
+                            variant="outline"
+                            size="sm"
                             onClick={() => {
                               setSelectedReschedule(appointment);
-                              const iso = new Date(appointment.scheduled_at).toISOString().slice(0, 16);
-                              setRescheduleValue('scheduled_at', iso);
-                              setRescheduleValue('duration_minutes', appointment.duration_minutes);
+                              setCurrentMonthReschedule(new Date(appointment.scheduled_at).toISOString().slice(0, 7));
+                              resetReschedule();
+                              // Não pré-selecionar data/hora - deixar usuário escolher das disponíveis
                             }}
+                            className="gap-1.5 text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-900/20"
                           >
+                            <CalendarClock className="h-3.5 w-3.5" />
                             Remarcar
                           </Button>
                         )}
                         {canObserve && (
                           <Button
+                            size="sm"
                             onClick={() => {
                               setSelectedObservation(appointment);
                               resetObservation();
                             }}
+                            className="gap-1.5"
                           >
-                            Registrar observação
+                            <FileText className="h-3.5 w-3.5" />
+                            Observação
                           </Button>
                         )}
                         <Button
                           variant="ghost"
+                          size="sm"
                           onClick={() => handleViewDetail(appointment)}
                           disabled={detailLoadingId === appointment.id}
+                          className="gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
                         >
-                          {detailLoadingId === appointment.id ? 'Carregando...' : 'Ver detalhes'}
+                          {detailLoadingId === appointment.id ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              Carregando...
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-3.5 w-3.5" />
+                              Detalhes
+                            </>
+                          )}
                         </Button>
                       </div>
                     </td>
@@ -1121,7 +1555,13 @@ export default function AppointmentsPage() {
               <Button type="button" variant="ghost" onClick={() => setSelectedObservation(null)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={busyId === selectedObservation.id}>
+              <Button 
+                type="submit" 
+                loading={busyId === selectedObservation.id}
+                success={successId === selectedObservation.id}
+                error={errorId === selectedObservation.id}
+                disabled={busyId === selectedObservation.id}
+              >
                 Salvar observação
               </Button>
             </div>
@@ -1140,14 +1580,127 @@ export default function AppointmentsPage() {
               </CardDescription>
             </div>
           </CardHeader>
-          <form onSubmit={handleRescheduleSubmit(onReschedule)} className="grid gap-4 p-6 md:grid-cols-2">
+          <form onSubmit={handleRescheduleSubmit(onReschedule)} className="space-y-6 p-6">
             <div className="space-y-2">
-              <Label htmlFor="reschedule_datetime">Nova data e hora</Label>
-              <Input id="reschedule_datetime" type="datetime-local" {...registerReschedule('scheduled_at')} />
+              <Label>Selecione a Nova Data *</Label>
+              <AppointmentCalendar
+                availableDates={availableDatesReschedule}
+                loadingDates={loadingDatesReschedule}
+                currentMonth={currentMonthReschedule}
+                onMonthChange={(month) => {
+                  setCurrentMonthReschedule(month);
+                  if (selectedReschedule.doctor_id) {
+                    fetchAvailableDates(selectedReschedule.doctor_id, month).then(response => {
+                      setAvailableDatesReschedule(response.available_dates || []);
+                      setDoctorHasNoSchedulesReschedule(response.has_schedules === false);
+                    }).catch(() => {
+                      setAvailableDatesReschedule([]);
+                      setDoctorHasNoSchedulesReschedule(false);
+                    });
+                  }
+                }}
+                onDateSelect={(date) => {
+                  // Quando seleciona apenas a data, seta apenas a data (sem hora)
+                  // Os horários serão carregados automaticamente pelo useEffect
+                  // O usuário precisará clicar em um horário para completar a seleção
+                  setRescheduleValue('scheduled_at', date, { shouldValidate: false });
+                }}
+                selectedDate={watchedRescheduleDate?.split('T')[0] || ''}
+                doctorHasNoSchedules={doctorHasNoSchedulesReschedule}
+              />
+              <input
+                type="hidden"
+                {...registerReschedule('scheduled_at')}
+              />
               {rescheduleErrors.scheduled_at && (
                 <p className="text-xs text-red-500">{rescheduleErrors.scheduled_at.message}</p>
               )}
             </div>
+
+            {watchedRescheduleDate && (
+              <div className="space-y-2">
+                <Label>Horários Disponíveis *</Label>
+                {loadingSlotsReschedule ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    <span className="ml-2 text-sm text-slate-600 dark:text-slate-400">Carregando horários...</span>
+                  </div>
+                ) : availableSlotsReschedule.length > 0 ? (
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800/50">
+                    {availableSlotsReschedule.map((slot) => {
+                      // O slot vem do backend como string ISO (ex: "2025-12-05T14:30:00Z" ou "2025-12-05T14:30:00")
+                      // Extrai data e hora do slot original do backend
+                      const slotDate = new Date(slot);
+                      
+                      // Para exibição, usa o timezone local
+                      const timeStr = slotDate.toLocaleTimeString('pt-BR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      });
+                      
+                      // Para o valor do formulário, extrai do slot original
+                      // O slot do backend já tem a data/hora correta
+                      // Extrai apenas YYYY-MM-DDTHH:mm (sem segundos e timezone)
+                      let datetimeValue: string;
+                      
+                      // Tenta extrair diretamente do formato do slot
+                      const slotMatch = slot.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+                      if (slotMatch) {
+                        datetimeValue = slotMatch[1];
+                      } else {
+                        // Fallback: constrói a partir do Date (usando valores locais)
+                        const year = slotDate.getFullYear();
+                        const month = String(slotDate.getMonth() + 1).padStart(2, '0');
+                        const day = String(slotDate.getDate()).padStart(2, '0');
+                        const hours = String(slotDate.getHours()).padStart(2, '0');
+                        const minutes = String(slotDate.getMinutes()).padStart(2, '0');
+                        datetimeValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+                      }
+                      
+                      // Verifica se está selecionado (compara data+hora completa)
+                      const isSelected = watchedRescheduleDate && (
+                        watchedRescheduleDate === datetimeValue || 
+                        watchedRescheduleDate.startsWith(datetimeValue)
+                      );
+                      
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => {
+                            // Log para debug
+                            if (process.env.NODE_ENV === 'development') {
+                              console.log('[Remarcar] Selecionando horário:', datetimeValue);
+                              console.log('[Remarcar] Slot original do backend:', slot);
+                              console.log('[Remarcar] SlotDate processado:', slotDate);
+                              console.log('[Remarcar] Valor atual do formulário:', watchedRescheduleDate);
+                            }
+                            // Seta o valor completo (data + hora)
+                            setRescheduleValue('scheduled_at', datetimeValue, { shouldValidate: true });
+                          }}
+                          className={`
+                            px-3 py-2 text-sm font-medium rounded-md border-2 transition-all duration-200
+                            ${isSelected 
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-105' 
+                              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                            }
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                          `}
+                        >
+                          {timeStr}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800/50">
+                    <p>Nenhum horário disponível para esta data.</p>
+                    <p className="text-xs mt-1">Selecione outra data.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {(isDoctor || isAdmin) && (
               <div className="space-y-2">
                 <Label htmlFor="reschedule_duration">Duração (min)</Label>
@@ -1163,11 +1716,28 @@ export default function AppointmentsPage() {
                 )}
               </div>
             )}
-            <div className={`${(isDoctor || isAdmin) ? 'md:col-span-2' : ''} flex items-center justify-end gap-2`}>
-              <Button type="button" variant="ghost" onClick={() => setSelectedReschedule(null)}>
+
+            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <Button type="button" variant="ghost" onClick={() => {
+                setSelectedReschedule(null);
+                resetReschedule();
+                setAvailableDatesReschedule([]);
+                setAvailableSlotsReschedule([]);
+              }}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={busyId === selectedReschedule.id}>
+              <Button 
+                type="submit" 
+                loading={busyId === selectedReschedule.id}
+                success={successId === selectedReschedule.id}
+                error={errorId === selectedReschedule.id}
+                disabled={
+                  busyId === selectedReschedule.id || 
+                  !watchedRescheduleDate || 
+                  !watchedRescheduleDate.includes('T') ||
+                  watchedRescheduleDate.split('T')[1]?.length < 5
+                }
+              >
                 Enviar remarcação
               </Button>
             </div>
@@ -1175,176 +1745,229 @@ export default function AppointmentsPage() {
         </Card>
       )}
 
-      {detailLoadingId && !detail && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalhes da consulta</CardTitle>
-            <CardDescription>Carregando informações...</CardDescription>
-          </CardHeader>
-          <div className="space-y-2 p-6">
+      {/* Modal de Detalhes da Consulta */}
+      <Modal
+        isOpen={!!detail || (!!detailLoadingId && !detail)}
+        onClose={() => {
+          setDetail(null);
+          setDetailLoadingId(null);
+        }}
+        title={detail ? "Detalhes da Consulta" : "Carregando..."}
+        size="xl"
+      >
+        {detailLoadingId && !detail ? (
+          <div className="space-y-4 py-4">
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-32 w-full" />
           </div>
-        </Card>
-      )}
-
-      {detail && (
-        <Tabs defaultValue="overview">
-          <Card>
-            <CardHeader>
-              <div>
-                <CardTitle>Detalhes da consulta</CardTitle>
-                <CardDescription>
-                  {detail.patient?.name ?? 'Paciente'} • {detail.doctor?.name ?? 'Médico'}
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <div className="px-6 pb-6">
-              <TabsList className="mb-4">
-                <TabsTrigger value="overview">Resumo</TabsTrigger>
-                <TabsTrigger value="observations">Observações</TabsTrigger>
-                <TabsTrigger value="history">Histórico de status</TabsTrigger>
-                {detail.patient && isDoctor && <TabsTrigger value="patient-history">Histórico do paciente</TabsTrigger>}
-              </TabsList>
-              <TabsContent value="overview" className="mt-0">
-                <div className="grid gap-2 md:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-slate-500">Status</p>
-                    <StatusBadge status={detail.status} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-slate-500">Data</p>
-                    <p className="text-sm text-slate-800">
-                      {new Date(detail.scheduled_at).toLocaleString('pt-BR', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-slate-500">Tipo</p>
-                    <p className="text-sm text-slate-800">{detail.type === 'ONLINE' ? 'Online' : 'Presencial'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-slate-500">Duração</p>
-                    <p className="text-sm text-slate-800">{detail.duration_minutes} minutos</p>
-                  </div>
+        ) : detail ? (
+          <Tabs defaultValue="overview" className="w-full">
+            <div className="mb-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                <span className="font-medium text-slate-900 dark:text-white">{detail.patient?.name ?? 'Paciente'}</span>
+                {' • '}
+                <span className="font-medium text-slate-900 dark:text-white">{detail.doctor?.name ?? 'Médico'}</span>
+              </p>
+            </div>
+            <TabsList className="mb-6 w-full grid grid-cols-3 lg:grid-cols-4">
+              <TabsTrigger value="overview">Resumo</TabsTrigger>
+              <TabsTrigger value="observations">Observações</TabsTrigger>
+              <TabsTrigger value="history">Histórico</TabsTrigger>
+              {detail.patient && isDoctor && <TabsTrigger value="patient-history">Hist. Paciente</TabsTrigger>}
+            </TabsList>
+            <TabsContent value="overview" className="mt-0 space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">Status</p>
+                  <StatusBadge status={detail.status} />
                 </div>
-                {detail.notes && (
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold uppercase text-slate-500">Notas</p>
-                    <p className="text-sm text-slate-700">{detail.notes}</p>
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="observations" className="mt-0">
-                {detail.observations && detail.observations.length > 0 ? (
-                  <ul className="space-y-3">
-                    {detail.observations.map((obs) => (
-                      <li key={obs.id} className="rounded-md border border-slate-200 p-3">
-                        <p className="text-sm font-medium text-slate-800">
-                          Registrado em {new Date(obs.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">Data e Horário</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    {new Date(detail.scheduled_at).toLocaleString('pt-BR', {
+                      dateStyle: 'long',
+                      timeStyle: 'short',
+                    })}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">Tipo de Consulta</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                    {detail.type === 'ONLINE' ? '🖥️ Online' : '🏥 Presencial'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide">Duração</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">{detail.duration_minutes} minutos</p>
+                </div>
+              </div>
+              {detail.notes && (
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wide mb-2">Notas</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap bg-slate-50 dark:bg-slate-900/50 p-3 rounded-md">
+                    {detail.notes}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="observations" className="mt-0">
+              {detail.observations && detail.observations.length > 0 ? (
+                <ul className="space-y-4">
+                  {detail.observations.map((obs) => (
+                    <li key={obs.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-900/50">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          Observação Clínica
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">Anamnese</p>
-                        <p className="text-sm text-slate-700">{obs.anamnesis}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {new Date(obs.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </p>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Anamnese</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{obs.anamnesis}</p>
+                        </div>
                         {obs.diagnosis && (
-                          <>
-                            <p className="mt-2 text-xs text-slate-500">Diagnóstico</p>
-                            <p className="text-sm text-slate-700">{obs.diagnosis}</p>
-                          </>
+                          <div>
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Diagnóstico</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{obs.diagnosis}</p>
+                          </div>
                         )}
                         {obs.prescription && (
-                          <>
-                            <p className="mt-2 text-xs text-slate-500">Prescrição</p>
-                            <p className="text-sm text-slate-700">{obs.prescription}</p>
-                          </>
+                          <div>
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Prescrição</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{obs.prescription}</p>
+                          </div>
                         )}
                         {obs.notes && (
-                          <>
-                            <p className="mt-2 text-xs text-slate-500">Notas adicionais</p>
-                            <p className="text-sm text-slate-700">{obs.notes}</p>
-                          </>
+                          <div>
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Notas Adicionais</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{obs.notes}</p>
+                          </div>
                         )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-slate-500">Nenhuma observação registrada.</p>
-                )}
-              </TabsContent>
-              <TabsContent value="history" className="mt-0">
-                {detail.logs && detail.logs.length > 0 ? (
-                  <ul className="space-y-2">
-                    {detail.logs.map((log) => (
-                      <li key={log.id} className="rounded-md border border-slate-200 p-3 text-sm">
-                        <p className="font-medium text-slate-800">
-                          {log.old_status ? getStatusLabel(log.old_status) : '—'} → {getStatusLabel(log.new_status)}
-                        </p>
-                        <p className="text-xs text-slate-500">
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState className="border-none bg-transparent p-0">
+                  Nenhuma observação registrada.
+                </EmptyState>
+              )}
+            </TabsContent>
+            <TabsContent value="history" className="mt-0">
+              {detail.logs && detail.logs.length > 0 ? (
+                <ul className="space-y-3">
+                  {detail.logs.map((log) => (
+                    <li key={log.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-900/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            {log.old_status ? getStatusLabel(log.old_status) : '—'}
+                          </span>
+                          <span className="text-slate-400">→</span>
+                          <StatusBadge status={log.new_status} />
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {new Date(log.changed_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                          {log.changed_by ? ` • ${log.changed_by.name}` : ''}
                         </p>
-                        {log.reason && <p className="mt-1 text-xs text-slate-600">Motivo: {log.reason}</p>}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-slate-500">Sem histórico registrado.</p>
-                )}
-              </TabsContent>
-              {detail.patient && isDoctor && (
-                <TabsContent value="patient-history" className="mt-0 space-y-3">
-                  <div className="flex justify-end">
-                    <Button variant="secondary" onClick={() => loadPatientHistory(detail.patient!.id)} disabled={patientHistoryLoading}>
-                      {patientHistoryLoading ? 'Carregando...' : 'Atualizar histórico'}
-                    </Button>
-                  </div>
-                  {patientHistory === null ? (
-                    <p className="text-sm text-slate-500">
-                      Clique em “Atualizar histórico” para carregar todas as observações do paciente.
+                      </div>
+                      {log.changed_by && (
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
+                          Alterado por: <span className="font-medium">{log.changed_by.name}</span>
+                        </p>
+                      )}
+                      {log.reason && (
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                          <span className="font-medium">Motivo:</span> {log.reason}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState className="border-none bg-transparent p-0">
+                  Sem histórico registrado.
+                </EmptyState>
+              )}
+            </TabsContent>
+            {detail.patient && isDoctor && (
+              <TabsContent value="patient-history" className="mt-0 space-y-4">
+                <div className="flex justify-end">
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => loadPatientHistory(detail.patient!.id)} 
+                    disabled={patientHistoryLoading}
+                    className="gap-1.5"
+                  >
+                    {patientHistoryLoading ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Carregando...
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="h-3.5 w-3.5" />
+                        Atualizar histórico
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {patientHistory === null ? (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Clique em "Atualizar histórico" para carregar todas as observações do paciente.
                     </p>
-                  ) : patientHistory.length === 0 ? (
-                    <EmptyState className="border-none bg-transparent p-0">
-                      Nenhuma observação registrada para este paciente.
-                    </EmptyState>
-                  ) : (
-                    <ul className="space-y-3 text-sm">
-                      {patientHistory.map((obs) => (
-                        <li key={obs.id} className="rounded-md border border-slate-200 p-3">
-                          <p className="font-medium text-slate-800">
-                            {new Date(obs.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </div>
+                ) : patientHistory.length === 0 ? (
+                  <EmptyState className="border-none bg-transparent p-0">
+                    Nenhuma observação registrada para este paciente.
+                  </EmptyState>
+                ) : (
+                  <ul className="space-y-3">
+                    {patientHistory.map((obs) => (
+                      <li key={obs.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-900/50">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {new Date(obs.created_at).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}
                           </p>
-                          <p className="text-xs text-slate-500">Responsável: {obs.doctor?.name ?? '---'}</p>
-                          <p className="mt-1 text-xs text-slate-500">Anamnese</p>
-                          <p className="text-sm text-slate-700">{obs.anamnesis}</p>
+                          {obs.doctor && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              Dr(a). {obs.doctor.name}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Anamnese</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{obs.anamnesis}</p>
+                          </div>
                           {obs.diagnosis && (
-                            <>
-                              <p className="mt-2 text-xs text-slate-500">Diagnóstico</p>
-                              <p className="text-sm text-slate-700">{obs.diagnosis}</p>
-                            </>
+                            <div>
+                              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Diagnóstico</p>
+                              <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{obs.diagnosis}</p>
+                            </div>
                           )}
                           {obs.prescription && (
-                            <>
-                              <p className="mt-2 text-xs text-slate-500">Prescrição</p>
-                              <p className="text-sm text-slate-700">{obs.prescription}</p>
-                            </>
+                            <div>
+                              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Prescrição</p>
+                              <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{obs.prescription}</p>
+                            </div>
                           )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </TabsContent>
-              )}
-            </div>
-            <div className="flex items-center justify-end px-6 pb-6">
-              <Button variant="ghost" onClick={() => setDetail(null)}>
-                Fechar
-              </Button>
-            </div>
-          </Card>
-        </Tabs>
-      )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </TabsContent>
+            )}
+          </Tabs>
+        ) : null}
+      </Modal>
     </div>
   );
 }

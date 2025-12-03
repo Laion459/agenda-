@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { handleApiError } from "@/lib/handle-api-error";
 import {
   fetchProfile,
@@ -43,6 +44,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [privacyLoading, setPrivacyLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [exportProgress, setExportProgress] = useState(0);
 
   const {
     register,
@@ -120,13 +123,32 @@ export default function ProfilePage() {
       };
     }
 
+    setSaveState('saving');
     try {
+      const toastId = toast.loading('Salvando alterações...', { id: 'saving-profile' });
       const updated = await updateProfile(payload);
       setUser(updated);
-      toast.success("Perfil atualizado com sucesso");
+      toast.success("✅ Perfil atualizado com sucesso!", { 
+        id: 'saving-profile',
+        duration: 3000,
+        icon: '✓'
+      });
+      setSaveState('saved');
       reset({ ...values, password: "" });
+      // Resetar estado após 2 segundos
+      setTimeout(() => {
+        setSaveState('idle');
+      }, 2000);
     } catch (error) {
+      toast.error("❌ Não foi possível atualizar seu perfil", { 
+        id: 'saving-profile',
+        duration: 4000
+      });
+      setSaveState('error');
       handleApiError(error, "Não foi possível atualizar seu perfil");
+      setTimeout(() => {
+        setSaveState('idle');
+      }, 3000);
     }
   };
 
@@ -171,7 +193,26 @@ export default function ProfilePage() {
   const handleExportData = async () => {
     try {
       setExporting(true);
+      setExportProgress(0);
+      
+      // Simular progresso (ou usar progresso real se a API suportar)
+      const progressInterval = setInterval(() => {
+        setExportProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+      
+      const toastId = toast.loading('Exportando seus dados...', { id: 'exporting-data' });
+      
       const data = await exportUserData();
+      
+      clearInterval(progressInterval);
+      setExportProgress(100);
+      
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json;charset=utf-8",
       });
@@ -181,8 +222,22 @@ export default function ProfilePage() {
       link.download = `meus-dados-${Date.now()}.json`;
       link.click();
       URL.revokeObjectURL(url);
-      toast.success("Exportação gerada com sucesso.");
+      
+      toast.success("✅ Exportação gerada com sucesso!", { 
+        id: 'exporting-data',
+        duration: 3000,
+        icon: '📥'
+      });
+      
+      setTimeout(() => {
+        setExportProgress(0);
+      }, 1000);
     } catch (error) {
+      setExportProgress(0);
+      toast.error("❌ Não foi possível exportar seus dados", { 
+        id: 'exporting-data',
+        duration: 4000
+      });
       handleApiError(error, "Não foi possível exportar seus dados");
     } finally {
       setExporting(false);
@@ -200,12 +255,20 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <Card>
+      <Card variant="elevated" className="animate-fade-in">
         <CardHeader>
           <CardTitle>Meu perfil</CardTitle>
           <CardDescription>Atualize suas informações pessoais e preferências.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 p-6 pt-0 md:grid-cols-2">
+        <Tabs defaultValue="info" className="p-6 pt-0">
+          <TabsList className="mb-6">
+            <TabsTrigger value="info">Informações</TabsTrigger>
+            <TabsTrigger value="security">Segurança</TabsTrigger>
+            <TabsTrigger value="privacy">Privacidade</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="info">
+            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="name">Nome</Label>
             <Input id="name" {...register("name")} />
@@ -269,22 +332,48 @@ export default function ProfilePage() {
             </>
           )}
 
-          <div className="md:col-span-2 flex justify-end gap-2">
-            <Button type="submit" disabled={!isDirty}>
-              Salvar alterações
-            </Button>
-          </div>
-        </form>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Privacidade e dados</CardTitle>
-          <CardDescription>
-            Controle sua aceitação dos termos e solicite a exclusão dos seus dados pessoais.
-          </CardDescription>
-        </CardHeader>
-        <div className="space-y-4 p-6 pt-0">
+              <div className="md:col-span-2 flex justify-end gap-2 pt-2">
+                <Button 
+                  type="submit" 
+                  disabled={!isDirty || saveState === 'saving'}
+                  loading={saveState === 'saving'}
+                  success={saveState === 'saved'}
+                  error={saveState === 'error'}
+                >
+                  {saveState === 'idle' && 'Salvar alterações'}
+                  {saveState === 'saving' && 'Salvando...'}
+                  {saveState === 'saved' && 'Salvo!'}
+                  {saveState === 'error' && 'Erro ao salvar'}
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="security">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Nova senha</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Deixe em branco para manter a senha atual"
+                  {...register("password")} 
+                />
+                {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Deixe em branco se não deseja alterar sua senha.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="submit" disabled={!isDirty}>
+                  Atualizar senha
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="privacy">
+            <div className="space-y-6">
           <div>
             <p className="text-sm text-slate-600 mb-2">
               {authUser?.privacy_policy_accepted_at
@@ -321,15 +410,41 @@ export default function ProfilePage() {
               Solicitar exclusão de dados
             </Button>
           </div>
-          <div>
-            <p className="text-sm text-slate-600">
-              Baixe uma cópia dos seus dados pessoais em formato JSON.
-            </p>
-            <Button className="mt-2" variant="outline" onClick={handleExportData} disabled={exporting}>
-              {exporting ? "Gerando..." : "Exportar meus dados"}
-            </Button>
-          </div>
-        </div>
+              <div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                  Baixe uma cópia dos seus dados pessoais em formato JSON.
+                </p>
+                <div className="space-y-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleExportData} 
+                    disabled={exporting}
+                    loading={exporting}
+                  >
+                    {exporting ? "Exportando..." : "Exportar meus dados"}
+                  </Button>
+                  {exporting && exportProgress > 0 && (
+                    <div className="w-full">
+                      <div className="h-2 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+                        <div
+                          className="h-full bg-blue-500 transition-all duration-300 ease-out rounded-full"
+                          style={{ width: `${exportProgress}%` }}
+                          role="progressbar"
+                          aria-valuenow={exportProgress}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 text-center">
+                        {exportProgress}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </Card>
     </div>
   );

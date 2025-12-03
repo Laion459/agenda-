@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, Clock, User, Stethoscope, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import { Calendar, Clock, User, Stethoscope, AlertCircle, CheckCircle2, XCircle, CalendarPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -85,140 +85,151 @@ export default function DashboardPage() {
 
       {/* Estatísticas Rápidas */}
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow duration-200 dark:border-l-blue-400">
+        <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Total de Consultas
               </CardTitle>
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg transition-transform duration-200 hover:scale-110">
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardHeader>
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.total}</p>
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1 transition-all duration-300">{stats.total}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">Todas as consultas</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow duration-200 dark:border-l-emerald-400">
+        <Card variant="interactive" className="border-l-4 border-l-emerald-500 dark:border-l-emerald-400 animate-fade-in" style={{ animationDelay: '50ms' }}>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Confirmadas
               </CardTitle>
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg transition-transform duration-200 hover:scale-110">
                 <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
           </CardHeader>
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.confirmed}</p>
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1 transition-all duration-300">{stats.confirmed}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">Consultas confirmadas</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500 hover:shadow-md transition-shadow duration-200 dark:border-l-amber-400">
+        <Card variant="interactive" className="border-l-4 border-l-amber-500 dark:border-l-amber-400 animate-fade-in" style={{ animationDelay: '100ms' }}>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Pendentes
               </CardTitle>
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg transition-transform duration-200 hover:scale-110">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
           </CardHeader>
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.pending}</p>
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1 transition-all duration-300">{stats.pending}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">Aguardando confirmação</p>
           </div>
         </Card>
 
-        <Card className="border-l-4 border-l-slate-400 hover:shadow-md transition-shadow duration-200 dark:border-l-slate-500">
+        <Card variant="interactive" className="border-l-4 border-l-slate-400 dark:border-l-slate-500 animate-fade-in" style={{ animationDelay: '150ms' }}>
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                 Canceladas
               </CardTitle>
-              <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+              <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg transition-transform duration-200 hover:scale-110">
                 <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-400" />
               </div>
             </div>
           </CardHeader>
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">{stats.cancelled}</p>
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1 transition-all duration-300">{stats.cancelled}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">Consultas canceladas</p>
           </div>
         </Card>
       </section>
 
-      {/* Próximas Consultas e Médicos */}
-      <section className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
-        {/* Próximas Consultas */}
-        <Card className="lg:col-span-2">
+      {/* Próximas Consultas */}
+      <section>
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Próximas Consultas</CardTitle>
-                <CardDescription>Suas consultas agendadas</CardDescription>
+                <CardTitle className="text-2xl">Próximas Consultas</CardTitle>
+                <CardDescription className="text-base mt-1">Suas consultas agendadas</CardDescription>
               </div>
               <Link 
                 href="/appointments"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center gap-1"
               >
                 Ver todas
+                <Calendar className="h-4 w-4" />
               </Link>
             </div>
           </CardHeader>
-          <div className="space-y-3 p-6 pt-0">
+          <div className="p-6 pt-0">
             {loading ? (
-              <>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </>
+              <div className="space-y-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </div>
             ) : upcomingAppointments.length === 0 ? (
               <EmptyState
-                icon={<AlertCircle className="h-8 w-8 text-slate-400" />}
+                icon={<AlertCircle className="h-12 w-12 text-slate-400" />}
                 title="Nenhuma consulta agendada"
                 description="Você ainda não possui consultas agendadas. Agende sua primeira consulta agora."
               >
-                <Link href="/appointments">
-                  <Button size="sm">Agendar consulta</Button>
+                <Link href="/appointments/new">
+                  <Button size="lg" className="mt-4">
+                    <CalendarPlus className="h-5 w-5 mr-2" />
+                    Agendar consulta
+                  </Button>
                 </Link>
               </EmptyState>
             ) : (
-              upcomingAppointments.map((appointment) => (
-                <Link
-                  key={appointment.id}
-                  href={`/appointments/${appointment.id}`}
-                  className="block rounded-lg border-2 border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 p-4 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-md">
-                          <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <p className="font-semibold text-slate-900 truncate">
-                          {appointment.doctor?.name ?? "---"}
-                        </p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {upcomingAppointments.map((appointment, index) => (
+                  <div
+                    key={appointment.id}
+                    onClick={() => router.push('/appointments')}
+                    className="group cursor-pointer rounded-xl border-2 border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 p-5 hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white dark:hover:from-blue-900/20 dark:hover:to-slate-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                        <Stethoscope className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-slate-700 mb-1">
-                        <div className="flex items-center gap-1.5">
+                      <StatusBadge status={appointment.status} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
+                        {appointment.doctor?.name ?? "Médico não informado"}
+                      </h3>
+                      {appointment.doctor?.specialty && (
+                        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                          {appointment.doctor.specialty}
+                        </p>
+                      )}
+                      <div className="flex flex-col gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                           <Calendar className="h-4 w-4 text-slate-500" />
                           <span>
                             {new Date(appointment.scheduled_at).toLocaleDateString("pt-BR", {
                               day: "2-digit",
-                              month: "short",
+                              month: "long",
                               year: "numeric",
                             })}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                           <Clock className="h-4 w-4 text-slate-500" />
-                          <span>
+                          <span className="font-medium">
                             {new Date(appointment.scheduled_at).toLocaleTimeString("pt-BR", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -226,66 +237,85 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       </div>
-                      {appointment.doctor?.specialty && (
-                        <p className="text-xs text-slate-600 font-medium mt-1">
-                          {appointment.doctor.specialty}
-                        </p>
-                      )}
                     </div>
-                    <StatusBadge status={appointment.status} />
                   </div>
-                </Link>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </Card>
+      </section>
 
-        {/* Médicos Favoritos */}
+      {/* Médicos Disponíveis */}
+      <section>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Médicos Disponíveis</CardTitle>
-                <CardDescription>Profissionais cadastrados</CardDescription>
+                <CardTitle className="text-2xl">Médicos Disponíveis</CardTitle>
+                <CardDescription className="text-base mt-1">Profissionais cadastrados na plataforma</CardDescription>
               </div>
               <Link 
                 href="/doctors"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center gap-1"
               >
                 Ver todos
+                <Stethoscope className="h-4 w-4" />
               </Link>
             </div>
           </CardHeader>
-          <div className="space-y-3 p-6 pt-0">
+          <div className="p-6 pt-0">
             {loading ? (
-              <>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+              </div>
             ) : doctors.length === 0 ? (
               <EmptyState
+                icon={<Stethoscope className="h-12 w-12 text-slate-400" />}
                 title="Nenhum médico disponível"
                 description="Não há médicos cadastrados no momento."
               />
             ) : (
-              doctors.map((doctor) => (
-                <Link
-                  key={doctor.id}
-                  href={`/doctors/${doctor.id}`}
-                  className="block rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                      <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {doctors.map((doctor, index) => (
+                  <div
+                    key={doctor.id}
+                    className="group rounded-xl border-2 border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 p-5 hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white dark:hover:from-blue-900/20 dark:hover:to-slate-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <User className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors mb-1">
+                          {doctor.name}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mb-1">
+                          CRM {doctor.crm}
+                        </p>
+                        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                          {doctor.specialty}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 truncate">{doctor.name}</p>
-                      <p className="text-xs text-slate-500">CRM {doctor.crm}</p>
-                      <p className="text-xs text-slate-600 mt-1 truncate">{doctor.specialty}</p>
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <Link href="/appointments">
+                        <Button 
+                          variant="secondary" 
+                          className="w-full group-hover:bg-blue-600 group-hover:text-white transition-colors"
+                          size="sm"
+                        >
+                          <CalendarPlus className="h-4 w-4 mr-2" />
+                          Agendar Consulta
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-                </Link>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </Card>
@@ -302,31 +332,31 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-6 pt-0">
             <Link
               href="/appointments"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:shadow-md hover:-translate-y-0.5"
             >
-              <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
-              <span className="text-sm font-medium text-slate-700">Agendar Consulta</span>
+              <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2 transition-transform duration-200 group-hover:scale-110" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Agendar Consulta</span>
             </Link>
             <Link
               href="/notifications"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:shadow-md hover:-translate-y-0.5"
             >
-              <AlertCircle className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
-              <span className="text-sm font-medium text-slate-700">Notificações</span>
+              <AlertCircle className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2 transition-transform duration-200 group-hover:scale-110" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Notificações</span>
             </Link>
             <Link
               href="/profile"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:shadow-md hover:-translate-y-0.5"
             >
-              <User className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
-              <span className="text-sm font-medium text-slate-700">Meu Perfil</span>
+              <User className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2 transition-transform duration-200 group-hover:scale-110" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Meu Perfil</span>
             </Link>
             <Link
               href="/doctors"
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+              className="flex flex-col items-center justify-center rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:shadow-md hover:-translate-y-0.5"
             >
-              <Stethoscope className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
-              <span className="text-sm font-medium text-slate-700">Médicos</span>
+              <Stethoscope className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2 transition-transform duration-200 group-hover:scale-110" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Médicos</span>
             </Link>
           </div>
         </Card>

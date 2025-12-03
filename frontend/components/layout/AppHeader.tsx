@@ -72,7 +72,7 @@ export function AppHeader() {
   const unreadBadge =
     unreadCount > 0 ? (
       <span 
-        className="absolute -right-1 -top-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white"
+        className="absolute -right-1 -top-1 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white animate-pulse-slow shadow-lg"
         aria-label={`${unreadCount} notificações não lidas`}
       >
         {unreadCount > 99 ? "99+" : unreadCount}
@@ -102,7 +102,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="flex items-center justify-between border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 px-4 sm:px-6 py-4">
+    <header className="flex items-center justify-between border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 px-4 sm:px-6 py-4 sticky top-0 z-20 backdrop-blur-sm bg-white/95 dark:bg-slate-900/95">
       <div className="flex items-center gap-3">
         {/* Menu Mobile */}
         <div className="lg:hidden">
@@ -112,10 +112,10 @@ export function AppHeader() {
         {/* Logo e Título */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 sm:gap-3 text-slate-900 dark:text-white"
+          className="flex items-center gap-2 sm:gap-3 text-slate-900 dark:text-white transition-all duration-200 hover:opacity-80"
           aria-label="Ir para o dashboard"
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden transition-transform duration-200 hover:scale-105">
             <Image
               src="/logo.png"
               alt="Agenda+"
@@ -172,7 +172,7 @@ export function AppHeader() {
         {/* Avatar do usuário */}
         <Link
           href="/profile"
-          className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-colors cursor-pointer"
+          className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-all duration-200 hover:scale-110 active:scale-95 shadow-md hover:shadow-lg cursor-pointer"
           aria-label="Ir para o perfil"
           title="Editar perfil"
         >

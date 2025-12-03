@@ -221,9 +221,40 @@ export class AppErrorHandler implements ErrorHandler {
         serializedDetails.errorType = typeof error;
         serializedDetails.errorString = String(error);
         serializedDetails.hasError = error !== null && error !== undefined;
+        
+        // Tenta extrair informações básicas mesmo que a serialização tenha falhado
+        if (error && typeof error === 'object') {
+          try {
+            serializedDetails.constructorName = error.constructor?.name;
+            serializedDetails.properties = Object.getOwnPropertyNames(error);
+            
+            // Tenta pegar message diretamente
+            if ('message' in error) {
+              serializedDetails.message = String((error as { message: unknown }).message);
+            }
+            
+            // Tenta pegar stack diretamente
+            if ('stack' in error) {
+              serializedDetails.stack = String((error as { stack: unknown }).stack).split('\n').slice(0, 3);
+            }
+          } catch (e) {
+            serializedDetails.extractionError = String(e);
+          }
+        }
       }
       
+      // Loga de forma que sempre mostre algo útil
       console.error(`[Error Handler] ${context || 'Erro'}:`, serializedDetails);
+      
+      // Se serializedDetails estiver vazio, loga o erro diretamente
+      if (Object.keys(serializedDetails).length === 0 || (Object.keys(serializedDetails).length === 1 && serializedDetails.errorType === 'object')) {
+        console.error(`[Error Handler] ${context || 'Erro'} (fallback):`, error);
+        console.error(`[Error Handler] String do erro:`, String(error));
+        console.error(`[Error Handler] Tipo do erro:`, typeof error);
+        if (error && typeof error === 'object') {
+          console.error(`[Error Handler] Propriedades do erro:`, Object.getOwnPropertyNames(error));
+        }
+      }
     }
 
     // Em produção, enviar para serviço de monitoramento (Sentry, etc.)

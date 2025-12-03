@@ -36,6 +36,7 @@ import {
   updateAvailabilityPeriod,
 } from "@/services/availability-period-service";
 import { Trash2, Calendar, Clock, X } from "lucide-react";
+import { clsx } from "clsx";
 
 const scheduleSchema = z.object({
   day_of_week: z.string().min(1),
@@ -379,7 +380,7 @@ export default function DoctorSchedulesPage() {
                 <CardTitle>Minhas agendas</CardTitle>
                 <CardDescription>Horários já cadastrados</CardDescription>
               </CardHeader>
-              <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
+              <div className="max-h-[520px] overflow-y-auto border-t border-slate-200 dark:border-slate-700">
                 {schedulesLoading ? (
                   <div className="space-y-3 p-6">
                     <Skeleton className="h-14 w-full" />
@@ -389,14 +390,22 @@ export default function DoctorSchedulesPage() {
                 ) : schedules.length === 0 ? (
                   <EmptyState className="m-4">Nenhum horário cadastrado.</EmptyState>
                 ) : (
-                  <ul className="divide-y divide-slate-200">
-                    {schedules.map((schedule) => (
-                      <li key={schedule.id} className="flex items-center justify-between px-6 py-4 text-sm">
+                  <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {schedules.map((schedule, index) => (
+                      <li 
+                        key={schedule.id} 
+                        className={clsx(
+                          "flex items-center justify-between px-6 py-4 text-sm",
+                          "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150",
+                          "animate-fade-in"
+                        )}
+                        style={{ animationDelay: `${index * 30}ms` }}
+                      >
                         <div>
-                          <p className="font-medium text-slate-800">
+                          <p className="font-medium text-slate-900 dark:text-white">
                             {days.find((d) => Number(d.value) === schedule.day_of_week)?.label}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
                             {schedule.start_time} - {schedule.end_time} • {schedule.slot_duration_minutes} min
                           </p>
                         </div>
@@ -455,7 +464,7 @@ export default function DoctorSchedulesPage() {
                     <Label htmlFor="exception_type">Tipo *</Label>
                     <select
                       id="exception_type"
-                      className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       {...exceptionForm.register("type")}
                     >
                       {exceptionTypes.map((type) => (
@@ -519,7 +528,7 @@ export default function DoctorSchedulesPage() {
               <CardTitle>Exceções Cadastradas</CardTitle>
               <CardDescription>Lista de datas bloqueadas ou com horários customizados</CardDescription>
             </CardHeader>
-            <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
+            <div className="max-h-[520px] overflow-y-auto border-t border-slate-200 dark:border-slate-700">
               {exceptionsLoading ? (
                 <div className="space-y-3 p-6">
                   <Skeleton className="h-14 w-full" />
@@ -528,25 +537,33 @@ export default function DoctorSchedulesPage() {
               ) : exceptions.length === 0 ? (
                 <EmptyState className="m-4">Nenhuma exceção cadastrada.</EmptyState>
               ) : (
-                <ul className="divide-y divide-slate-200">
-                  {exceptions.map((exception) => (
-                    <li key={exception.id} className="flex items-center justify-between px-6 py-4 text-sm">
+                <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                  {exceptions.map((exception, index) => (
+                    <li 
+                      key={exception.id} 
+                      className={clsx(
+                        "flex items-center justify-between px-6 py-4 text-sm",
+                        "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150",
+                        "animate-fade-in"
+                      )}
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-slate-500" />
-                          <p className="font-medium text-slate-800">{formatDate(exception.date)}</p>
-                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                          <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                          <p className="font-medium text-slate-900 dark:text-white">{formatDate(exception.date)}</p>
+                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 transition-all duration-200">
                             {exceptionTypes.find((t) => t.value === exception.type)?.label}
                           </span>
                         </div>
                         {exception.type === 'CUSTOM_HOURS' && exception.start_time && exception.end_time && (
-                          <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {exception.start_time} - {exception.end_time}
                           </p>
                         )}
                         {exception.reason && (
-                          <p className="text-xs text-slate-500 mt-1">{exception.reason}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{exception.reason}</p>
                         )}
                       </div>
                       <Button
@@ -653,7 +670,7 @@ export default function DoctorSchedulesPage() {
               <CardTitle>Períodos Cadastrados</CardTitle>
               <CardDescription>Lista de períodos de disponibilidade</CardDescription>
             </CardHeader>
-            <div className="max-h-[520px] overflow-y-auto border-t border-slate-200">
+            <div className="max-h-[520px] overflow-y-auto border-t border-slate-200 dark:border-slate-700">
               {periodsLoading ? (
                 <div className="space-y-3 p-6">
                   <Skeleton className="h-14 w-full" />
@@ -662,27 +679,36 @@ export default function DoctorSchedulesPage() {
               ) : periods.length === 0 ? (
                 <EmptyState className="m-4">Nenhum período cadastrado.</EmptyState>
               ) : (
-                <ul className="divide-y divide-slate-200">
-                  {periods.map((period) => (
-                    <li key={period.id} className="flex items-center justify-between px-6 py-4 text-sm">
+                <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                  {periods.map((period, index) => (
+                    <li 
+                      key={period.id} 
+                      className={clsx(
+                        "flex items-center justify-between px-6 py-4 text-sm",
+                        "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150",
+                        "animate-fade-in"
+                      )}
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-slate-500" />
-                          <p className="font-medium text-slate-800">
+                          <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                          <p className="font-medium text-slate-900 dark:text-white">
                             {formatDate(period.start_date)} - {formatDate(period.end_date)}
                           </p>
                           <span
-                            className={`px-2 py-1 text-xs rounded-full ${
+                            className={clsx(
+                              "px-2 py-1 text-xs rounded-full transition-all duration-200",
                               period.is_active
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-slate-100 text-slate-800'
-                            }`}
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
+                            )}
                           >
                             {period.is_active ? 'Ativo' : 'Inativo'}
                           </span>
                         </div>
                         {period.description && (
-                          <p className="text-xs text-slate-500 mt-1">{period.description}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{period.description}</p>
                         )}
                       </div>
                       <Button

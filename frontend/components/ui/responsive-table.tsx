@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { clsx } from 'clsx';
 import { Card } from './card';
 
 interface Column<T> {
@@ -66,29 +67,40 @@ export function ResponsiveTable<T>({
       {/* Tabela Desktop */}
       <div className={`hidden md:block overflow-x-auto ${className}`}>
         <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
+          <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-4 py-3 text-left font-medium text-slate-600 ${column.className || ''}`}
+                  className={clsx(
+                    "px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider",
+                    column.className
+                  )}
                 >
                   {column.label}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {data.map((item) => (
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
+            {data.map((item, index) => (
               <tr
                 key={keyExtractor(item)}
                 onClick={() => onRowClick?.(item)}
-                className={onRowClick ? 'cursor-pointer hover:bg-slate-50 transition-colors' : ''}
+                className={clsx(
+                  onRowClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150' : '',
+                  index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/50',
+                  'animate-fade-in'
+                )}
+                style={{ animationDelay: `${index * 30}ms` }}
               >
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className={`px-4 py-3 text-slate-700 ${column.className || ''}`}
+                    className={clsx(
+                      "px-4 py-3 text-sm text-slate-700 dark:text-slate-300",
+                      column.className
+                    )}
                   >
                     {column.render ? column.render(item) : String((item as Record<string, unknown>)[column.key] ?? '')}
                   </td>
@@ -100,12 +112,17 @@ export function ResponsiveTable<T>({
       </div>
 
       {/* Cards Mobile */}
-      <div className={`md:hidden space-y-4 ${className}`}>
-        {data.map((item) => (
+      <div className={clsx("md:hidden space-y-4", className)}>
+        {data.map((item, index) => (
           <Card
             key={keyExtractor(item)}
+            variant="interactive"
             onClick={() => onRowClick?.(item)}
-            className={onRowClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
+            className={clsx(
+              onRowClick ? 'cursor-pointer' : '',
+              'animate-fade-in'
+            )}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="space-y-3">
               {columns.map((column) => {

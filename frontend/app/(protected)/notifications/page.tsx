@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { clsx } from "clsx";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -204,13 +205,26 @@ export default function NotificationsPage() {
             ) : notifications.length === 0 ? (
               <EmptyState className="m-6">Nenhuma notificação encontrada.</EmptyState>
             ) : (
-              <ul className="divide-y divide-slate-200">
-                {notifications.map((notification) => (
-                  <li key={notification.id} className="px-6 py-4">
+              <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+                {notifications.map((notification, index) => (
+                  <li 
+                    key={notification.id} 
+                    className={clsx(
+                      "px-6 py-4 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/50",
+                      !notification.is_read && "bg-blue-50/30 dark:bg-blue-900/10",
+                      "animate-fade-in"
+                    )}
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="space-y-2">
-                        <p className="font-semibold text-slate-900">{notification.subject}</p>
-                        <p className="whitespace-pre-line text-sm text-slate-700">
+                      <div className="space-y-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          {!notification.is_read && (
+                            <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 flex-shrink-0 animate-pulse-slow" />
+                          )}
+                          <p className="font-semibold text-slate-900 dark:text-white">{notification.subject}</p>
+                        </div>
+                        <p className="whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                           {notification.message}
                         </p>
                         <p className="text-xs text-slate-500">
@@ -240,11 +254,12 @@ export default function NotificationsPage() {
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          className={clsx(
+                            "rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200",
                             notification.is_read
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                              : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                          )}
                         >
                           {notification.is_read ? "Lida" : "Não lida"}
                         </span>

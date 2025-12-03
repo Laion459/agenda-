@@ -85,7 +85,7 @@ export function MobileMenu() {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -94,7 +94,7 @@ export function MobileMenu() {
       {/* Menu lateral */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 h-full w-72 bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:hidden',
+          'fixed top-0 left-0 h-full w-72 bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:hidden backdrop-blur-sm bg-white/95 dark:bg-slate-900/95',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
         aria-label="Menu de navegação"
@@ -140,12 +140,16 @@ export function MobileMenu() {
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                         'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                         isActive
-                          ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-500'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                          ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-500 shadow-sm'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 hover:translate-x-1'
                       )}
                       onClick={() => setIsOpen(false)}
                     >
-                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <Icon className={clsx(
+                        "h-5 w-5 flex-shrink-0 transition-transform duration-200",
+                        isActive && "scale-110",
+                        !isActive && "group-hover:scale-110"
+                      )} />
                       <span>{item.label}</span>
                     </Link>
                   </li>

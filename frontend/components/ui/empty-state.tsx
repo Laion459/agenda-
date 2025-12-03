@@ -11,6 +11,8 @@ interface EmptyStateProps extends HTMLAttributes<HTMLDivElement> {
   description?: string;
 }
 
+type EmptyStateVariant = 'default' | 'error' | 'loading' | 'no-data';
+
 export function EmptyState({
   className,
   icon,
@@ -18,12 +20,18 @@ export function EmptyState({
   description,
   children,
   ...props
-}: EmptyStateProps) {
+}: EmptyStateProps & { variant?: EmptyStateVariant }) {
+  const variant = (props as { variant?: EmptyStateVariant }).variant || 'default';
+  
   return (
     <div
       className={clsx(
-        "flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/60 p-8 text-center",
-        "dark:border-slate-700 dark:bg-slate-800/60",
+        "flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-8 text-center",
+        "animate-fade-in",
+        variant === 'error' && "border-red-200 bg-red-50/60 dark:border-red-800 dark:bg-red-900/20",
+        variant === 'loading' && "border-slate-200 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/60",
+        variant === 'no-data' && "border-slate-200 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/60",
+        variant === 'default' && "border-slate-200 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/60",
         className
       )}
       role="status"
@@ -31,17 +39,33 @@ export function EmptyState({
       {...props}
     >
       {icon || (
-        <div className="p-3 bg-slate-100 rounded-full dark:bg-slate-700">
-          <Inbox className="h-6 w-6 text-slate-400" aria-hidden="true" />
+        <div className={clsx(
+          "p-3 rounded-full transition-transform duration-200",
+          variant === 'error' && "bg-red-100 dark:bg-red-900/30",
+          variant === 'loading' && "bg-slate-100 dark:bg-slate-700",
+          (variant === 'no-data' || variant === 'default') && "bg-slate-100 dark:bg-slate-700"
+        )}>
+          <Inbox className={clsx(
+            "h-6 w-6",
+            variant === 'error' && "text-red-500 dark:text-red-400",
+            variant !== 'error' && "text-slate-400 dark:text-slate-500"
+          )} aria-hidden="true" />
         </div>
       )}
       {title && (
-        <h3 className={clsx(TYPOGRAPHY.heading.h5, COLORS.text.primary)}>
+        <h3 className={clsx(
+          TYPOGRAPHY.heading.h5,
+          variant === 'error' ? "text-red-700 dark:text-red-300" : COLORS.text.primary
+        )}>
           {title}
         </h3>
       )}
       {description && (
-        <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary, "max-w-sm")}>
+        <p className={clsx(
+          TYPOGRAPHY.body.small,
+          variant === 'error' ? "text-red-600 dark:text-red-400" : COLORS.text.secondary,
+          "max-w-sm"
+        )}>
           {description}
         </p>
       )}

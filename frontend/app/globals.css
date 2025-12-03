@@ -61,7 +61,7 @@
     @apply border-slate-700;
   }
   
-  /* Melhorar contraste de texto */
+  /* Melhorar contraste de texto (WCAG AA) */
   h1, h2, h3, h4, h5, h6 {
     @apply text-slate-900 font-semibold;
   }
@@ -70,13 +70,47 @@
     @apply text-slate-50;
   }
   
-  /* Links com melhor contraste */
+  /* Garantir contraste mínimo para textos secundários */
+  p, span, div {
+    @apply text-slate-700;
+  }
+  
+  .dark p, .dark span, .dark div {
+    @apply text-slate-200;
+  }
+  
+  /* Skip to main content link para acessibilidade */
+  .skip-to-main {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4;
+    @apply focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white;
+    @apply focus:rounded-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  /* Links com melhor contraste e focus states */
   a {
     @apply text-blue-600 hover:text-blue-700 transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded;
   }
   
   .dark a {
     @apply text-blue-400 hover:text-blue-300;
+  }
+  
+  /* Focus states melhorados para todos os elementos interativos */
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  }
+  
+  .dark button:focus-visible,
+  .dark input:focus-visible,
+  .dark textarea:focus-visible,
+  .dark select:focus-visible,
+  .dark [role="button"]:focus-visible {
+    @apply ring-blue-400 ring-offset-slate-900;
   }
   
   /* Scrollbar customizada */
@@ -114,11 +148,106 @@
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(-16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes scaleUp {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.05);
+    }
+  }
+  
+  @keyframes rotateIn {
+    from {
+      opacity: 0;
+      transform: rotate(-5deg);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(0);
     }
   }
   
@@ -131,12 +260,162 @@
     }
   }
   
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes ripple {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes shake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+      transform: translateX(-4px);
+    }
+    20%, 40%, 60%, 80% {
+      transform: translateX(4px);
+    }
+  }
+  
+  @keyframes bounce-in {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes checkmark {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes progress {
+    0% {
+      width: 0%;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+  
+  /* Classes de animação */
   .animate-fade-in {
     animation: fadeIn 0.2s ease-out;
   }
   
+  .animate-ripple {
+    animation: ripple 0.6s ease-out;
+  }
+  
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .animate-checkmark {
+    animation: checkmark 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .animate-progress {
+    animation: progress 2s ease-out;
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+  }
+  
+  .animate-fade-in-down {
+    animation: fadeInDown 0.3s ease-out;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInLeft 0.3s ease-out;
+  }
+  
+  .animate-slide-in-up {
+    animation: slideInUp 0.3s ease-out;
+  }
+  
+  .animate-slide-in-down {
+    animation: slideInDown 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+  
+  .animate-scale-up {
+    animation: scaleUp 0.2s ease-out;
+  }
+  
+  .animate-rotate-in {
+    animation: rotateIn 0.3s ease-out;
+  }
+  
   .animate-shimmer {
     animation: shimmer 2s infinite;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    background-size: 200% 100%;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-spin-slow {
+    animation: spin 2s linear infinite;
   }
   
   /* Screen reader only */

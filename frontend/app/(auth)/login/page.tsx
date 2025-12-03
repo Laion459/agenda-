@@ -55,10 +55,12 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="w-full max-w-md space-y-6">
+    <Card variant="elevated" className="w-full max-w-md space-y-6 animate-fade-in-up">
       <CardHeader className="space-y-3 text-center">
         <div className="flex justify-center">
-          <Image src="/logo.png" alt="Agenda+" width={64} height={64} priority className="h-14 w-14" />
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-full transition-transform duration-200 hover:scale-110">
+            <Image src="/logo.png" alt="Agenda+" width={64} height={64} priority className="h-14 w-14" />
+          </div>
         </div>
         <CardTitle className="text-2xl">Entrar</CardTitle>
         <CardDescription>Acesse sua conta Agenda+ para gerenciar consultas.</CardDescription>
@@ -97,9 +99,9 @@ export default function LoginPage() {
           Entrar
         </Button>
       </form>
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-center text-slate-600 dark:text-slate-400">
         Ainda não tem conta?{" "}
-        <Link className="text-blue-600 hover:underline" href="/register">
+        <Link className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-200" href="/register">
           Cadastre-se
         </Link>
       </p>

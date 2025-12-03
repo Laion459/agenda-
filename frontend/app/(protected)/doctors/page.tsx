@@ -63,25 +63,44 @@ export default function DoctorsPage() {
             <Skeleton className="h-32 w-full" />
           </div>
         ) : filteredDoctors.length === 0 ? (
-          <EmptyState>Nenhum profissional encontrado.</EmptyState>
+          <EmptyState variant="no-data" title="Nenhum profissional encontrado" description="Tente ajustar sua busca." />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredDoctors.map((doctor) => (
-              <div key={doctor.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-base font-semibold text-slate-900">{doctor.name}</p>
-                <p className="text-xs text-slate-500">CRM {doctor.crm}</p>
-                <p className="mt-2 text-sm text-slate-700">{doctor.specialty}</p>
-                {doctor.health_insurances && doctor.health_insurances.length > 0 && (
-                  <div className="mt-3 space-y-1">
-                    <p className="text-xs font-semibold uppercase text-slate-500">Convênios</p>
-                    <ul className="text-xs text-slate-600">
-                      {doctor.health_insurances.map((plan) => (
-                        <li key={plan.id}>{plan.name}</li>
-                      ))}
-                    </ul>
+            {filteredDoctors.map((doctor, index) => (
+              <Card
+                key={doctor.id}
+                variant="interactive"
+                className="animate-fade-in hover:border-blue-300 dark:hover:border-blue-600"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold text-lg">
+                      {doctor.name.charAt(0).toUpperCase()}
+                    </span>
                   </div>
-                )}
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-semibold text-slate-900 dark:text-white truncate">{doctor.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">CRM {doctor.crm}</p>
+                    <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{doctor.specialty}</p>
+                    {doctor.health_insurances && doctor.health_insurances.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Convênios</p>
+                        <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-0.5">
+                          {doctor.health_insurances.slice(0, 3).map((plan) => (
+                            <li key={plan.id} className="truncate">• {plan.name}</li>
+                          ))}
+                          {doctor.health_insurances.length > 3 && (
+                            <li className="text-slate-500 dark:text-slate-500">
+                              +{doctor.health_insurances.length - 3} mais
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
             ))}
           </div>
         )}

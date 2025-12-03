@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Search, Plus, Edit, Trash2, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { clsx } from "clsx";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -313,10 +314,18 @@ export default function AdminDoctorsPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredDoctors.map((doctor) => {
+                    filteredDoctors.map((doctor, index) => {
                       const active = doctor.user?.is_active ?? doctor.is_active;
                       return (
-                        <tr key={doctor.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <tr 
+                          key={doctor.id} 
+                          className={clsx(
+                            "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150",
+                            index % 2 === 0 ? "bg-white dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50",
+                            "animate-fade-in"
+                          )}
+                          style={{ animationDelay: `${index * 30}ms` }}
+                        >
                           <td className="px-4 sm:px-6 py-4">
                             <div className="text-sm font-medium text-slate-900 dark:text-white">{doctor.name}</div>
                             <div className="text-xs text-slate-500 dark:text-slate-400 md:hidden mt-1">
@@ -339,11 +348,12 @@ export default function AdminDoctorsPage() {
                           </td>
                           <td className="px-4 sm:px-6 py-4">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              className={clsx(
+                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200",
                                 active
-                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
                                   : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-                              }`}
+                              )}
                             >
                               {active ? "ativo" : "inativo"}
                             </span>

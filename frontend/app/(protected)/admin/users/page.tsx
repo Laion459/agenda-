@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { clsx } from "clsx";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -207,31 +208,31 @@ export default function AdminUsersPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-blue-200 bg-blue-50/60">
+        <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
           <div className="space-y-1 p-4">
-            <p className="text-xs font-semibold uppercase text-blue-700">Total de usuários</p>
-            <p className="text-2xl font-bold text-blue-900">{summary.total}</p>
+            <p className="text-xs font-semibold uppercase text-blue-700 dark:text-blue-300">Total de usuários</p>
+            <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{summary.total}</p>
           </div>
         </Card>
-        <Card>
+        <Card variant="interactive" className="border-l-4 border-l-emerald-500 dark:border-l-emerald-400 animate-fade-in" style={{ animationDelay: '50ms' }}>
           <div className="space-y-1 p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Ativos</p>
-            <p className="text-2xl font-bold text-slate-900">{summary.active}</p>
+            <p className="text-xs font-semibold uppercase text-slate-700 dark:text-slate-300">Ativos</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{summary.active}</p>
           </div>
         </Card>
-        <Card>
+        <Card variant="interactive" className="border-l-4 border-l-slate-400 dark:border-l-slate-500 animate-fade-in" style={{ animationDelay: '100ms' }}>
           <div className="space-y-1 p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Inativos</p>
-            <p className="text-2xl font-bold text-slate-900">{summary.inactive}</p>
+            <p className="text-xs font-semibold uppercase text-slate-700 dark:text-slate-300">Inativos</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{summary.inactive}</p>
           </div>
         </Card>
-        <Card>
+        <Card variant="interactive" className="animate-fade-in" style={{ animationDelay: '150ms' }}>
           <div className="space-y-2 p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Distribuição por perfil</p>
-            <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+            <p className="text-xs font-semibold uppercase text-slate-700 dark:text-slate-300">Distribuição por perfil</p>
+            <div className="flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-400">
               {["ADMIN", "DOCTOR", "PATIENT"].map((role) => (
-                <span key={role} className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1">
-                  <strong className="mr-1 text-slate-800">{roleLabels[role] ?? role}:</strong>
+                <span key={role} className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-700 px-2 py-1">
+                  <strong className="mr-1 text-slate-800 dark:text-slate-200">{roleLabels[role] ?? role}:</strong>
                   {summary.byRole[role] ?? 0}
                 </span>
               ))}
@@ -255,18 +256,29 @@ export default function AdminUsersPage() {
           ) : users.length === 0 ? (
             <EmptyState className="m-6">Nenhum usuário encontrado com os filtros aplicados.</EmptyState>
           ) : (
-            <ul className="divide-y divide-slate-200">
-              {users.map((user) => (
-                <li key={user.id} className="flex flex-col gap-2 px-6 py-4 text-sm">
+            <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+              {users.map((user, index) => (
+                <li 
+                  key={user.id} 
+                  className={clsx(
+                    "flex flex-col gap-2 px-6 py-4 text-sm",
+                    "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150",
+                    "animate-fade-in"
+                  )}
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-slate-900">{user.name}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
+                      <p className="font-semibold text-slate-900 dark:text-white">{user.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
                     </div>
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        user.is_active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"
-                      }`}
+                      className={clsx(
+                        "rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200",
+                        user.is_active 
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                      )}
                     >
                       {user.is_active ? "Ativo" : "Inativo"}
                     </span>

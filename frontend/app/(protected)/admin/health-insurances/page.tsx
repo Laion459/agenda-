@@ -15,6 +15,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Modal } from "@/components/ui/modal";
 import { handleApiError } from "@/lib/handle-api-error";
 import { Edit, Trash2, Plus, Search, X } from "lucide-react";
+import { clsx } from "clsx";
 import {
   createHealthInsurance,
   deleteHealthInsurance,
@@ -225,32 +226,32 @@ export default function HealthInsurancesPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestão de Convênios</h1>
-          <p className="text-sm text-slate-600 mt-1">Gerencie os convênios e planos de saúde</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2">Gestão de Convênios</h1>
+          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300">Gerencie os convênios e planos de saúde</p>
         </div>
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+          <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
             <CardContent className="p-6">
-              <p className="text-sm font-medium text-slate-600 mb-1">Convênios Ativos</p>
-              <p className="text-3xl font-bold text-slate-900">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Convênios Ativos</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-white">
                 {items.filter(i => i.is_active).length}
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card variant="interactive" className="border-l-4 border-l-emerald-500 dark:border-l-emerald-400 animate-fade-in" style={{ animationDelay: '50ms' }}>
             <CardContent className="p-6">
-              <p className="text-sm font-medium text-slate-600 mb-1">Total de Beneficiários</p>
-              <p className="text-3xl font-bold text-slate-900">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Total de Beneficiários</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-white">
                 {statistics?.total_beneficiaries ?? 0}
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card variant="interactive" className="border-l-4 border-l-amber-500 dark:border-l-amber-400 animate-fade-in" style={{ animationDelay: '100ms' }}>
             <CardContent className="p-6">
-              <p className="text-sm font-medium text-slate-600 mb-1">Média por Convênio</p>
-              <p className="text-3xl font-bold text-slate-900">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Média por Convênio</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-white">
                 {statistics?.average_beneficiaries_per_insurance 
                   ? Math.round(statistics.average_beneficiaries_per_insurance)
                   : 0}
@@ -297,18 +298,18 @@ export default function HealthInsurancesPage() {
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Convênio</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cobertura</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beneficiários</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médicos</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Ações</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Convênio</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Descrição</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Cobertura</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Beneficiários</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Médicos</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider w-48">Ações</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-4">
@@ -325,40 +326,49 @@ export default function HealthInsurancesPage() {
                   </td>
                 </tr>
               ) : (
-                orderedItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                orderedItems.map((item, index) => (
+                  <tr 
+                    key={item.id} 
+                    className={clsx(
+                      "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150",
+                      index % 2 === 0 ? "bg-white dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50",
+                      "animate-fade-in"
+                    )}
+                    style={{ animationDelay: `${index * 30}ms` }}
+                  >
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500 max-w-xs truncate">
+                      <div className="text-sm text-slate-600 dark:text-slate-300 max-w-xs truncate">
                         {item.description || '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-700">
+                      <div className="text-sm text-slate-700 dark:text-slate-300">
                         {item.coverage_percentage !== null && item.coverage_percentage !== undefined
                           ? `${item.coverage_percentage}%`
                           : '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">
                         {item.beneficiaries_count ?? 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">
                         {item.doctors_count ?? 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={clsx(
+                          "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200",
                           item.is_active
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                            : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                        )}
                       >
                         {item.is_active ? "ativo" : "inativo"}
                       </span>
