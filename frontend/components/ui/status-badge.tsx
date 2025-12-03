@@ -31,6 +31,8 @@ const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 export function StatusBadge({ status, className, variant = 'default', pulse = false }: StatusBadgeProps) {
   const statusUpper = status.toUpperCase();
   const Icon = STATUS_ICONS[statusUpper];
+  const isActive = statusUpper === 'CONFIRMED' || statusUpper === 'COMPLETED';
+  const shouldPulse = pulse || (isActive && variant === 'default');
   
   if (variant === 'dot') {
     const colors = getStatusColors(status);
@@ -47,7 +49,7 @@ export function StatusBadge({ status, className, variant = 'default', pulse = fa
           className={clsx(
             "h-2 w-2 rounded-full",
             colors.bg,
-            pulse && "animate-pulse-slow"
+            shouldPulse && "animate-pulse-slow"
           )}
           aria-hidden="true"
         />
@@ -64,14 +66,14 @@ export function StatusBadge({ status, className, variant = 'default', pulse = fa
         getStatusBadgeClasses(status),
         "inline-flex items-center gap-1.5",
         TRANSITIONS.common.all,
-        pulse && "animate-pulse-slow",
+        shouldPulse && "animate-pulse-slow",
         className
       )}
       role="status"
       aria-label={`Status: ${getStatusLabel(status)}`}
     >
-      {variant === 'icon' && Icon && (
-        <Icon className="h-3 w-3" aria-hidden="true" />
+      {(variant === 'icon' || variant === 'default') && Icon && (
+        <Icon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
       )}
       {getStatusLabel(status)}
     </span>

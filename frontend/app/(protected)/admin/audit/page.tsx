@@ -13,6 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { handleApiError } from "@/lib/handle-api-error";
 import { exportActivityLogs, fetchActivityLogs } from "@/services/activity-log-service";
 import { ActivityLog, PaginatedResponse } from "@/types";
+import { ScrollText, Filter, Download, Search } from "lucide-react";
+import { TYPOGRAPHY, COLORS } from "@/constants/design-tokens";
 
 interface Filters {
   search: string;
@@ -111,14 +113,37 @@ export default function AuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      {/* Header */}
+      <div className="flex items-center gap-4 animate-fade-in">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg">
+          <ScrollText className="h-7 w-7 text-white" />
+        </div>
+        <div>
+          <h1 className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary)}>
+            Auditoria do Sistema
+          </h1>
+          <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary, "flex items-center gap-2 mt-1")}>
+            <Filter className="h-4 w-4 text-slate-500" />
+            Histórico completo das ações realizadas pelos usuários
+          </p>
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <Card variant="interactive" className="border-l-4 border-l-slate-500 dark:border-l-slate-400">
         <CardHeader>
-          <CardTitle>Auditoria do sistema</CardTitle>
-          <CardDescription>Histórico das principais ações realizadas pelos usuários.</CardDescription>
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+            <CardTitle>Filtros de Busca</CardTitle>
+          </div>
+          <CardDescription>Filtre os logs por ação ou usuário</CardDescription>
         </CardHeader>
         <form onSubmit={handleFilterSubmit} className="grid gap-4 p-6 pt-0 md:grid-cols-4">
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="search">Filtrar por ação</Label>
+            <Label htmlFor="search" className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-slate-500" />
+              Filtrar por ação
+            </Label>
             <Input
               id="search"
               placeholder="Ex.: POST admin/doctors"
@@ -136,7 +161,8 @@ export default function AuditLogsPage() {
             />
           </div>
           <div className="flex items-end gap-2">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
               Aplicar
             </Button>
             <Button
@@ -154,7 +180,8 @@ export default function AuditLogsPage() {
             >
               Limpar
             </Button>
-            <Button type="button" variant="outline" onClick={handleExport} disabled={exporting || loading}>
+            <Button type="button" variant="secondary" onClick={handleExport} disabled={exporting || loading} className="ml-auto">
+              <Download className="h-4 w-4 mr-2" />
               Exportar
             </Button>
           </div>

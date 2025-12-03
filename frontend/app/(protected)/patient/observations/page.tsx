@@ -9,6 +9,8 @@ import { clsx } from "clsx";
 import { handleApiError } from "@/lib/handle-api-error";
 import { fetchPatientObservations } from "@/services/observation-service";
 import { Observation } from "@/types";
+import { FileText, Calendar, Clock } from "lucide-react";
+import { TYPOGRAPHY, COLORS } from "@/constants/design-tokens";
 
 export default function PatientObservationsPage() {
   const [observations, setObservations] = useState<Observation[]>([]);
@@ -30,13 +32,30 @@ export default function PatientObservationsPage() {
   }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Histórico clínico</CardTitle>
-          <CardDescription>Observações registradas pelos médicos após suas consultas.</CardDescription>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4 animate-fade-in">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg">
+          <FileText className="h-7 w-7 text-white" />
         </div>
-      </CardHeader>
+        <div>
+          <h1 className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary)}>
+            Histórico Clínico
+          </h1>
+          <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary, "flex items-center gap-2 mt-1")}>
+            <FileText className="h-4 w-4 text-emerald-500" />
+            Observações registradas pelos médicos após suas consultas
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Suas Observações</CardTitle>
+            <CardDescription>Histórico completo de todas as observações clínicas</CardDescription>
+          </div>
+        </CardHeader>
       <div className="p-6">
         {loading ? (
           <div className="space-y-3">
@@ -59,23 +78,29 @@ export default function PatientObservationsPage() {
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {observation.doctor?.name ?? 'Profissional'}
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      {observation.appointment
-                        ? new Date(observation.appointment.scheduled_at).toLocaleString('pt-BR', {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })
-                        : new Date(observation.created_at).toLocaleString('pt-BR', {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                      <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {observation.doctor?.name ?? 'Profissional'}
+                      </p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                        <Calendar className="h-3 w-3" />
+                        {observation.appointment
+                          ? new Date(observation.appointment.scheduled_at).toLocaleString('pt-BR', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })
+                          : new Date(observation.created_at).toLocaleString('pt-BR', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })}
+                      </p>
+                    </div>
                   </div>
-                  <span className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 transition-all duration-200">
+                  <span className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 transition-all duration-200">
                     {observation.appointment?.status ?? 'REGISTRADA'}
                   </span>
                 </div>
@@ -109,7 +134,8 @@ export default function PatientObservationsPage() {
           </ul>
         )}
       </div>
-    </Card>
+      </Card>
+    </div>
   );
 }
 

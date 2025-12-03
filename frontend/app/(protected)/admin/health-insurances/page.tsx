@@ -14,8 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Modal } from "@/components/ui/modal";
 import { handleApiError } from "@/lib/handle-api-error";
-import { Edit, Trash2, Plus, Search, X } from "lucide-react";
+import { Edit, Trash2, Plus, Search, X, Shield } from "lucide-react";
 import { clsx } from "clsx";
+import { TYPOGRAPHY, COLORS } from "@/constants/design-tokens";
 import {
   createHealthInsurance,
   deleteHealthInsurance,
@@ -225,9 +226,20 @@ export default function HealthInsurancesPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2">Gestão de Convênios</h1>
-          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300">Gerencie os convênios e planos de saúde</p>
+        {/* Header */}
+        <div className="flex items-center gap-4 animate-fade-in">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg">
+            <Shield className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h1 className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary)}>
+              Gestão de Convênios
+            </h1>
+            <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary, "flex items-center gap-2 mt-1")}>
+              <Shield className="h-4 w-4 text-blue-500" />
+              Gerencie os convênios e planos de saúde do sistema
+            </p>
+          </div>
         </div>
 
         {/* Summary Cards */}

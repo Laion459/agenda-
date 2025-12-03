@@ -37,6 +37,7 @@ import {
 } from "@/services/availability-period-service";
 import { Trash2, Calendar, Clock, X } from "lucide-react";
 import { clsx } from "clsx";
+import { TYPOGRAPHY, COLORS } from "@/constants/design-tokens";
 
 const scheduleSchema = z.object({
   day_of_week: z.string().min(1),
@@ -299,14 +300,21 @@ export default function DoctorSchedulesPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Gestão de Agenda</CardTitle>
-          <CardDescription>
-            Configure seus horários padrão, exceções e períodos de disponibilidade.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      {/* Header */}
+      <div className="flex items-center gap-4 animate-fade-in">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg">
+          <Calendar className="h-7 w-7 text-white" />
+        </div>
+        <div>
+          <h1 className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary)}>
+            Gestão de Agenda
+          </h1>
+          <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary, "flex items-center gap-2 mt-1")}>
+            <Clock className="h-4 w-4 text-blue-500" />
+            Configure seus horários padrão, exceções e períodos de disponibilidade
+          </p>
+        </div>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
