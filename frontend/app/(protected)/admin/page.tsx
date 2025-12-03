@@ -10,9 +10,13 @@ import {
   XCircle,
   ArrowUpRight,
   TrendingUp,
+  BarChart3,
+  Activity,
+  ShieldCheck,
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import dynamic from "next/dynamic";
+import { TYPOGRAPHY, COLORS, SPACING, TRANSITIONS, ELEVATION } from "@/constants/design-tokens";
 
 // Importação dinâmica do recharts para evitar problemas com Turbopack em dev
 const LineChart = dynamic(() => import("recharts").then((mod) => mod.LineChart), { ssr: false });
@@ -107,14 +111,22 @@ export default function AdminDashboardPage() {
       {/* Breadcrumbs */}
       <Breadcrumbs items={[{ label: 'Resumo Administrativo' }]} />
       
-      {/* Header */}
-      <section>
-        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2">
-          Resumo Administrativo
-        </h1>
-        <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300">
-          Visão geral do sistema e métricas principais
-        </p>
+      {/* Header Sofisticado */}
+      <section className="animate-fade-in">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+            <ShieldCheck className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary)}>
+              Resumo Administrativo
+            </h1>
+            <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary, "flex items-center gap-2 mt-1")}>
+              <Activity className="h-4 w-4 flex-shrink-0" />
+              Visão geral do sistema e métricas principais
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* KPI Cards */}
@@ -131,16 +143,18 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-10 w-24" />
               ) : (
                 <>
-                  <p className="text-3xl font-bold text-slate-900">{stats?.total_appointments || 0}</p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className={clsx(TYPOGRAPHY.heading.h2, "text-slate-900 dark:text-white mb-2")}>
+                    {stats?.total_appointments || 0}
+                  </p>
+                  <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary, "mb-3")}>
                     {stats?.appointments_today || 0} hoje • {stats?.appointments_this_month || 0} este mês
                   </p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <ArrowUpRight className="h-4 w-4 text-green-500" />
-                    <span className="text-xs text-green-500 font-medium">
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 w-fit">
+                    <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className={clsx(TYPOGRAPHY.body.small, "text-emerald-600 dark:text-emerald-400 font-semibold")}>
                       +{stats?.appointments_growth || 0}%
                     </span>
                   </div>
@@ -163,18 +177,18 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-10 w-24" />
               ) : (
                 <>
-                  <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">
+                  <p className={clsx(TYPOGRAPHY.heading.h2, "text-slate-900 dark:text-white mb-2")}>
                     {stats?.total_doctors || 0}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary, "mb-3")}>
                     {stats?.active_doctors || 0} ativos • {stats?.new_doctors || 0} novos
                   </p>
-                  <div className="flex items-center gap-1 mt-2">
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 w-fit">
                     <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    <span className={clsx(TYPOGRAPHY.body.small, "text-emerald-600 dark:text-emerald-400 font-semibold")}>
                       +{stats?.doctors_growth || 0}%
                     </span>
                   </div>
@@ -197,18 +211,18 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-10 w-24" />
               ) : (
                 <>
-                  <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">
+                  <p className={clsx(TYPOGRAPHY.heading.h2, "text-slate-900 dark:text-white mb-2")}>
                     {stats?.total_patients || 0}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary, "mb-3")}>
                     {stats?.active_patients || 0} ativos • {stats?.new_patients || 0} novos
                   </p>
-                  <div className="flex items-center gap-1 mt-2">
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 w-fit">
                     <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    <span className={clsx(TYPOGRAPHY.body.small, "text-emerald-600 dark:text-emerald-400 font-semibold")}>
                       +{stats?.patients_growth || 0}%
                     </span>
                   </div>
@@ -231,18 +245,18 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-10 w-24" />
               ) : (
                 <>
-                  <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-1">
+                  <p className={clsx(TYPOGRAPHY.heading.h2, "text-slate-900 dark:text-white mb-2")}>
                     {stats?.total_health_insurances || 0}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary, "mb-3")}>
                     {stats?.active_health_insurances || 0} ativos • {stats?.new_health_insurances || 0} novos
                   </p>
-                  <div className="flex items-center gap-1 mt-2">
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 w-fit">
                     <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    <span className={clsx(TYPOGRAPHY.body.small, "text-emerald-600 dark:text-emerald-400 font-semibold")}>
                       +{stats?.health_insurances_growth || 0}%
                     </span>
                   </div>
@@ -252,25 +266,61 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+      {/* Charts - Profissionais */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Consultas por Mês */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Consultas por Mês</CardTitle>
+          <Card variant="interactive" className="overflow-hidden">
+            <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                    Consultas por Mês
+                  </CardTitle>
+                  <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                    Evolução mensal de agendamentos
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {loading ? (
                 <Skeleton className="h-64 w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="#64748b"
+                      className="dark:stroke-slate-400"
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <YAxis 
+                      stroke="#64748b"
+                      className="dark:stroke-slate-400"
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      }}
+                      className="dark:bg-slate-800 dark:border-slate-700"
+                    />
                     <Legend />
-                    <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="total" 
+                      stroke="#3b82f6" 
+                      strokeWidth={3}
+                      dot={{ fill: '#3b82f6', r: 5 }}
+                      activeDot={{ r: 7 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -278,22 +328,59 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Consultas por Especialidade */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Consultas por Especialidade</CardTitle>
+          <Card variant="interactive" className="overflow-hidden">
+            <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                  <BarChart3 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                    Consultas por Especialidade
+                  </CardTitle>
+                  <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                    Distribuição por área médica
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {loading ? (
                 <Skeleton className="h-64 w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={specialtyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="specialty" />
-                    <YAxis />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
+                    <XAxis 
+                      dataKey="specialty" 
+                      stroke="#64748b"
+                      className="dark:stroke-slate-400"
+                      tick={{ fill: 'currentColor' }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis 
+                      stroke="#64748b"
+                      className="dark:stroke-slate-400"
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      }}
+                      className="dark:bg-slate-800 dark:border-slate-700"
+                    />
                     <Legend />
-                    <Bar dataKey="total" fill="#3b82f6" />
+                    <Bar 
+                      dataKey="total" 
+                      fill="#8b5cf6"
+                      radius={[8, 8, 0, 0]}
+                      className="hover:opacity-80 transition-opacity"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -301,42 +388,66 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-      {/* Atividades Recentes */}
-      <Card>
-          <CardHeader>
-            <CardTitle>Atividades Recentes</CardTitle>
-            <CardDescription>Últimas ações realizadas no sistema</CardDescription>
+      {/* Atividades Recentes - Elegantes */}
+      <Card variant="interactive" className="overflow-hidden">
+          <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
+                <Activity className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+              </div>
+              <div>
+                <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                  Atividades Recentes
+                </CardTitle>
+                <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                  Últimas ações realizadas no sistema
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {loading ? (
               <div className="space-y-4">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            ) : activities.length === 0 ? (
+              <div className="text-center py-12">
+                <Activity className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
+                <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary)}>
+                  Nenhuma atividade recente
+                </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {activities.map((activity, index) => {
                   const activityColorClass = getActivityColor(activity.color);
                   return (
                     <div 
                       key={activity.id} 
                       className={clsx(
-                        "flex items-start gap-4 p-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0",
-                        "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150",
+                        "flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700",
+                        "hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-md transition-all duration-200",
+                        "hover:-translate-y-0.5",
                         "animate-fade-in"
                       )}
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <div className={clsx(
-                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-200 hover:scale-110",
+                        "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200",
+                        "hover:scale-110 shadow-sm",
                         activityColorClass
                       )}>
                         {getActivityIcon(activity.icon)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 dark:text-white">{activity.title}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{activity.description}</p>
+                        <p className={clsx(TYPOGRAPHY.body.base, "font-semibold text-slate-900 dark:text-white mb-1")}>
+                          {activity.title}
+                        </p>
+                        <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                          {activity.description}
+                        </p>
                       </div>
                     </div>
                   );

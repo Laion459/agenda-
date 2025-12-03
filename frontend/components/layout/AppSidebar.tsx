@@ -18,6 +18,8 @@ import {
   ScrollText,
   BarChart3,
   ChevronLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 import { useAuthStore } from "@/store/auth-store";
@@ -117,7 +119,7 @@ export function AppSidebar() {
             : "-translate-x-full lg:translate-x-0 lg:w-20"
         )}
       >
-        {/* Header do Sidebar - apenas botão toggle */}
+        {/* Header do Sidebar - botão toggle profissional */}
         <div className={clsx(
           "flex items-center justify-center border-b border-slate-200 dark:border-slate-700 min-h-[73px] transition-all duration-300 px-4"
         )}>
@@ -125,14 +127,23 @@ export function AppSidebar() {
             variant="ghost"
             size="sm"
             onClick={toggle}
-            className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 rounded-lg hover:scale-110 active:scale-95 shadow-sm hover:shadow-md"
+            className="relative h-11 w-11 p-0 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-700 dark:hover:to-slate-800 transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg group overflow-hidden"
             aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
             title={isOpen ? "Fechar menu" : "Abrir menu"}
           >
-            <ChevronLeft className={clsx(
-              "h-4 w-4 text-slate-600 dark:text-slate-300 transition-all duration-300",
-              !isOpen && "rotate-180"
-            )} />
+            <div className="relative w-full h-full flex items-center justify-center z-10">
+              {isOpen ? (
+                <>
+                  <PanelLeftClose className="h-5 w-5 flex-shrink-0 text-slate-700 dark:text-slate-300 transition-all duration-300 group-hover:scale-110 drop-shadow-sm" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </>
+              ) : (
+                <>
+                  <PanelLeftOpen className="h-5 w-5 flex-shrink-0 text-slate-700 dark:text-slate-300 transition-all duration-300 group-hover:scale-110 drop-shadow-sm" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-400/20 to-slate-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </>
+              )}
+            </div>
           </Button>
         </div>
 

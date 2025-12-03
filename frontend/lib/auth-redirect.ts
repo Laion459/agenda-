@@ -10,7 +10,7 @@ export function getRedirectPathByRole(user: User | null): string {
 
   switch (user.role) {
     case 'ADMIN':
-      return '/admin/doctors'; // Dashboard administrativo
+      return '/admin'; // Dashboard administrativo
     case 'DOCTOR':
       return '/doctor/dashboard'; // Dashboard do médico
     case 'PATIENT':

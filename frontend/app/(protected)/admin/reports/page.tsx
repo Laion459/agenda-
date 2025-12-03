@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Download, FileJson } from "lucide-react";
+import { Download, FileJson, BarChart3, Filter, FileText, TrendingUp, Calendar, Users, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { clsx } from "clsx";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { handleApiError } from "@/lib/handle-api-error";
+import { TYPOGRAPHY, COLORS, SPACING, TRANSITIONS, ELEVATION } from "@/constants/design-tokens";
 import { fetchAdminDoctors } from "@/services/admin-doctor-service";
 import {
   DoctorOccupancyItem,
@@ -205,7 +206,7 @@ export default function AdminReportsPage() {
     }
   };
 
-  const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+  const CHART_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
   // Preparar dados para gráficos - filtrar médicos com consultas e mostrar mais
   const doctorChartData = useMemo(() => {
@@ -268,80 +269,125 @@ export default function AdminReportsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Relatórios</h1>
-          <p className="text-sm text-slate-600 mt-1">Análise completa dos indicadores operacionais</p>
+        {/* Header Sofisticado */}
+        <div className="animate-fade-in">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
+              <BarChart3 className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary)}>
+                Relatórios
+              </h1>
+              <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary, "flex items-center gap-2 mt-1")}>
+                <TrendingUp className="h-4 w-4 flex-shrink-0" />
+                Análise completa dos indicadores operacionais
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Filtros */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtros</CardTitle>
-            <CardDescription>Selecione o período e tipo de relatório</CardDescription>
+        {/* Filtros Elegantes */}
+        <Card variant="interactive" className="border-l-4 border-l-purple-500 dark:border-l-purple-400">
+          <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                <Filter className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                  Filtros
+                </CardTitle>
+                <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                  Selecione o período e tipo de relatório
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid gap-4 p-6 pt-0 md:grid-cols-2 lg:grid-cols-4"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="start_date">De</Label>
-            <Input id="start_date" type="date" {...register("start_date")} />
-            {errors.start_date && <p className="text-xs text-red-500">{errors.start_date.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="end_date">Até</Label>
-            <Input id="end_date" type="date" {...register("end_date")} />
-            {errors.end_date && <p className="text-xs text-red-500">{errors.end_date.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="doctor_id">Médico</Label>
-            <select
-              id="doctor_id"
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              {...register("doctor_id")}
+          <CardContent className="pt-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
             >
-              <option value="">Todos</option>
-              {doctors.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  {doctor.name} • {doctor.specialty}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-end gap-2">
-            <Button type="submit">Aplicar filtros</Button>
-            <Button type="button" variant="ghost" onClick={resetFilters}>
-              Resetar
-            </Button>
-          </div>
-        </form>
+              <div className="space-y-2">
+                <Label htmlFor="start_date" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-500" />
+                  Data Inicial
+                </Label>
+                <Input id="start_date" type="date" {...register("start_date")} />
+                {errors.start_date && <p className="text-xs text-red-500">{errors.start_date.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_date" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-500" />
+                  Data Final
+                </Label>
+                <Input id="end_date" type="date" {...register("end_date")} />
+                {errors.end_date && <p className="text-xs text-red-500">{errors.end_date.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doctor_id" className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-slate-500" />
+                  Médico
+                </Label>
+                <select
+                  id="doctor_id"
+                  className={clsx(
+                    "w-full rounded-md border border-slate-200 dark:border-slate-700",
+                    "bg-white dark:bg-slate-800 px-3 py-2 text-sm",
+                    "focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                    "text-slate-900 dark:text-white",
+                    TRANSITIONS.common.all
+                  )}
+                  {...register("doctor_id")}
+                >
+                  <option value="">Todos os médicos</option>
+                  {doctors.map((doctor) => (
+                    <option key={doctor.id} value={doctor.id}>
+                      {doctor.name} • {doctor.specialty}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end gap-2">
+                <Button type="submit" className="w-full">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Aplicar
+                </Button>
+                <Button type="button" variant="outline" onClick={resetFilters} className="w-full">
+                  Resetar
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* Botões de Exportação - Profissionais */}
+        <div className="flex flex-wrap items-center justify-end gap-3">
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={() => exportReports("csv")}
             disabled={exporting || (!summary && doctorOccupancy.length === 0 && insuranceUsage.length === 0)}
+            className="hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-300 dark:hover:border-emerald-700"
           >
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={() => exportReports("json")}
             disabled={exporting || (!summary && doctorOccupancy.length === 0 && insuranceUsage.length === 0)}
+            className="hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-300 dark:hover:border-purple-700"
           >
             <FileJson className="mr-2 h-4 w-4" />
             Exportar JSON
           </Button>
           <Button
-            variant="default"
-            className="bg-blue-600 hover:bg-blue-700"
+            variant="primary"
+            disabled={exporting || (!summary && doctorOccupancy.length === 0 && insuranceUsage.length === 0)}
+            className="shadow-md hover:shadow-lg"
           >
-            <Download className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             Exportar PDF
           </Button>
         </div>
@@ -354,58 +400,132 @@ export default function AdminReportsPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-4">
+          {/* Cards de Resumo - Elegantes */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
-              <div className="space-y-1 p-4">
-                <p className="text-xs font-semibold uppercase text-blue-700 dark:text-blue-300">Total de consultas</p>
-                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{summary?.total ?? 0}</p>
-                <p className="text-xs text-blue-700 dark:text-blue-400">
-                  Período:{" "}
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className={clsx(TYPOGRAPHY.body.small, "font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300")}>
+                    Total de consultas
+                  </CardTitle>
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className={clsx(TYPOGRAPHY.heading.h2, "text-blue-900 dark:text-blue-100 mb-2")}>
+                  {summary?.total ?? 0}
+                </p>
+                <p className={clsx(TYPOGRAPHY.body.small, "text-blue-700 dark:text-blue-400")}>
                   {summary
                     ? `${summary.start_date} a ${summary.end_date}`
                     : "Nenhum período carregado"}
                 </p>
-              </div>
+              </CardContent>
             </Card>
-            {statusCards.map((card, index) => (
-              <Card key={card.label} variant="interactive" className="animate-fade-in" style={{ animationDelay: `${(index + 1) * 50}ms` }}>
-                <div className="space-y-1 p-4">
-                  <p className="text-xs font-semibold uppercase text-slate-700 dark:text-slate-300">{card.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">{card.total}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">{card.percentage}% do total</p>
-                </div>
-              </Card>
-            ))}
+            {statusCards.map((card, index) => {
+              const statusColors: Record<string, { border: string; icon: string; text: string }> = {
+                'CONFIRMED': { border: 'border-l-emerald-500 dark:border-l-emerald-400', icon: 'text-emerald-600 dark:text-emerald-400', text: 'text-emerald-700 dark:text-emerald-300' },
+                'PENDING': { border: 'border-l-amber-500 dark:border-l-amber-400', icon: 'text-amber-600 dark:text-amber-400', text: 'text-amber-700 dark:text-amber-300' },
+                'CANCELLED': { border: 'border-l-red-500 dark:border-l-red-400', icon: 'text-red-600 dark:text-red-400', text: 'text-red-700 dark:text-red-300' },
+                'COMPLETED': { border: 'border-l-blue-500 dark:border-l-blue-400', icon: 'text-blue-600 dark:text-blue-400', text: 'text-blue-700 dark:text-blue-300' },
+              };
+              const colors = statusColors[card.label] || { border: 'border-l-slate-500', icon: 'text-slate-600', text: 'text-slate-700' };
+              return (
+                <Card 
+                  key={card.label} 
+                  variant="interactive" 
+                  className={clsx("border-l-4 animate-fade-in", colors.border)} 
+                  style={{ animationDelay: `${(index + 1) * 50}ms` }}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className={clsx(TYPOGRAPHY.body.small, "font-semibold uppercase tracking-wide", colors.text)}>
+                        {card.label}
+                      </CardTitle>
+                      <div className={clsx("p-2 rounded-lg", colors.icon.includes('emerald') ? 'bg-emerald-100 dark:bg-emerald-900/30' : colors.icon.includes('amber') ? 'bg-amber-100 dark:bg-amber-900/30' : colors.icon.includes('red') ? 'bg-red-100 dark:bg-red-900/30' : 'bg-blue-100 dark:bg-blue-900/30')}>
+                        <CheckCircle2 className={clsx("h-4 w-4", colors.icon)} />
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className={clsx(TYPOGRAPHY.heading.h2, COLORS.text.primary, "mb-2")}>
+                      {card.total}
+                    </p>
+                    <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                      {card.percentage}% do total
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
-          {/* Resumo Executivo */}
+          {/* Resumo Executivo - Melhorado */}
           <div className="grid gap-4 md:grid-cols-2">
             <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400 animate-fade-in">
-              <CardContent className="p-6">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Total de Consultas</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">{summary?.total || 0}</p>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <CardTitle className={clsx(TYPOGRAPHY.heading.h5, COLORS.text.primary)}>
+                    Total de Consultas
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary, "mb-2")}>
+                  {summary?.total || 0}
+                </p>
+                <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                  No período selecionado
+                </p>
               </CardContent>
             </Card>
             <Card variant="interactive" className="border-l-4 border-l-emerald-500 dark:border-l-emerald-400 animate-fade-in" style={{ animationDelay: '50ms' }}>
-              <CardContent className="p-6">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Taxa de Comparecimento</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">{attendanceRate}%</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                    <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <CardTitle className={clsx(TYPOGRAPHY.heading.h5, COLORS.text.primary)}>
+                    Taxa de Comparecimento
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className={clsx(TYPOGRAPHY.heading.h1, "text-emerald-600 dark:text-emerald-400 mb-2")}>
+                  {attendanceRate}%
+                </p>
+                <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
                   {summary?.by_status.COMPLETED?.total || 0} consultas concluídas
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Gráficos */}
+          {/* Gráficos Profissionais */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Consultas por Médico */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Consultas por Médico</CardTitle>
-                <CardDescription>Distribuição de consultas por status (máximo 10 médicos com mais consultas)</CardDescription>
+            <Card variant="interactive" className="overflow-hidden">
+              <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                      Consultas por Médico
+                    </CardTitle>
+                    <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                      Distribuição por status (top 10 médicos)
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {loading ? (
                   <Skeleton className="h-64 w-full" />
                 ) : doctorChartData.length > 0 ? (
@@ -415,34 +535,60 @@ export default function AdminReportsPage() {
                       layout="vertical"
                       margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
+                      <XAxis 
+                        type="number" 
+                        stroke="#64748b"
+                        className="dark:stroke-slate-400"
+                        tick={{ fill: 'currentColor' }}
+                      />
                       <YAxis 
                         type="category" 
                         dataKey="name" 
                         width={100}
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fill: 'currentColor' }}
+                        stroke="#64748b"
+                        className="dark:stroke-slate-400"
                       />
-                      <Tooltip />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        }}
+                        className="dark:bg-slate-800 dark:border-slate-700"
+                      />
                       <Legend />
-                      <Bar dataKey="Confirmadas" stackId="a" fill="#3b82f6" />
-                      <Bar dataKey="Concluídas" stackId="a" fill="#10b981" />
-                      <Bar dataKey="Canceladas" stackId="a" fill="#ef4444" />
+                      <Bar dataKey="Confirmadas" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Concluídas" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Canceladas" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <EmptyState>Nenhum dado disponível</EmptyState>
+                  <EmptyState variant="no-data" title="Nenhum dado disponível" description="Não há dados de médicos para o período selecionado." />
                 )}
               </CardContent>
             </Card>
 
             {/* Distribuição por Especialidade */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribuição por Especialidade</CardTitle>
-                <CardDescription>Percentual de consultas por área médica</CardDescription>
+            <Card variant="interactive" className="overflow-hidden">
+              <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                    <BarChart3 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                      Distribuição por Especialidade
+                    </CardTitle>
+                    <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                      Percentual de consultas por área médica
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {loading ? (
                   <Skeleton className="h-64 w-full" />
                 ) : specialtyChartData.length > 0 ? (
@@ -454,41 +600,66 @@ export default function AdminReportsPage() {
                         cy="50%"
                         labelLine={false}
                         label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                        outerRadius={80}
+                        outerRadius={90}
                         fill="#8884d8"
                         dataKey="value"
                       >
                         {specialtyChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        }}
+                        className="dark:bg-slate-800 dark:border-slate-700"
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <EmptyState>Nenhum dado disponível</EmptyState>
+                  <EmptyState variant="no-data" title="Nenhum dado disponível" description="Não há dados de especialidades para o período selecionado." />
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Consultas por Convênio */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Consultas por Convênio</CardTitle>
-              <CardDescription>Distribuição de consultas por plano de saúde</CardDescription>
+          {/* Consultas por Convênio - Tabela Elegante */}
+          <Card variant="interactive" className="overflow-hidden">
+            <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                  <ShieldCheck className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                    Consultas por Convênio
+                  </CardTitle>
+                  <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                    Distribuição de consultas por plano de saúde
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {loading ? (
                 <Skeleton className="h-64 w-full" />
               ) : insuranceUsage.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
                   <table className="w-full">
-                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                    <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Convênio</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Número de Consultas</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Percentual</th>
+                        <th className={clsx("px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Convênio
+                        </th>
+                        <th className={clsx("px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Número de Consultas
+                        </th>
+                        <th className={clsx("px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Percentual
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
@@ -498,83 +669,122 @@ export default function AdminReportsPage() {
                           <tr 
                             key={item.health_insurance_id}
                             className={clsx(
-                              "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150",
+                              "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-150 hover:shadow-sm",
                               index % 2 === 0 ? "bg-white dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50",
                               "animate-fade-in"
                             )}
                             style={{ animationDelay: `${index * 30}ms` }}
                           >
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                            <td className={clsx("px-6 py-4 whitespace-nowrap text-sm font-medium", COLORS.text.primary)}>
                               {item.name}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
+                            <td className={clsx("px-6 py-4 whitespace-nowrap text-sm", COLORS.text.secondary)}>
                               {item.total_appointments}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">
+                            <td className={clsx("px-6 py-4 whitespace-nowrap text-sm font-semibold", COLORS.text.secondary)}>
                               {percentage}%
                             </td>
                           </tr>
                         );
                       })}
-                      <tr className="bg-slate-100 dark:bg-slate-700 font-semibold">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">Total</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
+                      <tr className="bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 font-semibold border-t-2 border-slate-300 dark:border-slate-600">
+                        <td className={clsx("px-6 py-4 whitespace-nowrap text-sm", COLORS.text.primary)}>Total</td>
+                        <td className={clsx("px-6 py-4 whitespace-nowrap text-sm", COLORS.text.primary)}>
                           {insuranceUsage.reduce((sum, item) => sum + item.total_appointments, 0)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">100%</td>
+                        <td className={clsx("px-6 py-4 whitespace-nowrap text-sm", COLORS.text.secondary)}>100%</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <EmptyState>Nenhum dado disponível</EmptyState>
+                <EmptyState variant="no-data" title="Nenhum dado disponível" description="Não há dados de convênios para o período selecionado." />
               )}
             </CardContent>
           </Card>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Resumo de consultas</CardTitle>
-                <CardDescription>
-                  {summary
-                    ? `Período de ${summary.start_date} até ${summary.end_date}`
-                    : "Sem dados no período"}
-                </CardDescription>
+            <Card variant="interactive" className="overflow-hidden">
+              <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                      Resumo de Consultas
+                    </CardTitle>
+                    <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                      {summary
+                        ? `Período de ${summary.start_date} até ${summary.end_date}`
+                        : "Sem dados no período"}
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <div className="space-y-3 p-6 pt-0">
+              <CardContent className="pt-6">
                 {summary ? (
-                  <>
-                    <p className="text-sm text-slate-600">
-                      Total de consultas:{" "}
-                      <span className="font-semibold text-slate-900">{summary.total}</span>
-                    </p>
+                  <div className="space-y-4">
+                    <div className={clsx("p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800")}>
+                      <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary, "mb-1")}>
+                        Total de consultas
+                      </p>
+                      <p className={clsx(TYPOGRAPHY.heading.h2, "text-blue-900 dark:text-blue-100")}>
+                        {summary.total}
+                      </p>
+                    </div>
                     <div className="grid gap-3 md:grid-cols-2">
-                      {Object.entries(summary.by_status).map(([status, info]) => (
-                        <div key={status} className="rounded-md border border-slate-200 p-3">
-                          <p className="text-xs uppercase text-slate-500">{status}</p>
-                          <p className="text-lg font-semibold text-slate-900">{info.total}</p>
-                          <p className="text-xs text-slate-500">{info.percentage}%</p>
+                      {Object.entries(summary.by_status).map(([status, info], idx) => (
+                        <div 
+                          key={status} 
+                          className={clsx(
+                            "rounded-lg border-2 p-4 transition-all duration-200 hover:shadow-md",
+                            "border-slate-200 dark:border-slate-700",
+                            "bg-white dark:bg-slate-800",
+                            "animate-fade-in"
+                          )}
+                          style={{ animationDelay: `${idx * 50}ms` }}
+                        >
+                          <p className={clsx(TYPOGRAPHY.body.small, "uppercase font-semibold mb-1", COLORS.text.secondary)}>
+                            {status}
+                          </p>
+                          <p className={clsx(TYPOGRAPHY.heading.h3, COLORS.text.primary)}>
+                            {info.total}
+                          </p>
+                          <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                            {info.percentage}% do total
+                          </p>
                         </div>
                       ))}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase text-slate-500">Tendência diária</p>
+                      <p className={clsx(TYPOGRAPHY.body.small, "font-semibold uppercase mb-3", COLORS.text.secondary)}>
+                        Tendência diária (últimos 14 dias)
+                      </p>
                       {summary.trend.length === 0 ? (
-                        <p className="text-xs text-slate-500">Sem registros no período.</p>
+                        <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                          Sem registros no período.
+                        </p>
                       ) : (
-                        <div className="mt-3 flex h-24 items-end gap-1">
-                          {summary.trend.slice(-14).map((item) => {
+                        <div className="mt-3 flex h-32 items-end gap-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 p-4">
+                          {summary.trend.slice(-14).map((item, idx) => {
                             const max = Math.max(...summary.trend.map((trend) => trend.total)) || 1;
                             const height = Math.max((item.total / max) * 100, 4);
                             return (
-                              <div key={item.date} className="group flex flex-col items-center">
+                              <div key={item.date} className="group flex flex-col items-center flex-1">
                                 <div
-                                  className="w-3 rounded-t bg-blue-500 transition-colors group-hover:bg-blue-600"
+                                  className={clsx(
+                                    "w-full rounded-t bg-gradient-to-t from-blue-500 to-blue-400",
+                                    "transition-all duration-200 group-hover:from-blue-600 group-hover:to-blue-500",
+                                    "shadow-sm group-hover:shadow-md"
+                                  )}
                                   style={{ height: `${height}%` }}
                                 />
-                                <span className="mt-1 hidden text-[10px] text-slate-500 group-hover:block">
+                                <span className="mt-2 hidden text-[10px] font-semibold text-slate-600 dark:text-slate-400 group-hover:block">
                                   {item.total}
+                                </span>
+                                <span className="mt-1 text-[9px] text-slate-500 dark:text-slate-500">
+                                  {new Date(item.date).getDate()}
                                 </span>
                               </div>
                             );
@@ -582,90 +792,146 @@ export default function AdminReportsPage() {
                         </div>
                       )}
                     </div>
-                  </>
+                  </div>
                 ) : (
-                  <EmptyState className="border-none bg-transparent p-0">
-                    Nenhum dado disponível para o período informado.
-                  </EmptyState>
+                  <EmptyState variant="no-data" title="Nenhum dado disponível" description="Não há dados para o período informado." />
                 )}
-              </div>
+              </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Uso de convênios</CardTitle>
-                <CardDescription>Convênios mais utilizados nas consultas do período.</CardDescription>
+            <Card variant="interactive" className="overflow-hidden">
+              <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                    <ShieldCheck className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                      Uso de Convênios
+                    </CardTitle>
+                    <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                      Convênios mais utilizados no período
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <div className="p-6 pt-0">
+              <CardContent className="pt-6">
                 {insuranceUsage.length === 0 ? (
-                  <EmptyState className="border-none bg-transparent p-0">
-                    Nenhum convênio registrado no período.
-                  </EmptyState>
+                  <EmptyState variant="no-data" title="Nenhum convênio registrado" description="Não há dados de convênios para o período selecionado." />
                 ) : (
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="text-xs uppercase text-slate-500">
-                      <tr>
-                        <th className="py-2">Convênio</th>
-                        <th className="py-2 text-right">Consultas</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {insuranceUsage.map((item) => (
-                        <tr key={item.health_insurance_id} className="border-t border-slate-200">
-                          <td className="py-2">{item.name}</td>
-                          <td className="py-2 text-right font-medium text-slate-900">
-                            {item.total_appointments}
-                          </td>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                    <table className="w-full">
+                      <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                          <th className={clsx("px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                            Convênio
+                          </th>
+                          <th className={clsx("px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                            Consultas
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                        {insuranceUsage.map((item, index) => (
+                          <tr 
+                            key={item.health_insurance_id}
+                            className={clsx(
+                              "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-150",
+                              index % 2 === 0 ? "bg-white dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50",
+                              "animate-fade-in"
+                            )}
+                            style={{ animationDelay: `${index * 30}ms` }}
+                          >
+                            <td className={clsx("px-4 py-3 text-sm font-medium", COLORS.text.primary)}>
+                              {item.name}
+                            </td>
+                            <td className={clsx("px-4 py-3 text-sm text-right font-semibold", COLORS.text.primary)}>
+                              {item.total_appointments}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
-              </div>
+              </CardContent>
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Ocupação por médico</CardTitle>
-              <CardDescription>
-                Conferir engajamento e volume de consultas por profissional no período.
-              </CardDescription>
+          <Card variant="interactive" className="overflow-hidden">
+            <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                  <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <CardTitle className={clsx(TYPOGRAPHY.heading.h4, COLORS.text.primary)}>
+                    Ocupação por Médico
+                  </CardTitle>
+                  <CardDescription className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary)}>
+                    Engajamento e volume de consultas por profissional
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <div className="p-6 pt-0">
+            <CardContent className="pt-6">
               {doctorOccupancy.length === 0 ? (
-                <EmptyState className="border-none bg-transparent p-0">
-                  Nenhuma consulta registrada para os filtros informados.
-                </EmptyState>
+                <EmptyState variant="no-data" title="Nenhuma consulta registrada" description="Não há dados de ocupação para os filtros informados." />
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[600px] text-left text-sm text-slate-600">
-                    <thead className="text-xs uppercase text-slate-500">
+                <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                  <table className="w-full min-w-[600px]">
+                    <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="py-2">Médico</th>
-                        <th className="py-2 text-right">Consultas</th>
-                        <th className="py-2 text-right">Confirmadas</th>
-                        <th className="py-2 text-right">Concluídas</th>
-                        <th className="py-2 text-right">Ocupação (%)</th>
+                        <th className={clsx("px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Médico
+                        </th>
+                        <th className={clsx("px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Consultas
+                        </th>
+                        <th className={clsx("px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Confirmadas
+                        </th>
+                        <th className={clsx("px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Concluídas
+                        </th>
+                        <th className={clsx("px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider", COLORS.text.secondary)}>
+                          Ocupação (%)
+                        </th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {doctorOccupancy.map((item) => (
-                        <tr key={item.doctor_id} className="border-t border-slate-200">
-                          <td className="py-2">{item.doctor_name}</td>
-                          <td className="py-2 text-right font-medium text-slate-900">
+                    <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                      {doctorOccupancy.map((item, index) => (
+                        <tr 
+                          key={item.doctor_id}
+                          className={clsx(
+                            "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-150 hover:shadow-sm",
+                            index % 2 === 0 ? "bg-white dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50",
+                            "animate-fade-in"
+                          )}
+                          style={{ animationDelay: `${index * 30}ms` }}
+                        >
+                          <td className={clsx("px-6 py-4 text-sm font-medium", COLORS.text.primary)}>
+                            {item.doctor_name}
+                          </td>
+                          <td className={clsx("px-6 py-4 text-sm text-right font-semibold", COLORS.text.primary)}>
                             {item.total_appointments}
                           </td>
-                          <td className="py-2 text-right">{item.confirmed}</td>
-                          <td className="py-2 text-right">{item.completed}</td>
-                          <td className="py-2 text-right">{item.occupancy_rate}%</td>
+                          <td className={clsx("px-6 py-4 text-sm text-right", COLORS.text.secondary)}>
+                            {item.confirmed}
+                          </td>
+                          <td className={clsx("px-6 py-4 text-sm text-right", COLORS.text.secondary)}>
+                            {item.completed}
+                          </td>
+                          <td className={clsx("px-6 py-4 text-sm text-right font-semibold", COLORS.text.secondary)}>
+                            {item.occupancy_rate}%
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               )}
-            </div>
+            </CardContent>
           </Card>
         </>
       )}
