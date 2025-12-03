@@ -38,4 +38,24 @@ class UserController extends Controller
             'Content-Type' => 'text/csv',
         ]);
     }
+
+    public function statistics(): JsonResponse
+    {
+        $stats = $this->service->getStatistics();
+        return response()->json($stats);
+    }
+
+    public function update(Request $request, int $userId): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|max:255|unique:users,email,' . $userId,
+            'phone' => 'sometimes|string|max:20',
+            'is_active' => 'sometimes|boolean',
+        ]);
+
+        $user = $this->service->update($userId, $validated);
+
+        return (new UserResource($user))->response();
+    }
 }

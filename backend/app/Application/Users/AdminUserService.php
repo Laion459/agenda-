@@ -61,4 +61,52 @@ class AdminUserService
 
         return [$header, $rows];
     }
+
+    public function getStatistics(): array
+    {
+        $total = User::count();
+        $active = User::where('is_active', true)->count();
+        $inactive = $total - $active;
+        
+        $byRole = User::selectRaw('role, COUNT(*) as count')
+            ->groupBy('role')
+            ->pluck('count', 'role')
+            ->toArray();
+
+        return [
+            'total' => $total,
+            'active' => $active,
+            'inactive' => $inactive,
+            'by_role' => [
+                'ADMIN' => $byRole['ADMIN'] ?? 0,
+                'DOCTOR' => $byRole['DOCTOR'] ?? 0,
+                'PATIENT' => $byRole['PATIENT'] ?? 0,
+            ],
+        ];
+    }
+
+    public function update(int $userId, array $data): User
+    {
+        $user = User::findOrFail($userId);
+        
+        if (isset($data['name'])) {
+            $user->name = $data['name'];
+        }
+        
+        if (isset($data['email'])) {
+            $user->email = $data['email'];
+        }
+        
+        if (isset($data['phone'])) {
+            $user->phone = $data['phone'];
+        }
+        
+        if (isset($data['is_active'])) {
+            $user->is_active = filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN);
+        }
+        
+        $user->save();
+        
+        return $user->load(['doctor', 'patient']);
+    }
 }

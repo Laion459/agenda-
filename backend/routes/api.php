@@ -82,7 +82,9 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
         Route::post('admin/patients/{patient}/toggle-active', [AdminPatientController::class, 'toggleActive']);
         Route::post('admin/appointments', [AppointmentController::class, 'storeAsAdmin']);
         Route::get('admin/users', [AdminUserController::class, 'index']);
+        Route::get('admin/users/statistics', [AdminUserController::class, 'statistics']);
         Route::get('admin/users/export', [AdminUserController::class, 'export']);
+        Route::put('admin/users/{user}', [AdminUserController::class, 'update']);
         Route::get('admin/reports/appointments', [AdminReportController::class, 'appointmentSummary']);
         Route::get('admin/reports/appointments/pdf', [AdminReportController::class, 'appointmentSummaryPdf']);
         Route::get('admin/reports/doctor-occupancy', [AdminReportController::class, 'doctorOccupancy']);

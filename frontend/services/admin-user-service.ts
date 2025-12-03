@@ -38,4 +38,28 @@ export async function exportAdminUsers(params?: Record<string, unknown>): Promis
   return new Blob([response.data], { type: "text/csv;charset=utf-8" });
 }
 
+export async function fetchAdminUsersStatistics() {
+  const { data } = await api.get<{
+    total: number;
+    active: number;
+    inactive: number;
+    by_role: {
+      ADMIN: number;
+      DOCTOR: number;
+      PATIENT: number;
+    };
+  }>("/admin/users/statistics");
+  return data;
+}
+
+export async function updateAdminUser(userId: number, data: {
+  name?: string;
+  email?: string;
+  phone?: string;
+  is_active?: boolean;
+}) {
+  const { data: response } = await api.put<User>(`/admin/users/${userId}`, data);
+  return response;
+}
+
 

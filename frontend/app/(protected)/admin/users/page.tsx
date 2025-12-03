@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Download, Search } from "lucide-react";
+import { Download, Search, Users, Filter, Calendar, Eye, Save, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,9 +14,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Modal } from "@/components/ui/modal";
 import { handleApiError } from "@/lib/handle-api-error";
-import { exportAdminUsers, fetchAdminUsers } from "@/services/admin-user-service";
+import { exportAdminUsers, fetchAdminUsers, fetchAdminUsersStatistics, updateAdminUser } from "@/services/admin-user-service";
 import { User } from "@/types";
+import { TYPOGRAPHY, COLORS, ELEVATION, TRANSITIONS } from "@/constants/design-tokens";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -26,12 +28,29 @@ const filterSchema = z.object({
   created_to: z.string().optional(),
 });
 
+const userEditSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+  email: z.string().email("E-mail inválido"),
+  phone: z.string().min(1, "Telefone é obrigatório"),
+  is_active: z.boolean(),
+});
+
 type FilterForm = z.infer<typeof filterSchema>;
+type UserEditForm = z.infer<typeof userEditSchema>;
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [statistics, setStatistics] = useState<{
+    total: number;
+    active: number;
+    inactive: number;
+    by_role: { ADMIN: number; DOCTOR: number; PATIENT: number };
+  } | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const {
     register,
@@ -50,10 +69,40 @@ export default function AdminUsersPage() {
     },
   });
 
+  const {
+    register: registerEdit,
+    handleSubmit: handleSubmitEdit,
+    reset: resetEdit,
+    watch: watchEdit,
+    formState: { errors: errorsEdit },
+    setValue: setEditValue,
+  } = useForm<UserEditForm>({
+    resolver: zodResolver(userEditSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      is_active: false,
+    },
+  });
+
+  const isActiveValue = watchEdit("is_active") ?? false;
+
   const loadUsers = useCallback(async (payload?: FilterForm) => {
     try {
       setLoading(true);
-      const response = await fetchAdminUsers(payload);
+      // Remove valores vazios para não enviar filtros desnecessários
+      const cleanPayload = payload ? Object.fromEntries(
+        Object.entries(payload).filter(([_, value]) => value !== "" && value !== undefined && value !== null)
+      ) : undefined;
+      
+      // Se não há filtros, aumenta o per_page para mostrar mais usuários
+      const params = cleanPayload || {};
+      if (!params.per_page && Object.keys(params).length === 0) {
+        params.per_page = 100; // Mostra até 100 usuários quando não há filtros
+      }
+      
+      const response = await fetchAdminUsers(params);
       setUsers(response.data ?? []);
     } catch (error) {
       handleApiError(error, "Não foi possível carregar os usuários");
@@ -62,20 +111,53 @@ export default function AdminUsersPage() {
     }
   }, []);
 
+  const loadStatistics = useCallback(async () => {
+    try {
+      const stats = await fetchAdminUsersStatistics();
+      setStatistics(stats);
+    } catch (error) {
+      handleApiError(error, "Não foi possível carregar as estatísticas");
+    }
+  }, []);
+
   useEffect(() => {
     void loadUsers();
-  }, [loadUsers]);
+    void loadStatistics();
+  }, [loadUsers, loadStatistics]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setEditValue('name', selectedUser.name || '');
+      setEditValue('email', selectedUser.email || '');
+      setEditValue('phone', selectedUser.phone || '');
+      setEditValue('is_active', selectedUser.is_active ?? false);
+    } else {
+      // Reset form quando não há usuário selecionado
+      resetEdit({
+        name: "",
+        email: "",
+        phone: "",
+        is_active: false,
+      });
+    }
+  }, [selectedUser, setEditValue, resetEdit]);
 
   const onSubmit = async (values: FilterForm) => {
+    // Remove valores vazios para não enviar filtros desnecessários
     const sanitized: FilterForm = {
       search: values.search?.trim() || undefined,
-      role: values.role || undefined,
-      is_active: values.is_active || undefined,
+      role: values.role && values.role !== "" ? values.role : undefined,
+      is_active: values.is_active && values.is_active !== "" ? values.is_active : undefined,
       created_from: values.created_from || undefined,
       created_to: values.created_to || undefined,
     };
 
-    void loadUsers(sanitized);
+    // Remove propriedades undefined
+    const cleanPayload = Object.fromEntries(
+      Object.entries(sanitized).filter(([_, value]) => value !== undefined)
+    ) as FilterForm;
+
+    void loadUsers(Object.keys(cleanPayload).length > 0 ? cleanPayload : undefined);
   };
 
   const onExport = async () => {
@@ -118,7 +200,56 @@ export default function AdminUsersPage() {
     void loadUsers();
   };
 
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+    resetEdit();
+  };
+
+  const handleSaveUser = async (values: UserEditForm) => {
+    if (!selectedUser) return;
+
+    try {
+      setSaving(true);
+      const updated = await updateAdminUser(selectedUser.id, {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        is_active: values.is_active,
+      });
+
+      // Atualiza o usuário na lista
+      setUsers(users.map(u => u.id === updated.id ? updated : u));
+      
+      // Recarrega estatísticas
+      await loadStatistics();
+      
+      toast.success("Usuário atualizado com sucesso");
+      handleCloseModal();
+    } catch (error) {
+      handleApiError(error, "Não foi possível atualizar o usuário");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const summary = useMemo(() => {
+    // Usa estatísticas totais se disponíveis, senão usa dos resultados filtrados
+    if (statistics) {
+      return {
+        total: statistics.total,
+        active: statistics.active,
+        inactive: statistics.inactive,
+        byRole: statistics.by_role,
+      };
+    }
+
+    // Fallback para estatísticas dos resultados filtrados
     const total = users.length;
     const active = users.filter((user) => user.is_active).length;
     const byRole = users.reduce<Record<string, number>>((acc, user) => {
@@ -132,7 +263,7 @@ export default function AdminUsersPage() {
       inactive: total - active,
       byRole,
     };
-  }, [users]);
+  }, [users, statistics]);
 
   const roleLabels: Record<string, string> = {
     ADMIN: "Administradores",
@@ -142,10 +273,30 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      {/* Header */}
+      <div className="flex items-center gap-4 animate-fade-in">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg">
+          <Users className="h-7 w-7 text-white" />
+        </div>
+        <div>
+          <h1 className={clsx(TYPOGRAPHY.heading.h1, COLORS.text.primary)}>
+            Usuários
+          </h1>
+          <p className={clsx(TYPOGRAPHY.body.base, COLORS.text.secondary, "flex items-center gap-2 mt-1")}>
+            <Filter className="h-4 w-4 text-blue-500" />
+            Administre todos os perfis cadastrados no sistema
+          </p>
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400">
         <CardHeader>
-          <CardTitle>Usuários</CardTitle>
-          <CardDescription>Administre todos os perfis cadastrados no sistema.</CardDescription>
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <CardTitle>Filtros de Busca</CardTitle>
+          </div>
+          <CardDescription>Filtre os usuários por perfil, status ou período de criação</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 p-6 pt-0 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2 md:col-span-2 lg:col-span-1">
@@ -158,10 +309,13 @@ export default function AdminUsersPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="role">Perfil</Label>
+            <Label htmlFor="role" className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-slate-500" />
+              Perfil
+            </Label>
             <select
               id="role"
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:border-blue-400 transition-colors"
               {...register("role")}
             >
               <option value="">Todos</option>
@@ -174,7 +328,7 @@ export default function AdminUsersPage() {
             <Label htmlFor="is_active">Status</Label>
             <select
               id="is_active"
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:border-blue-400 transition-colors"
               {...register("is_active")}
             >
               <option value="">Todos</option>
@@ -183,23 +337,32 @@ export default function AdminUsersPage() {
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="created_from">Criado a partir de</Label>
+            <Label htmlFor="created_from" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-slate-500" />
+              Criado a partir de
+            </Label>
             <Input id="created_from" type="date" {...register("created_from")} />
             {errors.created_from && (
               <p className="text-xs text-red-500">{errors.created_from.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="created_to">Criado até</Label>
+            <Label htmlFor="created_to" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-slate-500" />
+              Criado até
+            </Label>
             <Input id="created_to" type="date" {...register("created_to")} />
             {errors.created_to && <p className="text-xs text-red-500">{errors.created_to.message}</p>}
           </div>
-          <div className="flex items-end gap-2">
-            <Button type="submit">Aplicar filtros</Button>
+          <div className="flex items-end gap-2 md:col-span-2 lg:col-span-3">
+            <Button type="submit" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Aplicar filtros
+            </Button>
             <Button type="button" variant="ghost" onClick={resetFilters}>
               Limpar
             </Button>
-            <Button type="button" variant="secondary" onClick={onExport} disabled={exporting}>
+            <Button type="button" variant="secondary" onClick={onExport} disabled={exporting} className="ml-auto">
               <Download className="mr-2 h-4 w-4" />
               {exporting ? "Exportando..." : "Exportar CSV"}
             </Button>
@@ -306,12 +469,114 @@ export default function AdminUsersPage() {
                       </p>
                     )}
                   </div>
+                  <div className="flex justify-end mt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewUser(user)}
+                      className="flex items-center gap-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Visualizar
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </div>
       </Card>
+
+      {/* Modal de Visualização/Edição */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={selectedUser ? `Editar Usuário: ${selectedUser.name}` : "Visualizar Usuário"}
+        size="lg"
+      >
+        {selectedUser && (
+          <form onSubmit={handleSubmitEdit(handleSaveUser)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome</Label>
+              <Input
+                id="edit-name"
+                {...registerEdit("name")}
+                error={errorsEdit.name?.message}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">E-mail</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                {...registerEdit("email")}
+                error={errorsEdit.email?.message}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Telefone</Label>
+              <Input
+                id="edit-phone"
+                {...registerEdit("phone")}
+                error={errorsEdit.phone?.message}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Perfil</Label>
+              <Input
+                id="edit-role"
+                value={selectedUser.role}
+                disabled
+                className="bg-slate-100 dark:bg-slate-800"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  id="edit-is_active"
+                  type="checkbox"
+                  checked={isActiveValue}
+                  onChange={(e) => setEditValue("is_active", e.target.checked)}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                />
+                <Label htmlFor="edit-is_active" className="cursor-pointer">
+                  Usuário Ativo
+                </Label>
+              </div>
+            </div>
+
+            {selectedUser.role === "DOCTOR" && selectedUser.doctor && (
+              <div className="space-y-2">
+                <Label>CRM</Label>
+                <Input value={selectedUser.doctor.crm || "N/D"} disabled className="bg-slate-100 dark:bg-slate-800" />
+              </div>
+            )}
+
+            {selectedUser.role === "PATIENT" && selectedUser.patient && (
+              <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input value={selectedUser.patient.cpf || "N/D"} disabled className="bg-slate-100 dark:bg-slate-800" />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <Button type="button" variant="ghost" onClick={handleCloseModal}>
+                <X className="h-4 w-4 mr-2" />
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }
