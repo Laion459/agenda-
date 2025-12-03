@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Admin\ActivityLogController as AdminActivityLogController;
+use App\Http\Controllers\API\Admin\AdminController as AdminAdminController;
 use App\Http\Controllers\API\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\API\Admin\PatientController as AdminPatientController;
 use App\Http\Controllers\API\Admin\ReportController as AdminReportController;
@@ -80,6 +81,11 @@ Route::middleware(['auth:sanctum', 'active', 'audit', 'throttle:api'])->group(fu
         Route::post('admin/doctors/{doctor}/toggle-active', [AdminDoctorController::class, 'toggleActive']);
         Route::apiResource('admin/patients', AdminPatientController::class);
         Route::post('admin/patients/{patient}/toggle-active', [AdminPatientController::class, 'toggleActive']);
+        Route::get('admin/admins', [AdminAdminController::class, 'index']);
+        Route::post('admin/admins', [AdminAdminController::class, 'store']);
+        Route::put('admin/admins/{admin}', [AdminAdminController::class, 'update']);
+        Route::delete('admin/admins/{admin}', [AdminAdminController::class, 'destroy']);
+        Route::get('admin/admins/statistics', [AdminAdminController::class, 'statistics']);
         Route::post('admin/appointments', [AppointmentController::class, 'storeAsAdmin']);
         Route::get('admin/users', [AdminUserController::class, 'index']);
         Route::get('admin/users/statistics', [AdminUserController::class, 'statistics']);

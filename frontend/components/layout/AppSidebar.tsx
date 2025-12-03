@@ -20,6 +20,8 @@ import {
   ChevronLeft,
   PanelLeftClose,
   PanelLeftOpen,
+  Stethoscope,
+  Shield,
 } from "lucide-react";
 
 import { useAuthStore } from "@/store/auth-store";
@@ -66,8 +68,9 @@ export function AppSidebar() {
     // Admin tem menu completo unificado
     links.push(
       { href: "/admin", label: "Resumo", icon: LayoutDashboard },
-      { href: "/admin/doctors", label: "Médicos", icon: UserCog },
+      { href: "/admin/doctors", label: "Médicos", icon: Stethoscope },
       { href: "/admin/patients", label: "Pacientes", icon: Users },
+      { href: "/admin/admins", label: "Administradores", icon: Shield },
       { href: "/admin/users", label: "Usuários", icon: Users },
       { href: "/admin/health-insurances", label: "Convênios", icon: ShieldCheck },
       { href: "/admin/reports", label: "Relatórios", icon: BarChart3 },
@@ -112,7 +115,7 @@ export function AppSidebar() {
       <aside
         ref={sidebarRef}
         className={clsx(
-          "hidden lg:flex fixed lg:sticky top-0 left-0 h-screen z-30 flex-col border-r border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700",
+          "hidden lg:flex fixed top-[73px] left-0 h-[calc(100vh-73px)] z-30 flex-col border-r border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700",
           "transition-all duration-300 ease-in-out shadow-lg lg:shadow-none backdrop-blur-sm bg-white/95 dark:bg-slate-900/95",
           isOpen
             ? "w-64 translate-x-0"
