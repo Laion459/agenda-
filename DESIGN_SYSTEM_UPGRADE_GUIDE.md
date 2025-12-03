@@ -637,6 +637,42 @@ Todas as melhorias principais foram implementadas com sucesso! A aplicação ago
 
 ---
 
+## 📦 Commit History
+
+### Commit: `9eb0569` - feat: implement design system upgrades and fix appointment scheduling issues
+
+**Data:** 2025-12-02
+
+**Principais Mudanças:**
+- Design System completo implementado
+- Correções críticas no sistema de agendamento
+- Melhorias no tratamento de erros
+- 38 arquivos alterados, 3142 inserções, 755 deleções
+
+**Arquivos Criados:**
+- `DESIGN_SYSTEM_UPGRADE_GUIDE.md` - Guia completo do design system
+- `frontend/components/ui/progress-bar.tsx` - Componente de barra de progresso
+- `frontend/lib/animations.ts` - Sistema de animações centralizado
+
+**Arquivos Modificados:**
+- Componentes UI base (Button, Card, Input, Modal, etc.)
+- Layout components (AppHeader, AppSidebar, MobileMenu)
+- Páginas principais (Dashboards, Appointments, Doctors, Notifications, Profile)
+- Páginas Admin (Doctors, Patients)
+- Sistema de tratamento de erros (handleApiError, errorHandler)
+- Correções no sistema de agendamento (appointments/page.tsx)
+
+### Commit: `4aa9780` - docs: update design system guide with recent fixes and improvements
+
+**Data:** 2025-12-02
+
+**Mudanças:**
+- Atualização do guia com correções críticas implementadas
+- Documentação das melhorias no sistema de agendamento
+- Histórico de commits adicionado
+
+---
+
 **Última Atualização:** 2025-12-02  
 **Próxima Revisão:** Conforme progresso
 
