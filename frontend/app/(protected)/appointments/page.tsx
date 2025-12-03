@@ -35,7 +35,6 @@ import { APPOINTMENT_STATUS_OPTIONS } from "@/constants/appointments";
 import { Modal } from "@/components/ui/modal";
 import { Plus, Clock, Loader2, ChevronLeft, ChevronRight, X, Calendar, CalendarClock, Eye, CheckCircle2, FileText } from "lucide-react";
 
-// Schema base para criação de consultas
 const baseAppointmentSchema = z.object({
   doctor_id: z.coerce.number().min(1, "Selecione um médico"),
   patient_id: z.coerce.number().optional(),
@@ -92,7 +91,6 @@ export default function AppointmentsPage() {
   const [currentMonth, setCurrentMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [doctorHasNoSchedules, setDoctorHasNoSchedules] = useState(false);
   
-  // Estados para remarcação
   const [availableSlotsReschedule, setAvailableSlotsReschedule] = useState<string[]>([]);
   const [loadingSlotsReschedule, setLoadingSlotsReschedule] = useState(false);
   const [availableDatesReschedule, setAvailableDatesReschedule] = useState<string[]>([]);
@@ -105,7 +103,6 @@ export default function AppointmentsPage() {
   const isPatient = user?.role === 'PATIENT';
   const isAdmin = user?.role === 'ADMIN';
 
-  // Schema dinâmico baseado no role
   const appointmentSchema = useMemo(() => {
     if (isAdmin) {
       return baseAppointmentSchema.extend({
@@ -133,7 +130,6 @@ export default function AppointmentsPage() {
   const watchedDoctorId = watch('doctor_id');
   const watchedDate = watch('scheduled_at');
 
-  // Carrega horários disponíveis quando médico e data são selecionados
   useEffect(() => {
     const loadAvailableSlots = async () => {
       if (!watchedDoctorId || !watchedDate) {
@@ -142,8 +138,6 @@ export default function AppointmentsPage() {
       }
 
       try {
-        // Extrai apenas a data (sem hora) do campo
-        // Pode vir como "2025-01-15" (do calendário) ou "2025-01-15T14:00" (do botão de horário)
         let dateOnly = '';
         if (watchedDate.includes('T')) {
           dateOnly = watchedDate.split('T')[0];
@@ -160,8 +154,6 @@ export default function AppointmentsPage() {
         }
 
         setLoadingSlots(true);
-        // A duração será determinada pelo schedule do médico, não pelo paciente
-        // Passamos undefined para o backend usar a duração do schedule
         const response = await fetchAvailableSlots(
           Number(watchedDoctorId),
           dateOnly
@@ -177,7 +169,6 @@ export default function AppointmentsPage() {
     loadAvailableSlots();
   }, [watchedDoctorId, watchedDate]);
 
-  // Função para carregar dias disponíveis do mês
   const loadAvailableDates = async (doctorId: number) => {
     if (!doctorId) {
       setAvailableDates([]);
@@ -229,13 +220,11 @@ export default function AppointmentsPage() {
         const appointmentsResponse = await fetchAppointments({ per_page: 20, status: statusFilter });
         setAppointments(appointmentsResponse.data ?? []);
 
-        // Carrega médicos para pacientes ou admin
         if (isPatient || isAdmin) {
           const doctorResponse = await fetchDoctors({ per_page: 100 });
           setDoctors(doctorResponse.data ?? []);
         }
 
-        // Carrega pacientes para admin
         if (isAdmin) {
           const patientResponse = await fetchAdminPatients({ per_page: 100 });
           setPatients(patientResponse.data ?? []);
@@ -250,14 +239,12 @@ export default function AppointmentsPage() {
     load();
   }, [isPatient, isAdmin, statusFilter]);
 
-  // Carrega datas disponíveis quando médico é selecionado
   useEffect(() => {
     if (watchedDoctorId && isPatient) {
       loadAvailableDates(Number(watchedDoctorId));
     }
   }, [watchedDoctorId, currentMonth, isPatient]);
 
-  // Carrega datas e horários disponíveis quando uma consulta é selecionada para remarcação
   useEffect(() => {
     if (!selectedReschedule) {
       setAvailableDatesReschedule([]);
@@ -268,7 +255,6 @@ export default function AppointmentsPage() {
     const doctorId = selectedReschedule.doctor_id;
     if (!doctorId) return;
 
-    // Carregar datas disponíveis do mês atual
     const loadRescheduleDates = async () => {
       try {
         setLoadingDatesReschedule(true);
@@ -286,7 +272,6 @@ export default function AppointmentsPage() {
     loadRescheduleDates();
   }, [selectedReschedule, currentMonthReschedule]);
 
-  // Carrega horários disponíveis quando uma data é selecionada no remarcar
   useEffect(() => {
     if (!selectedReschedule) {
       setAvailableSlotsReschedule([]);
@@ -296,8 +281,6 @@ export default function AppointmentsPage() {
     const doctorId = selectedReschedule.doctor_id;
     if (!doctorId) return;
 
-    // Pega apenas a data (sem hora) do valor atual
-    // watchedRescheduleDate pode ser "2025-12-05" (só data) ou "2025-12-05T14:30" (data+hora)
     const dateOnly = watchedRescheduleDate?.split('T')[0];
     if (!dateOnly || dateOnly.length !== 10) {
       setAvailableSlotsReschedule([]);
@@ -308,20 +291,9 @@ export default function AppointmentsPage() {
       try {
         setLoadingSlotsReschedule(true);
         const response = await fetchAvailableSlots(doctorId, dateOnly);
-        
-        // Log para debug
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[Remarcar] Horários disponíveis carregados:', response.available_slots?.length || 0, 'horários');
-          console.log('[Remarcar] Data consultada:', dateOnly);
-          console.log('[Remarcar] Médico ID:', doctorId);
-          if (response.available_slots && response.available_slots.length > 0) {
-            console.log('[Remarcar] Primeiros horários:', response.available_slots.slice(0, 3));
-          }
-        }
-        
         setAvailableSlotsReschedule(response.available_slots || []);
       } catch (error) {
-        console.error('[Remarcar] Erro ao carregar horários:', error);
+        handleApiError(error, 'Erro ao carregar horários disponíveis');
         setAvailableSlotsReschedule([]);
       } finally {
         setLoadingSlotsReschedule(false);
@@ -338,65 +310,43 @@ export default function AppointmentsPage() {
 
   const onCreateAppointment = async (values: PatientForm) => {
     try {
-      // Parse os valores usando o schema para obter os valores transformados
       const parsed = appointmentSchema.parse(values);
       
-      // Para pacientes: REMOVE duration_minutes - a duração é definida pelo médico/admin via schedule
+      // Duração é definida pelo médico/admin via schedule, não pelo paciente
       if (isPatient && 'duration_minutes' in parsed) {
         delete parsed.duration_minutes;
       }
       
-      // Converte datetime para formato que o backend espera
       if (parsed.scheduled_at) {
-        // Garante que está no formato correto
         let dateTime: Date;
         
         if (typeof parsed.scheduled_at === 'string') {
-          // Se já está no formato datetime-local (YYYY-MM-DDTHH:MM)
           if (parsed.scheduled_at.includes('T')) {
             dateTime = new Date(parsed.scheduled_at);
           } else if (parsed.scheduled_at.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/)) {
-            // Se já está no formato YYYY-MM-DD HH:MM
             dateTime = new Date(parsed.scheduled_at.replace(' ', 'T'));
           } else {
-            // Assume que é apenas data
             dateTime = new Date(parsed.scheduled_at + 'T09:00:00');
           }
         } else {
           dateTime = parsed.scheduled_at as unknown as Date;
         }
         
-        // Valida se a data é válida
         if (isNaN(dateTime.getTime())) {
           toast.error('Data/hora inválida');
           return;
         }
         
-        // Log para debug em desenvolvimento
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[Agendar] Processando agendamento:', {
-            scheduled_at_original: parsed.scheduled_at,
-            dateTime_parsed: dateTime.toISOString(),
-            availableSlots_count: availableSlots.length,
-          });
-        }
-        
-        // REMOVIDA validação de disponibilidade no frontend
-        // O backend já valida isso no AppointmentValidationService
-        // Deixamos o backend fazer a validação correta
+        // Validação de disponibilidade é feita pelo backend para evitar problemas de timezone
         
         // Backend espera formato 'Y-m-d H:i:s' (ex: '2025-12-19 19:30:00')
-        // EXTRAI DIRETAMENTE DA STRING ORIGINAL para evitar problemas de timezone
-        // NUNCA usa Date.getHours() ou Date.getMinutes() pois eles podem mudar devido ao timezone
+        // Extrai diretamente da string para evitar problemas de timezone
         if (typeof parsed.scheduled_at === 'string') {
           if (parsed.scheduled_at.includes('T')) {
-            // Formato ISO: 'YYYY-MM-DDTHH:mm' - extrai componentes diretamente da string
             const match = parsed.scheduled_at.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
             if (match) {
-              // Usa os valores EXATOS da string, sem conversão de timezone
               parsed.scheduled_at = `${match[1]}-${match[2]}-${match[3]} ${match[4]}:${match[5]}:00`;
             } else {
-              // Fallback: tenta parsear
               const year = dateTime.getFullYear();
               const month = String(dateTime.getMonth() + 1).padStart(2, '0');
               const day = String(dateTime.getDate()).padStart(2, '0');
@@ -405,13 +355,10 @@ export default function AppointmentsPage() {
               parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:00`;
             }
           } else if (parsed.scheduled_at.includes(' ')) {
-            // Já está no formato 'Y-m-d H:i:s' ou 'Y-m-d H:i'
             if (parsed.scheduled_at.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) {
               parsed.scheduled_at = `${parsed.scheduled_at}:00`;
             }
-            // Se já tem segundos, mantém como está
           } else {
-            // Fallback: usa Date (último recurso)
             const year = dateTime.getFullYear();
             const month = String(dateTime.getMonth() + 1).padStart(2, '0');
             const day = String(dateTime.getDate()).padStart(2, '0');
@@ -420,7 +367,6 @@ export default function AppointmentsPage() {
             parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:00`;
           }
         } else {
-          // Fallback: usa Date (último recurso)
           const year = dateTime.getFullYear();
           const month = String(dateTime.getMonth() + 1).padStart(2, '0');
           const day = String(dateTime.getDate()).padStart(2, '0');
@@ -429,19 +375,7 @@ export default function AppointmentsPage() {
           parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:00`;
         }
         
-        // Log para debug
-        if (process.env.NODE_ENV === 'development') {
-          const sentMatch = parsed.scheduled_at.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}):(\d{2})/);
-          const matchingSlot = availableSlots.find(s => {
-            const slotMatch = String(s).match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
-            return slotMatch && sentMatch && 
-                   slotMatch[1] === sentMatch[1] && 
-                   slotMatch[2] === sentMatch[2];
-          });
-          
-          console.log('[Agendar] Formato final enviado ao backend:', {
-            scheduled_at: parsed.scheduled_at,
-            duration_minutes: parsed.duration_minutes,
+        // Formato enviado ao backend: 'Y-m-d H:i:s'
             dateTimeISO: dateTime.toISOString(),
             dateTimeLocal: dateTime.toLocaleString('pt-BR'),
             availableSlots: availableSlots.slice(0, 5), // Primeiros 5 slots
@@ -451,29 +385,25 @@ export default function AppointmentsPage() {
         }
       }
       
-      // Para pacientes: duração é SEMPRE definida pelo médico/admin via schedule
-      // NUNCA enviamos duration_minutes para pacientes - o backend busca do schedule
+      // Duração é definida pelo médico/admin via schedule, não pelo paciente
       if (isPatient) {
         delete parsed.duration_minutes;
       }
       
-      // Log para debug em desenvolvimento
       
-      // Mostrar toast de loading
       const toastId = toast.loading('Criando consulta...', { id: 'creating-appointment' });
       
       if (isAdmin) {
         // Admin usa endpoint específico que aceita patient_id
         await createAdminAppointment(parsed);
       } else {
-        // Remove patient_id se não for admin (pacientes não podem escolher outro paciente)
+        // Pacientes não podem escolher outro paciente
         if ('patient_id' in parsed) {
           delete parsed.patient_id;
         }
         await createAppointment(parsed);
       }
       
-      // Sucesso com animação
       toast.success('✅ Consulta agendada com sucesso!', { 
         id: 'creating-appointment',
         duration: 3000,
@@ -486,32 +416,12 @@ export default function AppointmentsPage() {
       setPatientSearch('');
       setDoctorSearch('');
       
-      // Resetar estado de sucesso após 2 segundos
       setTimeout(() => {
         setCreateSuccess(false);
       }, 2000);
       
       await reloadAppointments();
     } catch (error) {
-      // Log detalhado do erro para debug
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[onCreateAppointment] Erro capturado:', error);
-        console.error('[onCreateAppointment] Tipo do erro:', typeof error);
-        console.error('[onCreateAppointment] String do erro:', String(error));
-        
-        if (error && typeof error === 'object') {
-          const errorObj = error as Record<string, unknown>;
-          console.error('[onCreateAppointment] Propriedades do erro:', Object.getOwnPropertyNames(errorObj));
-          console.error('[onCreateAppointment] Tem response?', !!errorObj.response);
-          console.error('[onCreateAppointment] Tem message?', !!errorObj.message);
-          
-          if (errorObj.response) {
-            const response = errorObj.response as Record<string, unknown>;
-            console.error('[onCreateAppointment] Response status:', response.status);
-            console.error('[onCreateAppointment] Response data:', response.data);
-          }
-        }
-      }
       
       toast.error('❌ Não foi possível criar a consulta', { 
         id: 'creating-appointment',
@@ -538,7 +448,6 @@ export default function AppointmentsPage() {
       });
       setSuccessId(id);
       await reloadAppointments();
-      // Resetar estado de sucesso após 2 segundos
       setTimeout(() => {
         setSuccessId(null);
       }, 2000);
@@ -571,7 +480,6 @@ export default function AppointmentsPage() {
       });
       setSuccessId(id);
       await reloadAppointments();
-      // Resetar estado de sucesso após 2 segundos
       setTimeout(() => {
         setSuccessId(null);
       }, 2000);
@@ -613,57 +521,29 @@ export default function AppointmentsPage() {
     setErrorId(null);
     try {
       const toastId = toast.loading('Remarcando consulta...', { id: `reschedule-${selectedReschedule.id}` });
-      // Parse os valores usando o schema para obter os valores transformados
       const parsed = rescheduleSchema.parse(values);
       
-      // Converte para formato que o backend espera (mesmo formato da criação)
       if (!parsed.scheduled_at) {
         throw new Error('Data e horário são obrigatórios');
       }
       
-      // Log para debug
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[onReschedule] Valor recebido do formulário:', parsed.scheduled_at);
-        console.log('[onReschedule] Tipo:', typeof parsed.scheduled_at);
-      }
-      
-      // Garante que o valor tenha formato completo (data + hora)
       let dateTimeStr = parsed.scheduled_at;
       
-      // Se só tem data (YYYY-MM-DD), não permite - deve ter horário
       if (dateTimeStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         throw new Error('Por favor, selecione um horário disponível. Clique em um dos horários mostrados abaixo.');
       }
       
-      // Se tem data e hora mas sem segundos, adiciona segundos
       if (dateTimeStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
         dateTimeStr = `${dateTimeStr}:00`;
       }
       
-      // Log para debug
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[onReschedule] DateTimeStr após processamento:', dateTimeStr);
-      }
-      
       const dateTime = new Date(dateTimeStr);
       
-      // Valida se a data é válida
       if (isNaN(dateTime.getTime())) {
-        console.error('[onReschedule] Data inválida:', dateTimeStr);
         throw new Error(`Data/hora inválida: ${parsed.scheduled_at}. Por favor, selecione novamente a data e horário.`);
       }
       
-      // Log para debug
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[onReschedule] DateTime criado:', dateTime);
-        console.log('[onReschedule] DateTime ISO:', dateTime.toISOString());
-      }
-      
-      // Valida se o horário está na lista de horários disponíveis (validação opcional - backend também valida)
-      // Removemos a validação muito restritiva aqui e deixamos o backend validar
-      // Isso evita problemas de timezone e diferenças de formato
-      
-      // Converte para formato ISO sem timezone (formato que Laravel aceita melhor)
+      // Validação de disponibilidade é feita pelo backend para evitar problemas de timezone
       const year = dateTime.getFullYear();
       const month = String(dateTime.getMonth() + 1).padStart(2, '0');
       const day = String(dateTime.getDate()).padStart(2, '0');
@@ -673,7 +553,7 @@ export default function AppointmentsPage() {
       
       parsed.scheduled_at = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       
-      // Remove duration_minutes se for paciente - a duração é definida pelo médico
+      // Duração é definida pelo médico, não pelo paciente
       if (isPatient && 'duration_minutes' in parsed) {
         delete parsed.duration_minutes;
       }
@@ -692,14 +572,12 @@ export default function AppointmentsPage() {
         setSuccessId(null);
       }, 2000);
     } catch (error) {
-      // Verifica se é um erro do frontend (lançado por nós) ou da API
       const isFrontendError = error instanceof Error && 
         !(error && typeof error === 'object' && 'response' in error);
       
       let errorMessage = 'Erro ao remarcar consulta';
       
       if (isFrontendError && error instanceof Error) {
-        // Erro do frontend - mostra mensagem diretamente
         errorMessage = error.message;
         toast.error(`❌ ${errorMessage}`, { 
           id: `reschedule-${selectedReschedule.id}`,
@@ -710,57 +588,21 @@ export default function AppointmentsPage() {
           setErrorId(null);
         }, 3000);
       } else {
-        // Erro da API - usa handleApiError
-        // Log detalhado do erro para debug
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[onReschedule] Erro da API:', error);
-          
-          if (error && typeof error === 'object') {
-            const errorObj = error as Record<string, unknown>;
-            
-            if (errorObj.response) {
-              const response = errorObj.response as Record<string, unknown>;
-              console.error('[onReschedule] Response status:', response.status);
-              console.error('[onReschedule] Response data:', response.data);
-              
-              // Se for erro de validação, mostra mensagem específica
-              if (response.data && typeof response.data === 'object') {
-                const data = response.data as Record<string, unknown>;
-                if (data.message) {
-                  console.error('[onReschedule] Mensagem do servidor:', data.message);
-                  errorMessage = String(data.message);
-                }
-                if (data.errors) {
-                  console.error('[onReschedule] Erros de validação:', data.errors);
-                  const errors = data.errors as Record<string, string[] | string>;
-                  const firstError = Object.values(errors)[0];
-                  if (Array.isArray(firstError)) {
-                    errorMessage = firstError[0] || errorMessage;
-                  } else if (typeof firstError === 'string') {
-                    errorMessage = firstError;
-                  }
-                }
-              }
-            }
-          }
-        } else {
-          // Em produção, tenta extrair mensagem sem logs excessivos
-          if (error && typeof error === 'object') {
-            const errorObj = error as Record<string, unknown>;
-            if (errorObj.response) {
-              const response = errorObj.response as Record<string, unknown>;
-              if (response.data && typeof response.data === 'object') {
-                const data = response.data as Record<string, unknown>;
-                if (typeof data.message === 'string') {
-                  errorMessage = data.message;
-                } else if (data.errors && typeof data.errors === 'object') {
-                  const errors = data.errors as Record<string, string[] | string>;
-                  const firstError = Object.values(errors)[0];
-                  if (Array.isArray(firstError)) {
-                    errorMessage = firstError[0] || errorMessage;
-                  } else if (typeof firstError === 'string') {
-                    errorMessage = firstError;
-                  }
+        if (error && typeof error === 'object') {
+          const errorObj = error as Record<string, unknown>;
+          if (errorObj.response) {
+            const response = errorObj.response as Record<string, unknown>;
+            if (response.data && typeof response.data === 'object') {
+              const data = response.data as Record<string, unknown>;
+              if (typeof data.message === 'string') {
+                errorMessage = data.message;
+              } else if (data.errors && typeof data.errors === 'object') {
+                const errors = data.errors as Record<string, string[] | string>;
+                const firstError = Object.values(errors)[0];
+                if (Array.isArray(firstError)) {
+                  errorMessage = firstError[0] || errorMessage;
+                } else if (typeof firstError === 'string') {
+                  errorMessage = firstError;
                 }
               }
             }
@@ -916,9 +758,7 @@ export default function AppointmentsPage() {
                       }
                     }}
                     onDateSelect={(date) => {
-                      // Quando uma data é selecionada, limpa o horário e carrega os horários disponíveis
                       setValue('scheduled_at', date);
-                      // O useEffect vai detectar a mudança e carregar os horários automaticamente
                     }}
                     selectedDate={watchedDate?.split('T')[0] || watchedDate || ''}
                     doctorHasNoSchedules={doctorHasNoSchedules}
@@ -942,17 +782,14 @@ export default function AppointmentsPage() {
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-md">
                       {availableSlots.map((slot) => {
                         // Backend retorna slots no formato 'Y-m-d H:i:s' (ex: '2025-12-24 13:00:00')
-                        // Extrai diretamente da string para evitar problemas de timezone
                         const slotMatch = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
                         let datetimeValue: string;
                         let timeStr: string;
                         
                         if (slotMatch) {
-                          // Usa os valores EXATOS do slot, sem conversão de timezone
                           datetimeValue = `${slotMatch[1]}T${slotMatch[2]}`;
-                          timeStr = slotMatch[2]; // HH:mm
+                          timeStr = slotMatch[2];
                         } else {
-                          // Fallback: se já estiver no formato ISO
                           const isoMatch = slot.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
                           if (isoMatch) {
                             datetimeValue = isoMatch[1];
@@ -979,13 +816,7 @@ export default function AppointmentsPage() {
                             key={slot}
                             type="button"
                             onClick={() => {
-                              // Log para debug
                               if (process.env.NODE_ENV === 'development') {
-                                console.log('[Agendar] Selecionando horário (paciente):', {
-                                  datetimeValue,
-                                  slotOriginal: slot,
-                                  slotMatch,
-                                });
                               }
                               setValue('scheduled_at', datetimeValue, { shouldValidate: true });
                             }}
@@ -1219,17 +1050,14 @@ export default function AppointmentsPage() {
                               <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800/50">
                                 {availableSlots.map((slot) => {
                                   // Backend retorna slots no formato 'Y-m-d H:i:s' (ex: '2025-12-24 13:00:00')
-                                  // Extrai diretamente da string para evitar problemas de timezone
                                   let datetimeValue: string;
                                   let timeStr: string;
                                   
                                   const slotMatch = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
                                   if (slotMatch) {
-                                    // Usa os valores EXATOS do slot, sem conversão de timezone
                                     datetimeValue = `${slotMatch[1]}T${slotMatch[2]}`;
-                                    timeStr = slotMatch[2]; // HH:mm para exibição
+                                    timeStr = slotMatch[2];
                                   } else {
-                                    // Fallback: se já estiver no formato ISO
                                     const isoMatch = slot.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
                                     if (isoMatch) {
                                       datetimeValue = isoMatch[1];
@@ -1256,10 +1084,8 @@ export default function AppointmentsPage() {
                                       key={slot}
                                       type="button"
                                       onClick={() => {
-                                        // Log para debug
-                                        if (process.env.NODE_ENV === 'development') {
-                                          const match = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
-                                          console.log('[Agendar] Selecionando horário:', {
+                                        const match = slot.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
+                                          // Seleciona horário
                                             datetimeValue,
                                             slotOriginal: slot,
                                             slotMatch: match,
@@ -1336,11 +1162,9 @@ export default function AppointmentsPage() {
                     isOpen={showCreatePatientDialog}
                     onClose={() => setShowCreatePatientDialog(false)}
                     onSuccess={async (newPatient) => {
-                      // Recarrega a lista de pacientes
                       const patientResponse = await fetchAdminPatients({ per_page: 100 });
                       setPatients(patientResponse.data ?? []);
                       
-                      // Seleciona o paciente recém-criado no formulário
                       setValue('patient_id', newPatient.id);
                       setPatientSearch(newPatient.name);
                       
@@ -1466,7 +1290,6 @@ export default function AppointmentsPage() {
                               setSelectedReschedule(appointment);
                               setCurrentMonthReschedule(new Date(appointment.scheduled_at).toISOString().slice(0, 7));
                               resetReschedule();
-                              // Não pré-selecionar data/hora - deixar usuário escolher das disponíveis
                             }}
                             className="gap-1.5 text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-900/20"
                           >
@@ -1600,9 +1423,6 @@ export default function AppointmentsPage() {
                   }
                 }}
                 onDateSelect={(date) => {
-                  // Quando seleciona apenas a data, seta apenas a data (sem hora)
-                  // Os horários serão carregados automaticamente pelo useEffect
-                  // O usuário precisará clicar em um horário para completar a seleção
                   setRescheduleValue('scheduled_at', date, { shouldValidate: false });
                 }}
                 selectedDate={watchedRescheduleDate?.split('T')[0] || ''}
@@ -1638,12 +1458,8 @@ export default function AppointmentsPage() {
                         minute: '2-digit' 
                       });
                       
-                      // Para o valor do formulário, extrai do slot original
-                      // O slot do backend já tem a data/hora correta
-                      // Extrai apenas YYYY-MM-DDTHH:mm (sem segundos e timezone)
                       let datetimeValue: string;
                       
-                      // Tenta extrair diretamente do formato do slot
                       const slotMatch = slot.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
                       if (slotMatch) {
                         datetimeValue = slotMatch[1];
@@ -1657,7 +1473,6 @@ export default function AppointmentsPage() {
                         datetimeValue = `${year}-${month}-${day}T${hours}:${minutes}`;
                       }
                       
-                      // Verifica se está selecionado (compara data+hora completa)
                       const isSelected = watchedRescheduleDate && (
                         watchedRescheduleDate === datetimeValue || 
                         watchedRescheduleDate.startsWith(datetimeValue)
@@ -1668,14 +1483,6 @@ export default function AppointmentsPage() {
                           key={slot}
                           type="button"
                           onClick={() => {
-                            // Log para debug
-                            if (process.env.NODE_ENV === 'development') {
-                              console.log('[Remarcar] Selecionando horário:', datetimeValue);
-                              console.log('[Remarcar] Slot original do backend:', slot);
-                              console.log('[Remarcar] SlotDate processado:', slotDate);
-                              console.log('[Remarcar] Valor atual do formulário:', watchedRescheduleDate);
-                            }
-                            // Seta o valor completo (data + hora)
                             setRescheduleValue('scheduled_at', datetimeValue, { shouldValidate: true });
                           }}
                           className={`
@@ -1972,7 +1779,6 @@ export default function AppointmentsPage() {
   );
 }
 
-// Componente para criar paciente rapidamente
 function CreatePatientModal({ 
   isOpen, 
   onClose, 
@@ -2004,7 +1810,6 @@ function CreatePatientModal({
   const onSubmit = async (values: z.infer<typeof createPatientSchema>) => {
     setLoading(true);
     try {
-      // Gera senha aleatória temporária
       const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
       
       const newPatient = await createPatient({
@@ -2119,7 +1924,6 @@ function CreatePatientModal({
   );
 }
 
-// Componente de Calendário para Seleção de Dias Disponíveis
 function AppointmentCalendar({
   availableDates,
   loadingDates,
@@ -2137,16 +1941,14 @@ function AppointmentCalendar({
   selectedDate: string;
   doctorHasNoSchedules?: boolean;
 }) {
-  // Garante que currentMonth está no formato correto
-  // currentMonth vem como 'YYYY-MM', então adicionamos '-01' para criar uma data válida
   const [yearStr, monthStr] = currentMonth.split('-');
   const year = parseInt(yearStr, 10);
-  const month = parseInt(monthStr, 10) - 1; // Converte de 1-12 para 0-11
+  const month = parseInt(monthStr, 10) - 1;
   
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay(); // 0 = Domingo, 1 = Segunda, etc.
+  const startingDayOfWeek = firstDay.getDay();
   
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -2155,10 +1957,6 @@ function AppointmentCalendar({
   
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   
-  // Debug em desenvolvimento
-  if (process.env.NODE_ENV === 'development') {
-  }
-  
   const handlePrevMonth = () => {
     const prevMonth = new Date(year, month - 1, 1);
     const monthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
@@ -2166,29 +1964,20 @@ function AppointmentCalendar({
   };
   
   const handleNextMonth = () => {
-    // Calcula o próximo mês
-    // month é 0-based (0 = janeiro, 11 = dezembro)
     let nextYear = year;
     let nextMonthValue = month + 1;
     
-    // Se passou de dezembro, vai para janeiro do próximo ano
     if (nextMonthValue > 11) {
       nextMonthValue = 0;
       nextYear += 1;
     }
     
-    // Converte para formato YYYY-MM (nextMonthValue + 1 porque precisamos de 1-12)
     const monthStr = `${nextYear}-${String(nextMonthValue + 1).padStart(2, '0')}`;
-    
-    // Debug em desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-    }
     
     onMonthChange(monthStr);
   };
   
   const isDateAvailable = (date: Date): boolean => {
-    // Formata a data como YYYY-MM-DD sem depender de timezone
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -2198,7 +1987,6 @@ function AppointmentCalendar({
   };
   
   const isDateSelected = (date: Date): boolean => {
-    // Formata a data como YYYY-MM-DD sem depender de timezone
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -2215,7 +2003,6 @@ function AppointmentCalendar({
   
   const handleDateClick = (date: Date) => {
     if (isDatePast(date) || !isDateAvailable(date)) return;
-    // Formata a data como YYYY-MM-DD sem depender de timezone
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -2236,7 +2023,6 @@ function AppointmentCalendar({
     // Dias do mês
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      // Formata a data como YYYY-MM-DD sem depender de timezone
       const yearStr = date.getFullYear();
       const monthStr = String(date.getMonth() + 1).padStart(2, '0');
       const dayStr = String(date.getDate()).padStart(2, '0');

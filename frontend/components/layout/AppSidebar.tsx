@@ -122,7 +122,7 @@ export function AppSidebar() {
             : "-translate-x-full lg:translate-x-0 lg:w-20"
         )}
       >
-        {/* Header do Sidebar - botão toggle profissional */}
+        {/* Header do Sidebar */}
         <div className={clsx(
           "flex items-center justify-center border-b border-slate-200 dark:border-slate-700 min-h-[73px] transition-all duration-300 px-4"
         )}>

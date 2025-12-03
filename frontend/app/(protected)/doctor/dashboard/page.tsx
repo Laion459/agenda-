@@ -133,7 +133,7 @@ export default function DoctorDashboardPage() {
 
     return (
       <div className="space-y-6">
-        {/* Cabeçalho da semana - Elegante */}
+        {/* Cabeçalho da semana */}
         <div className="grid grid-cols-7 gap-2 mb-6">
           {weekDayNames.map((dayName, idx) => {
             const day = weekDays[idx];
@@ -312,7 +312,7 @@ export default function DoctorDashboardPage() {
       <div className="grid gap-6 lg:grid-cols-[400px_1fr]">
         {/* Sidebar - Calendário e Estatísticas */}
         <div className="space-y-6">
-          {/* Calendário Elegante */}
+          {/* Calendário */}
           <Card variant="interactive" className="overflow-hidden">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
@@ -356,7 +356,7 @@ export default function DoctorDashboardPage() {
                 ))}
               </div>
 
-              {/* Calendário Elegante */}
+              {/* Calendário */}
               <div className="grid grid-cols-7 gap-1.5">
                 {daysInMonth.map((day, idx) => {
                   const isCurrentMonth = isSameMonth(day, currentDate);
@@ -397,7 +397,7 @@ export default function DoctorDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Estatísticas do Dia - Cards Elegantes */}
+          {/* Estatísticas do Dia */}
           <Card variant="interactive" className="border-l-4 border-l-blue-500 dark:border-l-blue-400">
             <CardHeader className="pb-4">
               <CardTitle className={clsx(TYPOGRAPHY.heading.h5, COLORS.text.primary, "flex items-center gap-2")}>
@@ -488,7 +488,7 @@ export default function DoctorDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Ações Rápidas - Elegantes */}
+          {/* Ações Rápidas */}
           <Card variant="interactive" className="border-l-4 border-l-purple-500 dark:border-l-purple-400">
             <CardHeader className="pb-4">
               <CardTitle className={clsx(TYPOGRAPHY.heading.h5, COLORS.text.primary, "flex items-center gap-2")}>
@@ -529,7 +529,7 @@ export default function DoctorDashboardPage() {
           </Card>
         </div>
 
-        {/* Main Content - Agenda Profissional */}
+        {/* Main Content */}
         <Card variant="interactive" className="overflow-hidden">
           <CardHeader className="border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">

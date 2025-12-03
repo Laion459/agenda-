@@ -169,7 +169,7 @@ export function MobileMenu() {
         aria-hidden="true"
       />
 
-      {/* Menu lateral - Design Premium e Profissional */}
+      {/* Menu lateral */}
       <aside
         className={clsx(
           'fixed top-0 left-0 h-full w-80 sm:w-96 bg-white dark:bg-slate-900 shadow-2xl z-[9999]',
@@ -184,7 +184,7 @@ export function MobileMenu() {
         role="navigation"
       >
         <div className="flex flex-col h-full overflow-hidden">
-          {/* Header do menu - Design Premium */}
+          {/* Header do menu */}
           <div className={clsx(
             "relative flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700",
             "bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800",
@@ -223,7 +223,7 @@ export function MobileMenu() {
               </div>
             </div>
             
-            {/* Botão fechar - Design Premium */}
+            {/* Botão fechar */}
             <button
               onClick={handleClose}
               className={clsx(
@@ -243,7 +243,7 @@ export function MobileMenu() {
             </button>
           </div>
 
-          {/* Perfil do usuário - Design Premium */}
+          {/* Perfil do usuário */}
           <div className={clsx(
             "p-6 border-b border-slate-200 dark:border-slate-700",
             "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900"
@@ -278,7 +278,7 @@ export function MobileMenu() {
             </div>
           </div>
 
-          {/* Lista de navegação - Design Premium */}
+          {/* Lista de navegação */}
           <nav className="flex-1 overflow-y-auto p-4 space-y-2">
             <ul className="space-y-2">
               {navItems.map((item, index) => {
@@ -350,7 +350,7 @@ export function MobileMenu() {
             </ul>
           </nav>
 
-          {/* Footer do menu - Design Premium */}
+          {/* Footer do menu */}
           <div className={clsx(
             "p-4 border-t border-slate-200 dark:border-slate-700",
             "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900"
@@ -382,7 +382,7 @@ export function MobileMenu() {
 
   return (
     <>
-      {/* Botão do menu hambúrguer - Design Premium */}
+      {/* Botão do menu hambúrguer */}
       <button
         onClick={handleOpen}
         className={clsx(

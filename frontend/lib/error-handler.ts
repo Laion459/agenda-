@@ -243,17 +243,9 @@ export class AppErrorHandler implements ErrorHandler {
         }
       }
       
-      // Loga de forma que sempre mostre algo útil
-      console.error(`[Error Handler] ${context || 'Erro'}:`, serializedDetails);
-      
-      // Se serializedDetails estiver vazio, loga o erro diretamente
-      if (Object.keys(serializedDetails).length === 0 || (Object.keys(serializedDetails).length === 1 && serializedDetails.errorType === 'object')) {
-        console.error(`[Error Handler] ${context || 'Erro'} (fallback):`, error);
-        console.error(`[Error Handler] String do erro:`, String(error));
-        console.error(`[Error Handler] Tipo do erro:`, typeof error);
-        if (error && typeof error === 'object') {
-          console.error(`[Error Handler] Propriedades do erro:`, Object.getOwnPropertyNames(error));
-        }
+      // Log apenas em desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[Error Handler] ${context || 'Erro'}:`, serializedDetails);
       }
     }
 

@@ -92,7 +92,7 @@ export default function DoctorRegisterPage() {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Painel Esquerdo - Hero Premium */}
+      {/* Painel Esquerdo */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 flex-col relative overflow-hidden">
         {/* Efeitos de fundo */}
         <div className="absolute inset-0 overflow-hidden">

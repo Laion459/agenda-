@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Painel Esquerdo - Hero Premium Admin */}
+      {/* Painel Esquerdo */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-900 p-12 flex-col relative overflow-hidden">
         {/* Efeitos de fundo */}
         <div className="absolute inset-0 overflow-hidden">
@@ -96,7 +96,7 @@ export default function AdminLoginPage() {
         </div>
       </div>
       
-      {/* Painel Direito - Formulário Premium */}
+      {/* Painel Direito */}
       <div className="w-full lg:w-1/2 bg-white dark:bg-slate-900 p-8 lg:p-12 flex flex-col justify-center relative">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 via-transparent to-indigo-50/30 dark:from-slate-800/50 dark:via-transparent dark:to-slate-800/50" />
         

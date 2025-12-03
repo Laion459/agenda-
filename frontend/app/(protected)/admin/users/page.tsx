@@ -91,7 +91,6 @@ export default function AdminUsersPage() {
   const loadUsers = useCallback(async (payload?: FilterForm) => {
     try {
       setLoading(true);
-      // Remove valores vazios para não enviar filtros desnecessários
       const cleanPayload = payload ? Object.fromEntries(
         Object.entries(payload).filter(([_, value]) => value !== "" && value !== undefined && value !== null)
       ) : undefined;
@@ -143,7 +142,6 @@ export default function AdminUsersPage() {
   }, [selectedUser, setEditValue, resetEdit]);
 
   const onSubmit = async (values: FilterForm) => {
-    // Remove valores vazios para não enviar filtros desnecessários
     const sanitized: FilterForm = {
       search: values.search?.trim() || undefined,
       role: values.role && values.role !== "" ? values.role : undefined,
@@ -152,7 +150,6 @@ export default function AdminUsersPage() {
       created_to: values.created_to || undefined,
     };
 
-    // Remove propriedades undefined
     const cleanPayload = Object.fromEntries(
       Object.entries(sanitized).filter(([_, value]) => value !== undefined)
     ) as FilterForm;

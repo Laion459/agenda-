@@ -95,7 +95,7 @@ export default function HomePage() {
   if (loginType === 'patient') {
     return (
       <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        {/* Painel Esquerdo - Hero Premium */}
+        {/* Painel Esquerdo */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 p-12 flex-col relative overflow-hidden">
           {/* Efeitos de fundo */}
           <div className="absolute inset-0 overflow-hidden">
@@ -133,7 +133,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Painel Direito - Formulário Premium */}
+        {/* Painel Direito */}
         <div className="w-full lg:w-1/2 bg-white dark:bg-slate-900 p-8 lg:p-12 flex flex-col justify-center relative">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50/30 via-transparent to-blue-50/30 dark:from-slate-800/50 dark:via-transparent dark:to-slate-800/50" />
           
@@ -245,7 +245,7 @@ export default function HomePage() {
   if (loginType === 'doctor') {
     return (
       <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        {/* Painel Esquerdo - Hero Premium */}
+        {/* Painel Esquerdo */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 flex-col relative overflow-hidden">
           {/* Efeitos de fundo */}
           <div className="absolute inset-0 overflow-hidden">
@@ -283,7 +283,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Painel Direito - Formulário Premium */}
+        {/* Painel Direito */}
         <div className="w-full lg:w-1/2 bg-white dark:bg-slate-900 p-8 lg:p-12 flex flex-col justify-center relative">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-transparent to-purple-50/30 dark:from-slate-800/50 dark:via-transparent dark:to-slate-800/50" />
           
@@ -405,7 +405,7 @@ export default function HomePage() {
 
         {/* Conteúdo */}
         <div className="relative z-10 flex flex-col h-full">
-          {/* Logo Premium */}
+          {/* Logo */}
           <div className="mb-12 animate-fade-in">
             <div className="flex items-center space-x-4 mb-12">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-2xl border border-white/30 transition-transform duration-300 hover:scale-110">
@@ -453,7 +453,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Elementos Visuais Premium - Substituindo Imagem */}
+          {/* Elementos Visuais */}
           <div className="flex-1 flex items-center justify-center relative mt-8">
             <div className="relative w-full max-w-2xl">
               {/* Grid de Cards Flutuantes com Ícones */}
@@ -558,13 +558,13 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Painel Direito - Acesso Premium */}
+      {/* Painel Direito */}
       <div className="w-full lg:w-1/2 bg-white dark:bg-slate-900 p-8 lg:p-12 flex flex-col justify-center relative">
         {/* Background decorativo sutil */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-transparent to-blue-50/50 dark:from-slate-800/50 dark:via-transparent dark:to-slate-800/50" />
         
         <div className="max-w-md mx-auto w-full relative z-10">
-          {/* Logo mobile premium */}
+          {/* Logo mobile */}
           <div className="lg:hidden flex items-center space-x-3 mb-8 animate-fade-in">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <Calendar className="h-6 w-6 text-white" />
@@ -575,7 +575,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Título de Acesso Premium */}
+          {/* Título */}
           <div className="mb-10 animate-fade-in">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -588,9 +588,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Botões de Acesso Premium */}
+          {/* Botões de Acesso */}
           <div className="space-y-4 mb-8">
-            {/* Botão Médico - Premium */}
+            {/* Botão Médico */}
             <Button
               onClick={() => setLoginType('doctor')}
               className={clsx(
@@ -617,7 +617,7 @@ export default function HomePage() {
               <ArrowRight className="h-5 w-5 text-white/80 group-hover:translate-x-1 transition-transform duration-300" />
             </Button>
 
-            {/* Botão Paciente - Premium */}
+            {/* Botão Paciente */}
             <Button
               onClick={() => setLoginType('patient')}
               variant="outline"
@@ -656,7 +656,7 @@ export default function HomePage() {
             </Button>
           </div>
 
-          {/* Link de Cadastro Premium */}
+          {/* Link de Cadastro */}
           <div className="text-center mb-8 animate-fade-in" style={{ animationDelay: '300ms' }}>
             <p className={clsx(TYPOGRAPHY.body.small, COLORS.text.secondary, "inline mr-2")}>
               Primeira vez aqui?
@@ -672,7 +672,7 @@ export default function HomePage() {
             </span>
           </div>
 
-          {/* Área Administrativa Premium */}
+          {/* Área Administrativa */}
           <div className="flex justify-center mb-10 animate-fade-in" style={{ animationDelay: '400ms' }}>
             <Link 
               href="/admin/login" 
@@ -692,7 +692,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Estatísticas Premium */}
+          {/* Estatísticas */}
           <div className={clsx(
             "grid grid-cols-3 gap-4 pt-8 border-t-2",
             "border-slate-200 dark:border-slate-700",

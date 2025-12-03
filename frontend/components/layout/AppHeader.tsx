@@ -136,7 +136,7 @@ export function AppHeader() {
 
       {/* Actions */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Dark Mode Toggle - Upgrade Profissional e Elegante */}
+        {/* Dark Mode Toggle */}
         {mounted && (
           <Button
             variant="ghost"

@@ -388,7 +388,7 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-      {/* Atividades Recentes - Elegantes */}
+      {/* Atividades Recentes */}
       <Card variant="interactive" className="overflow-hidden">
           <CardHeader className="border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-3">

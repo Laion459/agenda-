@@ -74,7 +74,7 @@ export const STATUS_COLORS = {
   },
 } as const;
 
-// Cores de fundo neutras e elegantes
+// Cores de fundo neutras
 export const BACKGROUND_COLORS = {
   primary: 'bg-white',
   secondary: 'bg-slate-50',

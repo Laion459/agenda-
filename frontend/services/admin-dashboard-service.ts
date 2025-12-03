@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { handleApiError } from "@/lib/handle-api-error";
 
 interface DoctorData {
   id: number;
@@ -88,12 +89,10 @@ export async function fetchDashboardStats() {
   const lastDayLastMonth = new Date(thisYear, thisMonth, 0);
   lastDayLastMonth.setHours(23, 59, 59, 999);
 
-  // Busca todos os dados (sem filtros do backend que podem não existir)
-  // Para as estatísticas, busca as consultas diretamente da API de appointments
   const [appointmentsResponse, doctorsResponse, patientsResponse, insurancesResponse] = await Promise.all([
     api.get("/appointments", {
       params: {
-        per_page: 1000, // Busca todas as consultas
+        per_page: 1000,
         start_date: firstDayLastMonth.toISOString().split("T")[0],
         end_date: now.toISOString().split("T")[0],
       },
@@ -109,7 +108,6 @@ export async function fetchDashboardStats() {
   const patientsData = (patientsResponse.data?.data || patientsResponse.data || []) as PatientData[];
   const insurancesData = (insurancesResponse.data?.data || insurancesResponse.data || []) as InsuranceData[];
 
-  // Calcular consultas de hoje
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -141,13 +139,11 @@ export async function fetchDashboardStats() {
     return aptDate >= firstDayLastMonth && aptDate <= lastDayLastMonth;
   }).length;
 
-  // Calcular crescimento percentual
   const calculateGrowth = (current: number, previous: number): number => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return Math.round(((current - previous) / previous) * 100 * 10) / 10;
   };
 
-  // Calcular médicos
   const activeDoctors = doctorsData.filter((d) => d.is_active).length;
   
   // Médicos novos do mês atual
@@ -157,7 +153,6 @@ export async function fetchDashboardStats() {
     return created >= firstDayThisMonth && created <= now;
   }).length;
 
-  // Total de médicos antes do início do mês atual (para calcular crescimento)
   const doctorsBeforeThisMonth = doctorsData.filter((d) => {
     if (!d.created_at) return false;
     const created = new Date(d.created_at);
@@ -168,7 +163,6 @@ export async function fetchDashboardStats() {
   const doctorsAtEndOfLastMonth = doctorsBeforeThisMonth;
   const doctorsGrowth = calculateGrowth(doctorsData.length, doctorsAtEndOfLastMonth);
 
-  // Calcular pacientes
   const activePatients = patientsData.filter((p) => p.user?.is_active !== false).length;
   
   // Pacientes novos do mês atual
@@ -188,7 +182,6 @@ export async function fetchDashboardStats() {
   const patientsAtEndOfLastMonth = patientsBeforeThisMonth;
   const patientsGrowth = calculateGrowth(patientsData.length, patientsAtEndOfLastMonth);
 
-  // Calcular convênios
   const activeInsurances = insurancesData.filter((i) => i.is_active).length;
   
   // Convênios novos do mês atual
@@ -211,7 +204,6 @@ export async function fetchDashboardStats() {
   // Crescimento de consultas
   const appointmentsGrowth = calculateGrowth(appointmentsThisMonth, appointmentsLastMonth);
 
-  // Total de consultas (todas) - busca todas as consultas sem filtro de data
   const allAppointmentsResponse = await api.get("/appointments", {
     params: {
       per_page: 1000,
@@ -242,7 +234,6 @@ export async function fetchDashboardStats() {
 
 export async function fetchRecentActivities(): Promise<RecentActivity[]> {
   try {
-    // Busca logs de auditoria reais do sistema
     const response = await api.get("/admin/activity-logs", {
       params: {
         per_page: 10,
@@ -252,7 +243,6 @@ export async function fetchRecentActivities(): Promise<RecentActivity[]> {
 
     const logs = response.data?.data || [];
     
-    // Converte logs de auditoria para formato de atividades recentes
     return logs.map((log: any) => {
       const action = log.action || '';
       const user = log.user;
@@ -262,7 +252,6 @@ export async function fetchRecentActivities(): Promise<RecentActivity[]> {
       let icon = 'check';
       let color = 'gray';
 
-      // Determina tipo e formatação baseado na ação
       if (action.includes('POST') && action.includes('doctors')) {
         type = 'doctor_registered';
         title = 'Novo médico cadastrado';
@@ -305,21 +294,19 @@ export async function fetchRecentActivities(): Promise<RecentActivity[]> {
       };
     });
   } catch (error) {
-    // Em caso de erro, retorna array vazio
-    console.error('Erro ao buscar atividades recentes:', error);
+    handleApiError(error, 'Erro ao buscar atividades recentes');
     return [];
   }
 }
 
 export async function fetchMonthlyAppointments(): Promise<MonthlyAppointments[]> {
   try {
-    // Busca consultas diretamente da API de appointments para ter controle total
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     
     const response = await api.get("/appointments", {
       params: {
-        per_page: 1000, // Busca todas as consultas
+        per_page: 1000,
         start_date: sixMonthsAgo.toISOString().split("T")[0],
         end_date: new Date().toISOString().split("T")[0],
       },
@@ -340,7 +327,6 @@ export async function fetchMonthlyAppointments(): Promise<MonthlyAppointments[]>
 
     // Ordenar por data (mais antigo primeiro)
     const sortedEntries = Object.entries(monthly).sort((a, b) => {
-      // Converte "nov. 2025" para Date para ordenar corretamente
       const parseMonth = (str: string) => {
         const [month, year] = str.split(' ');
         const monthMap: Record<string, number> = {
@@ -357,23 +343,21 @@ export async function fetchMonthlyAppointments(): Promise<MonthlyAppointments[]>
       total,
     }));
   } catch (error) {
-    console.error('Erro ao buscar consultas por mês:', error);
+    handleApiError(error, 'Erro ao buscar consultas por mês');
     return [];
   }
 }
 
 export async function fetchSpecialtyDistribution(): Promise<SpecialtyDistribution[]> {
   try {
-    // Busca todas as consultas com informações de médicos
     const now = new Date();
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(now.getMonth() - 6);
 
-    // Busca consultas diretamente da API de appointments (não do report)
     const [appointmentsResponse, doctorsResponse] = await Promise.all([
       api.get("/appointments", {
         params: {
-          per_page: 1000, // Busca todas as consultas
+          per_page: 1000,
           start_date: sixMonthsAgo.toISOString().split("T")[0],
           end_date: now.toISOString().split("T")[0],
         },
@@ -403,10 +387,8 @@ export async function fetchSpecialtyDistribution(): Promise<SpecialtyDistributio
       specialtyCount[specialty] = (specialtyCount[specialty] || 0) + 1;
     });
 
-    // Calcula total para percentuais
     const total = Object.values(specialtyCount).reduce((sum, count) => sum + count, 0);
 
-    // Converte para array e ordena por total (decrescente)
     const distribution = Object.entries(specialtyCount)
       .map(([specialty, count]) => ({
         specialty,
@@ -418,8 +400,7 @@ export async function fetchSpecialtyDistribution(): Promise<SpecialtyDistributio
 
     return distribution;
   } catch (error) {
-    console.error('Erro ao buscar distribuição de especialidades:', error);
-    // Retorna array vazio em caso de erro
+    handleApiError(error, 'Erro ao buscar distribuição de especialidades');
     return [];
   }
 }
