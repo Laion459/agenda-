@@ -51,9 +51,16 @@ api.interceptors.response.use(
       }
     }
     
-    // Preserva informações importantes do erro original
-    const enhancedError = {
+    // Preserva informações importantes do erro original de forma serializável
+    const enhancedError: AxiosError & { 
+      response?: { status: number; statusText: string; data: unknown };
+      request?: unknown;
+      config?: { url?: string; method?: string; baseURL?: string };
+    } = {
       ...handledError,
+      name: handledError.name || 'AxiosError',
+      message: handledError.message,
+      stack: handledError.stack,
       response: error.response ? {
         status: error.response.status,
         statusText: error.response.statusText,

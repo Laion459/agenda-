@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Application\Notifications\NotificationDispatcher;
 use App\Domain\Shared\Enums\AppointmentStatus;
 use App\Domain\Shared\Enums\NotificationChannel;
 use App\Domain\Shared\Enums\UserRole;
@@ -175,15 +176,65 @@ class DatabaseSeeder extends Seeder
             ]);
         });
 
-        // Notifications for all users
-        User::all()->each(function (User $user) {
-            Notification::factory()->count(2)->create([
-                'user_id' => $user->id,
-                'channel' => NotificationChannel::IN_APP->value,
-                'metadata' => ['trigger' => 'seed'],
-            ]);
-        });
+        // Notificações realistas usando o mesmo padrão do sistema
+        $this->createRealisticNotifications($appointments, $admin);
 
         $this->call(DataRetentionPolicySeeder::class);
+    }
+
+    /**
+     * Cria notificações realistas usando o mesmo padrão do sistema (NotificationDispatcher)
+     */
+    private function createRealisticNotifications($appointments, User $admin): void
+    {
+        $notificationDispatcher = app(NotificationDispatcher::class);
+
+        // Notificações para o admin baseadas nas consultas confirmadas (usando template)
+        $confirmedAppointments = $appointments->filter(
+            fn (Appointment $appointment) => $appointment->status === AppointmentStatus::CONFIRMED
+        )->take(2);
+
+        foreach ($confirmedAppointments as $appointment) {
+            $appointment->loadMissing(['doctor.user', 'patient.user']);
+
+            $context = [
+                'patient' => $appointment->patient->user->name,
+                'doctor' => $appointment->doctor->user->name,
+                'date' => $appointment->scheduled_at->translatedFormat('d/m/Y'),
+                'time' => $appointment->scheduled_at->translatedFormat('H:i'),
+            ];
+
+            $notificationDispatcher->dispatchFromTemplate(
+                $admin,
+                'appointment.confirmed.admin',
+                $context,
+                NotificationChannel::IN_APP,
+                ['appointment_id' => $appointment->id, 'trigger' => 'seed']
+            );
+        }
+
+        // Notificação de remarcação para o admin (usando template)
+        $rescheduledAppointment = $appointments->where('status', '!=', AppointmentStatus::CONFIRMED)
+            ->where('status', '!=', AppointmentStatus::COMPLETED)
+            ->first();
+
+        if ($rescheduledAppointment) {
+            $rescheduledAppointment->loadMissing(['doctor.user', 'patient.user']);
+
+            $context = [
+                'patient' => $rescheduledAppointment->patient->user->name,
+                'doctor' => $rescheduledAppointment->doctor->user->name,
+                'date' => $rescheduledAppointment->scheduled_at->translatedFormat('d/m/Y'),
+                'time' => $rescheduledAppointment->scheduled_at->translatedFormat('H:i'),
+            ];
+
+            $notificationDispatcher->dispatchFromTemplate(
+                $admin,
+                'appointment.rescheduled.admin',
+                $context,
+                NotificationChannel::IN_APP,
+                ['appointment_id' => $rescheduledAppointment->id, 'trigger' => 'seed']
+            );
+        }
     }
 }

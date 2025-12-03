@@ -168,19 +168,59 @@ export class AppErrorHandler implements ErrorHandler {
             };
           } else if (typeof error === 'object') {
             const errorObj = error as Record<string, unknown>;
+            
+            // Tenta extrair propriedades diretamente
             for (const [k, v] of Object.entries(errorObj)) {
               if (k !== 'config' && k !== 'request' && v !== null && v !== undefined) {
                 try {
-                  serializedDetails[k] = typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+                  if (typeof v === 'object' && v !== null) {
+                    // Para objetos, tenta serializar recursivamente
+                    const serialized = JSON.parse(JSON.stringify(v, (key, val) => {
+                      if (typeof val === 'function') return '[Function]';
+                      if (val instanceof Error) return { message: val.message, name: val.name };
+                      if (val instanceof Date) return val.toISOString();
+                      return val;
+                    }));
+                    if (serialized && Object.keys(serialized).length > 0) {
+                      serializedDetails[k] = serialized;
+                    }
+                  } else {
+                    serializedDetails[k] = v;
+                  }
                 } catch {
                   serializedDetails[k] = String(v);
                 }
               }
             }
+            
+            // Se ainda estiver vazio, tenta usar Object.getOwnPropertyNames
+            if (Object.keys(serializedDetails).length === 0) {
+              const props = Object.getOwnPropertyNames(errorObj);
+              for (const prop of props) {
+                try {
+                  const value = (errorObj as Record<string, unknown>)[prop];
+                  if (value !== null && value !== undefined && prop !== 'config' && prop !== 'request') {
+                    serializedDetails[prop] = typeof value === 'object' 
+                      ? JSON.parse(JSON.stringify(value)) 
+                      : value;
+                  }
+                } catch {
+                  // Ignora propriedades que não podem ser serializadas
+                }
+              }
+            }
           }
-        } catch {
+        } catch (e) {
           serializedDetails.errorString = String(error);
+          serializedDetails.serializationError = String(e);
         }
+      }
+      
+      // Se ainda estiver vazio, adiciona pelo menos informações básicas
+      if (Object.keys(serializedDetails).length === 0) {
+        serializedDetails.errorType = typeof error;
+        serializedDetails.errorString = String(error);
+        serializedDetails.hasError = error !== null && error !== undefined;
       }
       
       console.error(`[Error Handler] ${context || 'Erro'}:`, serializedDetails);

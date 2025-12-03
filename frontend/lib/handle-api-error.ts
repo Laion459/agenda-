@@ -22,6 +22,7 @@ export function handleApiError(error: unknown, fallback = "Ocorreu um erro inesp
       errorInfo.hasRequest = !!errorObj.request;
       errorInfo.hasMessage = !!errorObj.message;
       
+      // Extrai informações do response
       if (errorObj.response) {
         const response = errorObj.response as Record<string, unknown>;
         errorInfo.responseStatus = response.status;
@@ -30,9 +31,16 @@ export function handleApiError(error: unknown, fallback = "Ocorreu um erro inesp
         // Tenta serializar response.data de forma segura
         if (response.data) {
           try {
-            errorInfo.responseData = JSON.parse(JSON.stringify(response.data));
-          } catch {
+            const dataStr = JSON.stringify(response.data, (key, val) => {
+              if (typeof val === 'function') return '[Function]';
+              if (val instanceof Error) return { message: val.message, name: val.name };
+              if (val instanceof Date) return val.toISOString();
+              return val;
+            });
+            errorInfo.responseData = JSON.parse(dataStr);
+          } catch (e) {
             errorInfo.responseData = String(response.data);
+            errorInfo.responseDataError = String(e);
           }
         }
       }
@@ -55,8 +63,20 @@ export function handleApiError(error: unknown, fallback = "Ocorreu um erro inesp
           }
         }
       }
+      
+      // Tenta extrair todas as propriedades do erro
+      const allProps = Object.getOwnPropertyNames(errorObj);
+      if (allProps.length > 0) {
+        errorInfo.allProperties = allProps;
+      }
     } else if (error) {
       errorInfo.errorString = String(error);
+    }
+    
+    // Garante que sempre há algo para logar
+    if (Object.keys(errorInfo).length === 1) {
+      errorInfo.errorString = String(error);
+      errorInfo.errorType = typeof error;
     }
     
     console.error('[handleApiError] Erro recebido:', errorInfo);
