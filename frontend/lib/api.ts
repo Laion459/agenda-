@@ -5,7 +5,7 @@ import { getStoredToken } from "@/lib/auth-storage";
 // Detecta automaticamente a URL da API baseado no ambiente
 // No Codespace, usa a URL pública; localmente usa localhost
 const getApiUrl = () => {
-  // Se NEXT_PUBLIC_API_URL estiver definido, usa ele
+  // Se NEXT_PUBLIC_API_URL estiver definido, usa ele (prioridade máxima)
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
@@ -13,17 +13,25 @@ const getApiUrl = () => {
   // No browser, detecta a URL baseado na origem atual
   if (typeof window !== 'undefined') {
     const origin = window.location.origin;
+    
     // Se estiver no Codespace (URL contém .app.github.dev ou .preview.app.github.dev)
     if (origin.includes('.app.github.dev') || origin.includes('.preview.app.github.dev')) {
-      // Tenta usar a porta 8000 do mesmo domínio
-      const codespaceUrl = origin.replace(/:\d+$/, ':8000');
-      return `${codespaceUrl}/api`;
+      // No Codespace, as portas aparecem no subdomínio: -3000, -8000, etc.
+      // Substitui -3000 por -8000 para acessar o backend
+      const backendUrl = origin.replace(/-3000\./, '-8000.');
+      return `${backendUrl}/api`;
     }
-    // Localmente, usa localhost:8000
-    return 'http://localhost:8000/api';
+    
+    // Se estiver em localhost (desenvolvimento local)
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return 'http://localhost:8000/api';
+    }
+    
+    // Fallback: tenta usar a mesma origem com porta 8000
+    return `${origin.replace(/:\d+$/, '')}:8000/api`;
   }
   
-  // Fallback para SSR
+  // Fallback para SSR (server-side rendering)
   return 'http://localhost:8000/api';
 };
 
