@@ -47,9 +47,6 @@ services:
     working_dir: /usr/src/app
     ports:
       - "3000:3000"
-    environment:
-      # NEXT_PUBLIC_API_URL removido - o frontend detecta automaticamente a URL correta
-      # Se precisar forçar uma URL específica, defina a variável de ambiente manualmente
     volumes:
       - ./frontend:/usr/src/app
       - frontend-node-modules:/usr/src/app/node_modules
