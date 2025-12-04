@@ -73,10 +73,20 @@ class AppServiceProvider extends ServiceProvider
                 }
                 
                 // Garante que o CORS permite este domínio
+                // Adiciona explicitamente ao allowed_origins para garantir que funcione
                 $corsOrigins = config('cors.allowed_origins', []);
-                if (!in_array("https://{$host}", $corsOrigins) && !in_array("http://{$host}", $corsOrigins)) {
-                    // O padrão regex já cobre, mas garantimos que está configurado
-                    config(['cors.allowed_origins' => array_merge($corsOrigins, ["https://{$host}"])]);
+                $origin = "https://{$host}";
+                if (!in_array($origin, $corsOrigins)) {
+                    $corsOrigins[] = $origin;
+                    config(['cors.allowed_origins' => $corsOrigins]);
+                }
+                
+                // Também atualiza os padrões se necessário
+                $patterns = config('cors.allowed_origins_patterns', []);
+                $pattern = '#^https?://.*\.app\.github\.dev$#';
+                if (!in_array($pattern, $patterns)) {
+                    $patterns[] = $pattern;
+                    config(['cors.allowed_origins_patterns' => $patterns]);
                 }
             }
         });

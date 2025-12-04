@@ -26,8 +26,9 @@ return [
 
     'allowed_origins_patterns' => [
         // Permite qualquer domínio do Codespace (com ou sem porta no subdomínio)
-        '#^https?://[^/]+\.app\.github\.dev$#',
-        '#^https?://[^/]+\.preview\.app\.github\.dev$#',
+        // Padrão mais permissivo para capturar todos os subdomínios do Codespace
+        '#^https?://.*\.app\.github\.dev$#',
+        '#^https?://.*\.preview\.app\.github\.dev$#',
     ],
 
     'allowed_headers' => ['*'],
