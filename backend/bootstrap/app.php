@@ -38,6 +38,11 @@ return Application::configure(basePath: dirname(__DIR__))
             RequestMetricsMiddleware::class,
             EnsureTokenNotExpired::class,
         ]);
+        
+        // Desabilita CSRF para rotas da API (já que usa Sanctum tokens)
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -53,6 +53,25 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // Adiciona suporte dinâmico para domínios do Codespace no Sanctum
+        $this->app->booted(function () {
+            if ($this->app->runningInConsole()) {
+                return;
+            }
+            
+            $request = $this->app->make('request');
+            if ($request && (
+                str_contains($request->getHost(), '.app.github.dev') ||
+                str_contains($request->getHost(), '.preview.app.github.dev')
+            )) {
+                $host = $request->getHost();
+                $stateful = config('sanctum.stateful', []);
+                if (!in_array($host, $stateful)) {
+                    config(['sanctum.stateful' => array_merge($stateful, [$host])]);
+                }
+            }
+        });
+
         // Limpa o cache do Spatie Permission ao iniciar
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
