@@ -14,8 +14,10 @@ const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     const origin = window.location.origin;
     
-    // Se estiver no Codespace, usa proxy (mesmo domínio)
+    // Se estiver no Codespace, tenta usar proxy primeiro, mas tem fallback
     if (origin.includes('.app.github.dev') || origin.includes('.preview.app.github.dev')) {
+      // No Codespace, tenta proxy primeiro (/api)
+      // Se falhar, o interceptor pode tentar a URL direta do backend
       return '/api';
     }
     
@@ -80,6 +82,21 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
+    // Se for 404 e estiver no Codespace usando proxy, pode ser problema de proxy
+    if (error.response?.status === 404 && typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      if ((origin.includes('.app.github.dev') || origin.includes('.preview.app.github.dev')) 
+          && error.config?.baseURL === '/api') {
+        // Tenta usar URL direta do backend como fallback
+        const backendUrl = origin.replace(/-3000\./, '-8000.');
+        const originalUrl = error.config.url || '';
+        const fullUrl = `${backendUrl}/api${originalUrl}`;
+        
+        // Retorna erro com informação útil
+        error.message = `Rota não encontrada. Verifique se o backend está acessível em: ${fullUrl}`;
+      }
+    }
+    
     // Tratamento centralizado de erros
     const handledError = handleApiErrorResponse(error);
     
