@@ -28,14 +28,27 @@ class ValidCpf implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        // Rejeita valores null, array, boolean, object
         if (!is_string($value) && !is_numeric($value)) {
             $fail('O campo :attribute deve ser uma string ou número.');
             return;
         }
 
+        // Converte para string
+        $cpfString = (string) $value;
+
+        // Remove formatação para validar
+        $cpfNumeros = preg_replace('/[^0-9]/', '', $cpfString);
+
+        // Se após remover formatação não sobrar nada ou apenas espaços, é inválido
+        if (strlen($cpfNumeros) === 0 || trim($cpfString) === '') {
+            $fail('O campo :attribute não pode estar vazio.');
+            return;
+        }
+
         try {
             // Tenta criar o Value Object CPF, que já valida automaticamente
-            new CPF((string) $value);
+            new CPF($cpfString);
         } catch (ValidationException $e) {
             $messages = $e->errors();
             $fail($messages[$attribute][0] ?? 'O CPF informado é inválido.');

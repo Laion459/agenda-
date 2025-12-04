@@ -49,7 +49,7 @@ class IntegrationTest extends TestCase
             'name' => 'Maria Santos',
             'email' => 'maria@test.com',
             'phone' => '(11) 88888-8888',
-            'cpf' => '12345678901',
+            'cpf' => '12345678909',
             'birth_date' => '1990-01-01',
             'address' => 'Rua Teste, 123',
         ]);

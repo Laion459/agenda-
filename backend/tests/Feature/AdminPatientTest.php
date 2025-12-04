@@ -22,7 +22,7 @@ class AdminPatientTest extends TestCase
                 'name' => 'João Silva',
                 'email' => 'joao@test.com',
                 'phone' => '(11) 99999-9999',
-                'cpf' => '12345678901',
+                'cpf' => '12345678909',
                 'birth_date' => '1990-01-01',
                 'address' => 'Rua Teste, 123',
                 'gender' => 'M',
@@ -44,7 +44,7 @@ class AdminPatientTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('patients', [
-            'cpf' => '12345678901',
+            'cpf' => '12345678909',
         ]);
     }
 
@@ -90,15 +90,18 @@ class AdminPatientTest extends TestCase
     {
         $admin = $this->createAdmin();
 
-        Patient::factory()->create(['cpf' => '12345678901']);
+        // Usa um CPF válido para o primeiro paciente
+        $cpfExistente = '12345678909';
+        Patient::factory()->create(['cpf' => $cpfExistente]);
 
         $this->authAs($admin);
 
+        // Tenta criar outro paciente com o mesmo CPF
         $response = $this->postJson('/api/admin/patients', [
             'name' => 'Outro Paciente',
             'email' => 'outro@test.com',
             'phone' => '(11) 99999-9999',
-            'cpf' => '12345678901',
+            'cpf' => $cpfExistente, // Mesmo CPF
             'birth_date' => '1990-01-01',
         ]);
 
@@ -118,7 +121,7 @@ class AdminPatientTest extends TestCase
             'name' => 'Teste',
             'email' => 'test@test.com',
             'phone' => '(11) 99999-9999',
-            'cpf' => '12345678901',
+            'cpf' => '12345678909',
             'birth_date' => '1990-01-01',
         ]);
 
