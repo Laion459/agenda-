@@ -6,15 +6,13 @@ const nextConfig: NextConfig = {
   transpilePackages: ['date-fns', 'recharts'],
   
   // Proxy reverso para API - evita problemas de CORS no Codespace
+  // O Next.js server faz proxy de /api/* para o backend
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://backend:8000';
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL 
-          ? `${process.env.NEXT_PUBLIC_API_URL}/:path*`
-          : process.env.NODE_ENV === 'production'
-          ? 'http://backend:8000/api/:path*'
-          : 'http://localhost:8000/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },
