@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'up'],
 
     'allowed_methods' => ['*'],
 
@@ -25,16 +25,16 @@ return [
     ],
 
     'allowed_origins_patterns' => [
-        // Permite qualquer domínio do Codespace
-        '#^https?://.*\.app\.github\.dev$#',
-        '#^https?://.*\.preview\.app\.github\.dev$#',
+        // Permite qualquer domínio do Codespace (com ou sem porta no subdomínio)
+        '#^https?://[^/]+\.app\.github\.dev$#',
+        '#^https?://[^/]+\.preview\.app\.github\.dev$#',
     ],
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['*'],
 
-    'max_age' => 0,
+    'max_age' => 86400,
 
     'supports_credentials' => true,
 

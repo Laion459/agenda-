@@ -31,10 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'token.fresh' => EnsureTokenNotExpired::class,
         ]);
 
+        // CORS deve ser o primeiro middleware global para processar preflight requests
+        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+        
         $middleware->append(SecurityHeadersMiddleware::class);
 
         $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\HandleCors::class,
             SanitizeInputMiddleware::class,
             RequestMetricsMiddleware::class,
             EnsureTokenNotExpired::class,
