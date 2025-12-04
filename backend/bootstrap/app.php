@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeadersMiddleware::class);
 
         $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
             SanitizeInputMiddleware::class,
             RequestMetricsMiddleware::class,
             EnsureTokenNotExpired::class,

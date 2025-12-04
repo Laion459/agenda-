@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Adiciona suporte dinâmico para domínios do Codespace no Sanctum
+        // Adiciona suporte dinâmico para domínios do Codespace no Sanctum e CORS
         $this->app->booted(function () {
             if ($this->app->runningInConsole()) {
                 return;
@@ -65,9 +65,18 @@ class AppServiceProvider extends ServiceProvider
                 str_contains($request->getHost(), '.preview.app.github.dev')
             )) {
                 $host = $request->getHost();
+                
+                // Adiciona ao Sanctum stateful domains
                 $stateful = config('sanctum.stateful', []);
                 if (!in_array($host, $stateful)) {
                     config(['sanctum.stateful' => array_merge($stateful, [$host])]);
+                }
+                
+                // Garante que o CORS permite este domínio
+                $corsOrigins = config('cors.allowed_origins', []);
+                if (!in_array("https://{$host}", $corsOrigins) && !in_array("http://{$host}", $corsOrigins)) {
+                    // O padrão regex já cobre, mas garantimos que está configurado
+                    config(['cors.allowed_origins' => array_merge($corsOrigins, ["https://{$host}"])]);
                 }
             }
         });
