@@ -79,10 +79,26 @@ export default function AdminDoctorsPage() {
           fetchHealthInsurances(),
         ]);
 
-        setDoctors(doctorResponse.data ?? []);
-        setHealthInsurances(insuranceResponse);
+        // Garante que a resposta está no formato esperado
+        if (doctorResponse && typeof doctorResponse === 'object' && 'data' in doctorResponse) {
+          setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
+        } else if (Array.isArray(doctorResponse)) {
+          // Fallback: se a resposta for um array direto
+          setDoctors(doctorResponse);
+        } else {
+          setDoctors([]);
+        }
+        
+        setHealthInsurances(Array.isArray(insuranceResponse) ? insuranceResponse : []);
       } catch (error) {
+        // Log adicional para debug
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[Admin Doctors Page] Erro ao carregar:', error);
+        }
         handleApiError(error, "Não foi possível carregar médicos");
+        // Garante que os estados estão definidos mesmo em caso de erro
+        setDoctors([]);
+        setHealthInsurances([]);
       } finally {
         setLoading(false);
       }

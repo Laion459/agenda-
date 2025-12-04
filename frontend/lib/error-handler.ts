@@ -35,6 +35,19 @@ export class AppErrorHandler implements ErrorHandler {
    * Trata um erro e executa ações apropriadas
    */
   handle(error: unknown, context?: string): void {
+    // Log imediato do erro antes de qualquer processamento
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[Error Handler - Raw] ${context || 'Erro'}:`, {
+        error,
+        errorType: typeof error,
+        isError: error instanceof Error,
+        isAxiosError: error && typeof error === 'object' && 'isAxiosError' in error,
+        errorKeys: error && typeof error === 'object' ? Object.keys(error) : [],
+        errorString: String(error),
+        errorMessage: error instanceof Error ? error.message : undefined,
+      });
+    }
+    
     const apiError = error as ApiError;
     const message = this.getErrorMessage(error);
 
@@ -245,7 +258,26 @@ export class AppErrorHandler implements ErrorHandler {
       
       // Log apenas em desenvolvimento
       if (process.env.NODE_ENV === 'development') {
-        console.error(`[Error Handler] ${context || 'Erro'}:`, serializedDetails);
+        // Sempre loga informações básicas primeiro
+        const basicInfo = {
+          errorType: typeof error,
+          errorConstructor: error?.constructor?.name,
+          errorString: String(error),
+          errorMessage: error instanceof Error ? error.message : undefined,
+          hasResponse: (error as { response?: unknown })?.response !== undefined,
+          hasRequest: (error as { request?: unknown })?.request !== undefined,
+          errorKeys: error && typeof error === 'object' ? Object.keys(error) : [],
+        };
+        
+        // Se serializedDetails estiver vazio, usa apenas informações básicas
+        if (Object.keys(serializedDetails).length === 0) {
+          console.error(`[Error Handler] ${context || 'Erro'}:`, basicInfo);
+        } else {
+          console.error(`[Error Handler] ${context || 'Erro'}:`, {
+            ...basicInfo,
+            ...serializedDetails,
+          });
+        }
       }
     }
 
