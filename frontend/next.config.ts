@@ -8,7 +8,10 @@ const nextConfig: NextConfig = {
   // Proxy reverso para API - evita problemas de CORS no Codespace
   // O Next.js server faz proxy de /api/* para o backend
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://backend:8000';
+    // Se BACKEND_URL estiver definido (Docker), usa ele
+    // Caso contrário, usa localhost (desenvolvimento local)
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    
     return [
       {
         source: '/api/:path*',
