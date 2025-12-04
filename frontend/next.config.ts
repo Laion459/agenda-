@@ -12,10 +12,13 @@ const nextConfig: NextConfig = {
     // Caso contrário, usa localhost (desenvolvimento local)
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
     
+    // Remove barra final se houver para evitar duplicação
+    const cleanBackendUrl = backendUrl.replace(/\/$/, '');
+    
     return [
       {
         source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
+        destination: `${cleanBackendUrl}/api/:path*`,
       },
     ];
   },
