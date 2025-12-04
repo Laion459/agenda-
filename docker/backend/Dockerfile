@@ -30,8 +30,14 @@ RUN apt-get update && \
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-RUN groupadd --gid ${GID} agenda || true && \
-    useradd --uid ${UID} --gid ${GID} --shell /bin/bash --create-home agenda || true
+# Cria grupo e usuário agenda, verificando se já existem antes de criar
+RUN if ! getent group ${GID} >/dev/null 2>&1; then \
+        groupadd --gid ${GID} agenda; \
+    fi && \
+    if ! getent passwd agenda >/dev/null 2>&1; then \
+        useradd --uid ${UID} --gid ${GID} --shell /bin/bash --create-home agenda; \
+    fi && \
+    id agenda
 
 # -------------------------------------------------------------------
 # Vendor stage: installs production dependencies once, cached by Docker
