@@ -53,44 +53,6 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Adiciona suporte dinâmico para domínios do Codespace no Sanctum e CORS
-        $this->app->booted(function () {
-            if ($this->app->runningInConsole()) {
-                return;
-            }
-            
-            $request = $this->app->make('request');
-            if ($request && (
-                str_contains($request->getHost(), '.app.github.dev') ||
-                str_contains($request->getHost(), '.preview.app.github.dev')
-            )) {
-                $host = $request->getHost();
-                
-                // Adiciona ao Sanctum stateful domains
-                $stateful = config('sanctum.stateful', []);
-                if (!in_array($host, $stateful)) {
-                    config(['sanctum.stateful' => array_merge($stateful, [$host])]);
-                }
-                
-                // Garante que o CORS permite este domínio
-                // Adiciona explicitamente ao allowed_origins para garantir que funcione
-                $corsOrigins = config('cors.allowed_origins', []);
-                $origin = "https://{$host}";
-                if (!in_array($origin, $corsOrigins)) {
-                    $corsOrigins[] = $origin;
-                    config(['cors.allowed_origins' => $corsOrigins]);
-                }
-                
-                // Também atualiza os padrões se necessário
-                $patterns = config('cors.allowed_origins_patterns', []);
-                $pattern = '#^https?://.*\.app\.github\.dev$#';
-                if (!in_array($pattern, $patterns)) {
-                    $patterns[] = $pattern;
-                    config(['cors.allowed_origins_patterns' => $patterns]);
-                }
-            }
-        });
-
         // Limpa o cache do Spatie Permission ao iniciar
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
