@@ -4,6 +4,11 @@ FRONTEND_CONTAINER=$(COMPOSE) exec frontend
 DB_CONTAINER=$(COMPOSE) exec db
 REDIS_CONTAINER=$(COMPOSE) exec redis
 
+# Detecta UID/GID automaticamente (compatível com Codespaces)
+DOCKER_UID ?= $(shell id -u 2>/dev/null || echo 1000)
+DOCKER_GID ?= $(shell id -g 2>/dev/null || echo 1000)
+BUILD_ARGS = --build-arg UID=$(DOCKER_UID) --build-arg GID=$(DOCKER_GID)
+
 .PHONY: up down stop restart logs ps build rebuild install bootstrap seed key queue-backend queue-stop schedule-run reminders notifications-clean backend-shell frontend-shell db-shell db-root redis-shell frontend-build lint test test-backend test-frontend prod-build
 
 # Start all services in detached mode
@@ -31,13 +36,15 @@ ps:
 	$(COMPOSE) ps
 
 # Rebuild images pulling the latest bases and ignoring cache
+# Passa UID/GID automaticamente para compatibilidade com Codespaces
 build:
-	$(COMPOSE) build --pull
+	$(COMPOSE) build --pull $(BUILD_ARGS)
 
 # Fully rebuild the stack and start fresh containers
+# Passa UID/GID automaticamente para compatibilidade com Codespaces
 rebuild:
 	$(COMPOSE) down --remove-orphans
-	$(COMPOSE) build --pull --force-rm
+	$(COMPOSE) build --pull --force-rm $(BUILD_ARGS)
 	$(COMPOSE) up -d
 
 # One-shot setup: build images, install deps, run migrations + seeders
