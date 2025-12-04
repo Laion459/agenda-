@@ -31,23 +31,32 @@ const getApiUrl = () => {
     return `${origin.replace(/:\d+$/, '')}:8000/api`;
   }
   
-  // Fallback para SSR (server-side rendering)
+  // Fallback para SSR (server-side rendering) - será sobrescrito no cliente
   return 'http://localhost:8000/api';
 };
 
-const rawBaseUrl = getApiUrl();
-const normalizedBaseUrl = rawBaseUrl.endsWith("/api")
-  ? rawBaseUrl
-  : `${rawBaseUrl.replace(/\/$/, "")}/api`;
+// Função para obter a URL da API dinamicamente (sempre atualizada)
+const getApiBaseUrl = (): string => {
+  const apiUrl = getApiUrl();
+  return apiUrl.endsWith("/api")
+    ? apiUrl
+    : `${apiUrl.replace(/\/$/, "")}/api`;
+};
 
+// Cria instância do axios
 const api = axios.create({
-  baseURL: normalizedBaseUrl,
+  baseURL: typeof window !== 'undefined' ? getApiBaseUrl() : 'http://localhost:8000/api',
   timeout: 30000, // 30 segundos
 });
 
-// Interceptor de requisição
+// Interceptor de requisição - atualiza baseURL dinamicamente no cliente
 api.interceptors.request.use(
   (config) => {
+    // Atualiza baseURL no cliente para garantir URL correta
+    if (typeof window !== 'undefined') {
+      config.baseURL = getApiBaseUrl();
+    }
+    
     const token = getStoredToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
