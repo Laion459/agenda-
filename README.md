@@ -8,6 +8,9 @@ Sistema completo de agendamento médico desenvolvido com Laravel (backend) e Nex
 - [Tecnologias](#tecnologias)
 - [Requisitos](#requisitos)
 - [Instalação](#instalação)
+  - [Método 1: Docker com Makefile](#método-1-usando-docker-com-makefile-recomendado---mais-simples)
+  - [Método 2: Docker Compose Manual](#método-2-usando-docker-compose-manualmente)
+  - [Método 3: Desenvolvimento Local SEM Docker](#método-3-desenvolvimento-local-sem-docker)
 - [Configuração](#configuração)
 - [Uso](#uso)
 - [Testes](#testes)
@@ -54,14 +57,24 @@ O **Agenda+** é um sistema completo de agendamento médico que permite:
 
 ## 📦 Requisitos
 
+### Opção 1: Com Docker (Recomendado - Mais Fácil)
 - Docker e Docker Compose
-- Node.js 20+ (para desenvolvimento local)
-- PHP 8.2+ (para desenvolvimento local)
-- Composer (para desenvolvimento local)
+- Make (opcional, mas recomendado) ou Git Bash no Windows
+- Node.js 20+ (apenas para desenvolvimento local sem Docker)
+
+### Opção 2: Sem Docker (Desenvolvimento Local)
+- PHP 8.2+ com extensões: `pdo_pgsql`, `pdo_sqlite`, `mbstring`, `xml`, `curl`, `zip`, `bcmath`, `intl`, `redis` (opcional)
+- Composer 2.x
+- PostgreSQL 16+ ou SQLite (como alternativa simples)
+- Redis 7+ (opcional, pode usar `file` ou `array` como driver de cache)
+- Node.js 20+ e npm/yarn
+- Git
+
+**Nota:** O Docker é a forma mais fácil e recomendada para rodar o projeto, pois automatiza toda a configuração. Desenvolvimento local sem Docker requer mais configuração manual.
 
 ## 🚀 Instalação
 
-### Método 1: Usando Makefile (Recomendado - Mais Simples)
+### Método 1: Usando Docker com Makefile (Recomendado - Mais Simples)
 
 O projeto inclui um `Makefile` que automatiza todo o processo de instalação:
 
@@ -150,38 +163,267 @@ docker-compose exec frontend npm install
 - API Docs (Swagger): http://localhost:8000/api/documentation
 - Mailpit: http://localhost:8025
 
-### Desenvolvimento Local
+### Método 3: Desenvolvimento Local SEM Docker
 
-#### Backend
+> ⚠️ **Atenção:** Este método requer mais configuração manual. O Docker é recomendado para garantir que todos tenham o mesmo ambiente.
+
+#### Pré-requisitos para Desenvolvimento Local
+
+Você precisará instalar e configurar manualmente:
+
+1. **PHP 8.2+** com as seguintes extensões:
+   - `pdo_pgsql` ou `pdo_sqlite`
+   - `mbstring`
+   - `xml`
+   - `curl`
+   - `zip`
+   - `bcmath`
+   - `intl`
+   - `gd` (para geração de PDF)
+
+2. **Composer** - Gerenciador de dependências PHP
+   - Baixe em: https://getcomposer.org/
+
+3. **PostgreSQL 16+** ou **SQLite** (mais simples)
+   - PostgreSQL: https://www.postgresql.org/download/
+   - SQLite: Geralmente já vem com PHP
+
+4. **Redis** (opcional - pode usar cache em arquivo)
+   - Redis: https://redis.io/download/
+   - Ou configure para usar `file` ou `array` como driver de cache
+
+5. **Node.js 20+** e npm/yarn
+   - Baixe em: https://nodejs.org/
+
+#### Configuração no Windows (Sem WSL)
+
+Se você estiver no Windows sem WSL:
+
+1. **Instale o XAMPP ou Laragon** (mais fácil):
+   - XAMPP: https://www.apachefriends.org/ (inclui PHP, Apache, MySQL - pode desabilitar MySQL)
+   - Laragon: https://laragon.org/ (recomendado - inclui PHP, PostgreSQL, Redis)
+
+2. **Instale PostgreSQL separadamente:**
+   - Download: https://www.postgresql.org/download/windows/
+   - Ou use o PostgreSQL que vem com Laragon
+
+3. **Use PowerShell ou CMD** (não precisa de Make):
+   - Todos os comandos podem ser executados diretamente
+   - Veja a seção "Comandos Equivalentes no Windows" abaixo
+
+4. **Para comandos que usam Make:**
+   - Substitua `make install` pelos comandos manuais abaixo
+   - Ou instale o Make: https://www.gnu.org/software/make/
+
+---
+
+#### Passo a Passo: Backend Local
+
+**1. Instale as dependências PHP:**
 
 ```bash
 cd backend
 composer install
-cp .env.example .env
+```
+
+**2. Configure o ambiente:**
+
+```bash
+# Copie o arquivo de exemplo
+copy .env.example .env  # Windows
+# ou
+cp .env.example .env    # Linux/Mac
+
+# Gere a chave da aplicação
 php artisan key:generate
-php artisan migrate
-php artisan db:seed
+```
+
+**3. Configure o banco de dados:**
+
+**Opção A: PostgreSQL (Recomendado para produção)**
+
+Edite o arquivo `backend/.env`:
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=agenda
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha_postgres
+```
+
+Crie o banco de dados:
+```bash
+# No PostgreSQL (psql ou pgAdmin)
+CREATE DATABASE agenda;
+
+# Ou via linha de comando:
+createdb -U postgres agenda
+```
+
+**Opção B: SQLite (Mais Simples - Apenas Desenvolvimento)**
+
+Edite o arquivo `backend/.env`:
+```env
+DB_CONNECTION=sqlite
+DB_DATABASE=C:\caminho\para\app agenda+\backend\database\database.sqlite
+```
+
+Crie o arquivo SQLite:
+```bash
+# Windows (PowerShell)
+New-Item -ItemType File -Path "database\database.sqlite"
+
+# Linux/Mac
+touch database/database.sqlite
+```
+
+**4. Configure o cache (se não tiver Redis):**
+
+Edite o arquivo `backend/.env`:
+```env
+CACHE_DRIVER=file  # Ou 'array' para desenvolvimento
+QUEUE_CONNECTION=sync  # Processa filas de forma síncrona
+```
+
+**5. Execute as migrações e seeders:**
+
+```bash
+php artisan migrate --seed
+```
+
+**6. Inicie o servidor:**
+
+```bash
 php artisan serve
 ```
 
-#### Frontend
+O backend estará disponível em: http://localhost:8000
 
-**Pré-requisitos:** Certifique-se de que o backend está rodando primeiro.
+---
+
+#### Passo a Passo: Frontend Local
+
+**1. Instale as dependências:**
 
 ```bash
 cd frontend
 npm install
+```
 
-# Crie o arquivo .env.local se não existir
-cp .env.example .env.local  # Se o arquivo .env.example existir
-# Ou crie manualmente com:
-# NEXT_PUBLIC_API_URL=http://localhost:8000/api
-# NEXT_PUBLIC_BASE_URL=http://localhost:3000
+**2. Configure as variáveis de ambiente:**
 
+Crie o arquivo `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+**3. Inicie o servidor de desenvolvimento:**
+
+```bash
 npm run dev
 ```
 
-**Importante:** Para desenvolvimento local sem Docker, você precisará ter PostgreSQL e Redis rodando localmente, ou ajustar as configurações do backend para usar SQLite (não recomendado para produção).
+O frontend estará disponível em: http://localhost:3000
+
+---
+
+#### Comandos Equivalentes no Windows (Sem Make)
+
+Se você não tem Make instalado, use estes comandos equivalentes:
+
+| Comando Make | Equivalente no Windows (PowerShell) | Equivalente no Linux/Mac |
+|--------------|-------------------------------------|--------------------------|
+| `make install` | Veja passos manuais acima | `docker-compose build && docker-compose run --rm backend composer install && ...` |
+| `make up` | `docker-compose up -d` | `docker-compose up -d` |
+| `make down` | `docker-compose down` | `docker-compose down` |
+| `make logs` | `docker-compose logs -f` | `docker-compose logs -f` |
+| `make test` | `docker-compose run --rm backend php artisan test && docker-compose run --rm frontend npm test` | Igual |
+| `make backend-shell` | `docker-compose exec backend bash` | `docker-compose exec backend bash` |
+
+---
+
+#### Troubleshooting - Desenvolvimento Local
+
+**Erro: "Class 'PDO' not found" ou extensão PDO não encontrada**
+- Instale a extensão `pdo_pgsql` ou `pdo_sqlite` no PHP
+- No Windows com XAMPP: Edite `php.ini` e descomente `extension=pdo_pgsql`
+
+**Erro: "Connection refused" ao conectar ao PostgreSQL**
+- Verifique se o PostgreSQL está rodando: `pg_isready` (Linux/Mac) ou verifique os serviços no Windows
+- Confirme que as credenciais no `.env` estão corretas
+- Teste a conexão: `psql -U postgres -d agenda`
+
+**Erro: Redis não encontrado (mas você não precisa dele)**
+- Configure `CACHE_DRIVER=file` no `.env`
+- Configure `QUEUE_CONNECTION=sync` no `.env`
+
+**Porta 8000 ou 3000 já em uso**
+- Mude a porta do Laravel: `php artisan serve --port=8001`
+- Mude a porta do Next.js: `npm run dev -- -p 3001`
+- Atualize `NEXT_PUBLIC_API_URL` no frontend para usar a nova porta
+
+**Erro ao gerar PDF (extensão GD não encontrada)**
+- Instale a extensão `gd` no PHP
+- No Windows com XAMPP: Edite `php.ini` e descomente `extension=gd`
+
+---
+
+#### Limitações ao Rodar Sem Docker
+
+Ao rodar sem Docker, você pode encontrar algumas limitações:
+
+- ⚠️ **Mailpit não disponível** - E-mails não serão capturados automaticamente
+  - Solução: Configure um servidor SMTP real ou use `log` como driver de mail
+  - Configure no `.env`: `MAIL_MAILER=log` para salvar e-mails em arquivo de log
+
+- ⚠️ **Redis opcional** - Se não tiver Redis, use `file` como cache
+  - Configure: `CACHE_DRIVER=file` e `QUEUE_CONNECTION=sync`
+
+- ⚠️ **Diferenças entre ambientes** - Seu ambiente pode diferir do Docker
+  - Algumas funcionalidades podem se comportar diferente
+  - Testes podem passar em um ambiente e falhar em outro
+
+**Recomendação:** Use Docker para desenvolvimento quando possível. Use desenvolvimento local apenas se:
+- Você tem experiência com configuração de ambientes
+- Você não consegue usar Docker no seu sistema
+- Você está fazendo modificações que requerem acesso direto ao sistema
+
+---
+
+#### Alternativa: Usar Docker apenas para Serviços
+
+Você pode rodar apenas os serviços (PostgreSQL, Redis) via Docker e rodar o código localmente:
+
+**1. Inicie apenas os serviços:**
+```bash
+docker-compose up -d db redis mailpit
+```
+
+**2. Configure o `.env` para conectar aos serviços Docker:**
+```env
+DB_HOST=127.0.0.1
+DB_PORT=5432
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025
+```
+
+**3. Execute o código localmente:**
+```bash
+# Terminal 1 - Backend
+cd backend
+php artisan serve
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
+
+Esta abordagem combina a facilidade do Docker para serviços com a flexibilidade de desenvolvimento local.
 
 ## ⚙️ Configuração
 
@@ -303,12 +545,50 @@ npm run test:watch
 
 ### Problemas Comuns
 
+#### Erro: "make: command not found" (Windows sem WSL/Make)
+
+**Solução:**
+
+1. **Use Docker Compose diretamente** (não precisa de Make):
+   ```powershell
+   # Em vez de: make install
+   docker-compose build
+   docker-compose run --rm backend composer install
+   docker-compose run --rm backend php artisan key:generate
+   docker-compose run --rm backend php artisan migrate --seed
+   docker-compose run --rm frontend npm install
+   docker-compose up -d
+   
+   # Em vez de: make up
+   docker-compose up -d
+   
+   # Em vez de: make down
+   docker-compose down
+   ```
+
+2. **Instale o Make** (opcional):
+   - Git Bash já inclui Make
+   - Ou baixe: https://www.gnu.org/software/make/
+
+3. **Use desenvolvimento local** (veja Método 3 acima)
+
 #### Erro: "Cannot find module" ou dependências não instaladas
 ```bash
-# Reinstale as dependências
+# Com Docker (com Make):
 make down
 make install
 make up
+
+# Com Docker (sem Make):
+docker-compose down
+docker-compose build
+docker-compose run --rm backend composer install
+docker-compose run --rm frontend npm install
+docker-compose up -d
+
+# Desenvolvimento local:
+cd backend && composer install
+cd ../frontend && npm install
 ```
 
 #### Erro: "Connection refused" ao conectar ao banco
@@ -318,9 +598,14 @@ make up
 
 #### Erro: "APP_KEY not set" no Laravel
 ```bash
+# Com Docker:
 docker-compose exec backend php artisan key:generate
 # Ou usando Makefile:
 make key
+
+# Desenvolvimento local:
+cd backend
+php artisan key:generate
 ```
 
 #### Frontend não conecta ao backend
@@ -331,10 +616,22 @@ make key
 
 #### Erro ao executar migrações
 ```bash
-# Recrie o banco de dados
+# Com Docker (com Make):
 make down
-docker volume rm agenda-plus_db-data  # Remove o volume do banco
+docker volume rm agenda-plus_db-data
 make install
+
+# Com Docker (sem Make):
+docker-compose down
+docker volume rm agenda-plus_db-data
+docker-compose build
+docker-compose run --rm backend composer install
+docker-compose run --rm backend php artisan migrate --seed
+docker-compose up -d
+
+# Desenvolvimento local:
+cd backend
+php artisan migrate:fresh --seed
 ```
 
 #### Portas já em uso
@@ -344,17 +641,31 @@ Se as portas 3000, 8000, 5432 ou 6379 estiverem em uso:
 
 ### Verificando o Status dos Serviços
 
+**Com Docker:**
 ```bash
 # Ver status dos containers
-make ps
-# Ou
-docker-compose ps
+make ps                    # Com Make
+docker-compose ps          # Sem Make
 
 # Ver logs
-make logs
-# Ou logs de um serviço específico
-docker-compose logs backend
-docker-compose logs frontend
+make logs                  # Com Make
+docker-compose logs -f     # Sem Make (todos os serviços)
+docker-compose logs backend    # Logs do backend
+docker-compose logs frontend   # Logs do frontend
+```
+
+**Desenvolvimento Local:**
+```bash
+# Backend - verifique se o servidor está rodando:
+# http://localhost:8000
+
+# Frontend - verifique se o servidor está rodando:
+# http://localhost:3000
+
+# PostgreSQL - verifique o serviço:
+# Windows: Services.msc → PostgreSQL
+# Linux: sudo systemctl status postgresql
+# Mac: brew services list
 ```
 
 ## 📚 Documentação
