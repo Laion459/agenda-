@@ -46,6 +46,11 @@ build:
 # Rebuild backend without cache (useful after Dockerfile changes)
 build-backend-no-cache:
 	$(COMPOSE) build --pull --no-cache $(BUILD_ARGS) backend
+	# Valida se o usuário foi criado corretamente após o build
+	@echo "Validando se usuário existe na imagem..."
+	@docker run --rm agenda-plus-backend id $(DOCKER_UID) >/dev/null 2>&1 || \
+		(echo "ERRO: Usuário com UID $(DOCKER_UID) não existe na imagem!" && exit 1)
+	@echo "✅ Validação passou: usuário existe na imagem"
 
 # Fully rebuild the stack and start fresh containers
 # Passa UID/GID automaticamente para compatibilidade com Codespaces
@@ -61,6 +66,11 @@ install: build-backend-no-cache
 	# Verifica se o usuário agenda existe na imagem (diagnóstico)
 	@echo "Verificando se usuário 'agenda' existe na imagem..."
 	@docker run --rm agenda-plus-backend id agenda || (echo "ERRO: Usuário agenda não existe na imagem!" && exit 1)
+	# Cria .env se não existir
+	@if [ ! -f backend/.env ]; then \
+		echo "Criando arquivo .env a partir do .env.example..."; \
+		cp backend/.env.example backend/.env; \
+	fi
 	# Backend dependencies
 	$(COMPOSE) run --rm backend composer install
 	$(COMPOSE) run --rm backend php artisan key:generate
