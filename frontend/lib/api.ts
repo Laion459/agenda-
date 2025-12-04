@@ -2,7 +2,32 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 import { getStoredToken } from "@/lib/auth-storage";
 
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Detecta automaticamente a URL da API baseado no ambiente
+// No Codespace, usa a URL pública; localmente usa localhost
+const getApiUrl = () => {
+  // Se NEXT_PUBLIC_API_URL estiver definido, usa ele
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // No browser, detecta a URL baseado na origem atual
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    // Se estiver no Codespace (URL contém .app.github.dev ou .preview.app.github.dev)
+    if (origin.includes('.app.github.dev') || origin.includes('.preview.app.github.dev')) {
+      // Tenta usar a porta 8000 do mesmo domínio
+      const codespaceUrl = origin.replace(/:\d+$/, ':8000');
+      return `${codespaceUrl}/api`;
+    }
+    // Localmente, usa localhost:8000
+    return 'http://localhost:8000/api';
+  }
+  
+  // Fallback para SSR
+  return 'http://localhost:8000/api';
+};
+
+const rawBaseUrl = getApiUrl();
 const normalizedBaseUrl = rawBaseUrl.endsWith("/api")
   ? rawBaseUrl
   : `${rawBaseUrl.replace(/\/$/, "")}/api`;
