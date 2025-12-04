@@ -8,8 +8,11 @@ REDIS_CONTAINER=$(COMPOSE) exec redis
 DOCKER_UID ?= $(shell id -u 2>/dev/null || echo 1000)
 DOCKER_GID ?= $(shell id -g 2>/dev/null || echo 1000)
 BUILD_ARGS = --build-arg UID=$(DOCKER_UID) --build-arg GID=$(DOCKER_GID)
+# Exporta variáveis para docker-compose.yml usar
+export UID=$(DOCKER_UID)
+export GID=$(DOCKER_GID)
 
-.PHONY: up down stop restart logs ps build rebuild install bootstrap seed key queue-backend queue-stop schedule-run reminders notifications-clean backend-shell frontend-shell db-shell db-root redis-shell frontend-build lint test test-backend test-frontend prod-build
+.PHONY: up down stop restart logs ps build build-backend-no-cache rebuild install bootstrap seed key queue-backend queue-stop schedule-run reminders notifications-clean backend-shell frontend-shell db-shell db-root redis-shell frontend-build lint test test-backend test-frontend prod-build
 
 # Start all services in detached mode
 up:
@@ -40,6 +43,10 @@ ps:
 build:
 	$(COMPOSE) build --pull $(BUILD_ARGS)
 
+# Rebuild backend without cache (useful after Dockerfile changes)
+build-backend-no-cache:
+	$(COMPOSE) build --pull --no-cache $(BUILD_ARGS) backend
+
 # Fully rebuild the stack and start fresh containers
 # Passa UID/GID automaticamente para compatibilidade com Codespaces
 rebuild:
@@ -48,7 +55,12 @@ rebuild:
 	$(COMPOSE) up -d
 
 # One-shot setup: build images, install deps, run migrations + seeders
-install: build
+# Rebuild backend sem cache para garantir que mudanças no Dockerfile sejam aplicadas
+install: build-backend-no-cache
+	$(COMPOSE) build --pull $(BUILD_ARGS) frontend
+	# Verifica se o usuário agenda existe na imagem (diagnóstico)
+	@echo "Verificando se usuário 'agenda' existe na imagem..."
+	@docker run --rm agenda-plus-backend id agenda || (echo "ERRO: Usuário agenda não existe na imagem!" && exit 1)
 	# Backend dependencies
 	$(COMPOSE) run --rm backend composer install
 	$(COMPOSE) run --rm backend php artisan key:generate

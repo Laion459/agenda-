@@ -59,10 +59,21 @@ RUN composer install \
 # -------------------------------------------------------------------
 FROM base AS development
 
+# Re-declara ARGs para garantir que estejam disponíveis
+ARG UID=1000
+ARG GID=1000
+
 ENV APP_ENV=local \
     APP_DEBUG=true
 
 WORKDIR /var/www/html
+
+# Garante que o usuário agenda existe (herdado do base, mas verifica/cria se necessário)
+RUN if ! id agenda >/dev/null 2>&1; then \
+        (getent group ${GID} >/dev/null 2>&1 || groupadd --gid ${GID} agenda) && \
+        useradd --uid ${UID} --gid ${GID} --shell /bin/bash --create-home agenda; \
+    fi && \
+    id agenda
 
 COPY backend/composer.json backend/composer.lock ./
 RUN composer install \
@@ -73,7 +84,8 @@ RUN composer install \
 
 COPY backend /var/www/html
 
-USER agenda
+# Usa UID:GID diretamente ao invés de nome de usuário (mais confiável)
+USER ${UID}:${GID}
 
 EXPOSE 8000
 
@@ -83,6 +95,10 @@ CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
 # Production image: optimized autoloader + cached config/routes
 # -------------------------------------------------------------------
 FROM base AS production
+
+# Re-declara ARGs para garantir que estejam disponíveis
+ARG UID=1000
+ARG GID=1000
 
 ENV APP_ENV=production \
     APP_DEBUG=false
@@ -94,7 +110,8 @@ COPY --from=vendor /var/www/html/vendor /var/www/html/vendor
 
 RUN chown -R ${UID}:${GID} storage bootstrap/cache
 
-USER agenda
+# Usa UID:GID diretamente ao invés de nome de usuário (mais confiável)
+USER ${UID}:${GID}
 
 EXPOSE 8000
 
