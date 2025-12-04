@@ -48,10 +48,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # No Codespace, o frontend no navegador precisa acessar o backend pela URL pública
-      # Se estiver rodando localmente, use http://localhost:8000/api
-      # No Codespace, o backend será acessível via porta 8000 exposta
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+      # NEXT_PUBLIC_API_URL removido - o frontend detecta automaticamente a URL correta
+      # Se precisar forçar uma URL específica, defina a variável de ambiente manualmente
     volumes:
       - ./frontend:/usr/src/app
       - frontend-node-modules:/usr/src/app/node_modules

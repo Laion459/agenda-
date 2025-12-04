@@ -43,18 +43,21 @@ const getApiBaseUrl = (): string => {
     : `${apiUrl.replace(/\/$/, "")}/api`;
 };
 
-// Cria instância do axios
+// Cria instância do axios - baseURL será sempre atualizado no interceptor
 const api = axios.create({
-  baseURL: typeof window !== 'undefined' ? getApiBaseUrl() : 'http://localhost:8000/api',
+  baseURL: '/api', // Placeholder, sempre sobrescrito no interceptor
   timeout: 30000, // 30 segundos
 });
 
-// Interceptor de requisição - atualiza baseURL dinamicamente no cliente
+// Interceptor de requisição - SEMPRE atualiza baseURL dinamicamente
 api.interceptors.request.use(
   (config) => {
-    // Atualiza baseURL no cliente para garantir URL correta
+    // SEMPRE atualiza baseURL para garantir URL correta (não confia no valor inicial)
     if (typeof window !== 'undefined') {
       config.baseURL = getApiBaseUrl();
+    } else {
+      // Fallback para SSR
+      config.baseURL = 'http://localhost:8000/api';
     }
     
     const token = getStoredToken();
