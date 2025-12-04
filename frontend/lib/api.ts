@@ -3,36 +3,23 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { getStoredToken } from "@/lib/auth-storage";
 
 // Detecta automaticamente a URL da API baseado no ambiente
-// No Codespace, usa a URL pública; localmente usa localhost
+// Usa proxy reverso do Next.js para evitar problemas de CORS
 const getApiUrl = () => {
   // Se NEXT_PUBLIC_API_URL estiver definido, usa ele (prioridade máxima)
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // No browser, detecta a URL baseado na origem atual
+  // No browser, usa caminho relativo para o proxy do Next.js
+  // Isso evita problemas de CORS porque tudo fica no mesmo domínio
   if (typeof window !== 'undefined') {
-    const origin = window.location.origin;
-    
-    // Se estiver no Codespace (URL contém .app.github.dev ou .preview.app.github.dev)
-    if (origin.includes('.app.github.dev') || origin.includes('.preview.app.github.dev')) {
-      // No Codespace, as portas aparecem no subdomínio: -3000, -8000, etc.
-      // Substitui -3000 por -8000 para acessar o backend
-      const backendUrl = origin.replace(/-3000\./, '-8000.');
-      return `${backendUrl}/api`;
-    }
-    
-    // Se estiver em localhost (desenvolvimento local)
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return 'http://localhost:8000/api';
-    }
-    
-    // Fallback: tenta usar a mesma origem com porta 8000
-    return `${origin.replace(/:\d+$/, '')}:8000/api`;
+    return '/api';
   }
   
-  // Fallback para SSR (server-side rendering) - será sobrescrito no cliente
-  return 'http://localhost:8000/api';
+  // Para SSR, usa o backend diretamente (mesmo container)
+  return process.env.NODE_ENV === 'production'
+    ? 'http://backend:8000/api'
+    : 'http://localhost:8000/api';
 };
 
 // Função para obter a URL da API dinamicamente (sempre atualizada)
