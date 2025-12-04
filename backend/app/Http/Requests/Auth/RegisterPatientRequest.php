@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Domain\Shared\Enums\Gender;
+use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\Password;
@@ -21,7 +22,7 @@ class RegisterPatientRequest extends FormRequest
             'email' => ['required', 'email', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20'],
             'password' => ['required', Password::defaults()],
-            'cpf' => ['required', 'string', 'max:14', 'unique:patients,cpf'],
+            'cpf' => ['required', 'string', 'max:14', new ValidCpf(), 'unique:patients,cpf'],
             'birth_date' => ['required', 'date', 'before:today'],
             'address' => ['nullable', 'string'],
             'gender' => ['nullable', new Enum(Gender::class)],

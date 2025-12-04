@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Profile;
 
+use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -39,7 +40,7 @@ class UpdateProfileRequest extends FormRequest
             'patient.birth_date' => ['sometimes', 'required', 'date'],
             'patient.gender' => ['sometimes', 'nullable', Rule::in(['M', 'F', 'OTHER'])],
             'patient.address' => ['sometimes', 'nullable', 'string'],
-            'patient.cpf' => ['sometimes', 'required', 'string', 'max:14'],
+            'patient.cpf' => ['sometimes', 'required', 'string', 'max:14', new ValidCpf()],
             'doctor' => ['nullable', 'array'],
             'doctor.specialty' => ['sometimes', 'nullable', 'string', 'max:100'],
             'doctor.qualification' => ['sometimes', 'nullable', 'string'],

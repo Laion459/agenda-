@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Shared\ValueObjects\CPF;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -53,5 +55,37 @@ class Patient extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * Normaliza o CPF antes de salvar (remove formatação, mantém apenas números).
+     * Formata o CPF na leitura (adiciona pontos e traço).
+     */
+    protected function cpf(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value) {
+                if (empty($value)) {
+                    return null;
+                }
+                
+                // Se já estiver formatado, retorna como está
+                if (preg_match('/^\d{3}\.\d{3}\.\d{3}-\d{2}$/', $value)) {
+                    return $value;
+                }
+                
+                // Se estiver sem formatação, formata
+                $cpf = preg_replace('/[^0-9]/', '', $value);
+                if (strlen($cpf) === 11) {
+                    return substr($cpf, 0, 3).'.'.
+                           substr($cpf, 3, 3).'.'.
+                           substr($cpf, 6, 3).'-'.
+                           substr($cpf, 9, 2);
+                }
+                
+                return $value;
+            },
+            set: fn (?string $value) => $value ? preg_replace('/[^0-9]/', '', $value) : null,
+        );
     }
 }

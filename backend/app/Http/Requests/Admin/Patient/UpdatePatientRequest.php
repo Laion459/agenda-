@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Patient;
 
 use App\Models\Patient;
+use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,6 +41,7 @@ class UpdatePatientRequest extends FormRequest
                 'required',
                 'string',
                 'max:14',
+                new ValidCpf(),
                 Rule::unique('patients', 'cpf')->ignore($patient?->id),
             ],
             'birth_date' => ['sometimes', 'required', 'date'],

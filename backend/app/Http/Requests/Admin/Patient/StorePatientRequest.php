@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Patient;
 
+use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,7 +26,7 @@ class StorePatientRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['nullable', 'string', 'min:8'],
-            'cpf' => ['required', 'string', 'max:14', 'unique:patients,cpf'],
+            'cpf' => ['required', 'string', 'max:14', new ValidCpf(), 'unique:patients,cpf'],
             'birth_date' => ['required', 'date'],
             'gender' => ['nullable', Rule::in(['M', 'F', 'OTHER'])],
             'address' => ['nullable', 'string'],
