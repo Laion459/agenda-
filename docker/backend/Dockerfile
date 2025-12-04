@@ -30,14 +30,14 @@ RUN apt-get update && \
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Cria grupo e usuário agenda, verificando se já existem antes de criar
+# Cria grupo e usuário com UID/GID específicos (sem nome fixo para evitar problemas)
 RUN if ! getent group ${GID} >/dev/null 2>&1; then \
         groupadd --gid ${GID} agenda; \
     fi && \
-    if ! getent passwd agenda >/dev/null 2>&1; then \
-        useradd --uid ${UID} --gid ${GID} --shell /bin/bash --create-home agenda; \
+    if ! getent passwd ${UID} >/dev/null 2>&1; then \
+        useradd --uid ${UID} --gid ${GID} --shell /bin/bash --create-home --no-log-init agenda; \
     fi && \
-    id agenda
+    id ${UID} || id agenda
 
 # -------------------------------------------------------------------
 # Vendor stage: installs production dependencies once, cached by Docker
@@ -63,17 +63,22 @@ FROM base AS development
 ARG UID=1000
 ARG GID=1000
 
-ENV APP_ENV=local \
+# Armazena os valores em ENV para garantir que estejam disponíveis em runtime
+ENV DOCKER_UID=${UID} \
+    DOCKER_GID=${GID} \
+    APP_ENV=local \
     APP_DEBUG=true
 
 WORKDIR /var/www/html
 
-# Garante que o usuário agenda existe (herdado do base, mas verifica/cria se necessário)
-RUN if ! id agenda >/dev/null 2>&1; then \
+# Garante que o usuário com UID/GID existe e é verificado
+RUN if ! getent passwd ${UID} >/dev/null 2>&1; then \
         (getent group ${GID} >/dev/null 2>&1 || groupadd --gid ${GID} agenda) && \
-        useradd --uid ${UID} --gid ${GID} --shell /bin/bash --create-home agenda; \
+        useradd --uid ${UID} --gid ${GID} --shell /bin/bash --create-home --no-log-init agenda; \
     fi && \
-    id agenda
+    getent passwd ${UID} && \
+    test -n "$(getent passwd ${UID})" && \
+    id ${UID}
 
 COPY backend/composer.json backend/composer.lock ./
 RUN composer install \
@@ -84,7 +89,7 @@ RUN composer install \
 
 COPY backend /var/www/html
 
-# Usa UID:GID diretamente ao invés de nome de usuário (mais confiável)
+# Usa UID:GID diretamente - mais confiável que nome de usuário
 USER ${UID}:${GID}
 
 EXPOSE 8000
