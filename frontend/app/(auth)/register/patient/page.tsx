@@ -14,9 +14,17 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
+import { ErrorMessage } from '@/components/ui/error-message';
 import { registerPatient } from '@/services/auth-service';
 import { clsx } from 'clsx';
 import { TYPOGRAPHY, COLORS, TRANSITIONS } from '@/constants/design-tokens';
+import {
+  extractValidationErrors,
+  applyValidationErrors,
+  translateValidationError,
+  type ValidationErrors,
+} from '@/lib/validation-error-translator';
+import toast from 'react-hot-toast';
 
 const schema = z
   .object({
@@ -77,15 +85,87 @@ export default function PatientRegisterPage() {
         cpf: values.cpf,
         birth_date: values.birth_date,
         address: values.address,
+        city: values.city,
+        state: values.state,
         gender: values.gender as 'M' | 'F' | 'OTHER',
       });
+      
+      toast.success('Conta criada com sucesso! Redirecionando...');
       router.push('/');
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      setError('email', {
-        type: 'manual',
-        message: axiosError?.response?.data?.message ?? 'Não foi possível cadastrar',
-      });
+      const validationErrors = extractValidationErrors(error);
+      
+      if (validationErrors && Object.keys(validationErrors).length > 0) {
+        // Aplica erros específicos em cada campo
+        applyValidationErrors(validationErrors, setError);
+        
+        // Conta quantos erros existem
+        const errorCount = Object.keys(validationErrors).length;
+        const errorFields = Object.keys(validationErrors)
+          .map((field) => {
+            const fieldNames: Record<string, string> = {
+              name: 'Nome completo',
+              email: 'E-mail',
+              phone: 'Telefone',
+              password: 'Senha',
+              cpf: 'CPF',
+              birth_date: 'Data de nascimento',
+              gender: 'Sexo',
+              address: 'Endereço',
+              city: 'Cidade',
+              state: 'UF',
+            };
+            return fieldNames[field] || field;
+          })
+          .join(', ');
+        
+        // Exibe toast com resumo dos erros
+        toast.error(
+          `Por favor, corrija os erros no formulário${errorCount > 1 ? ` (${errorCount} campos): ${errorFields}` : `: ${errorFields}`}`,
+          { duration: 5000 }
+        );
+      } else {
+        // Se não conseguiu extrair erros estruturados, tenta tratar mensagem genérica
+        const axiosError = error as AxiosError<{ 
+          message?: string; 
+          errors?: Record<string, string[] | string> 
+        }>;
+        
+        // Verifica se tem mensagem de erro genérica
+        const errorMessage = axiosError?.response?.data?.message;
+        const errorsObj = axiosError?.response?.data?.errors;
+        const statusCode = axiosError?.response?.status;
+        
+        // Se tem erros mas não foram extraídos, tenta extrair agora
+        if (errorsObj && typeof errorsObj === 'object' && Object.keys(errorsObj).length > 0) {
+          applyValidationErrors(errorsObj as ValidationErrors, setError);
+          
+          const errorCount = Object.keys(errorsObj).length;
+          toast.error(
+            `Por favor, corrija os erros no formulário (${errorCount} campo${errorCount > 1 ? 's' : ''})`,
+            { duration: 5000 }
+          );
+        } else if (statusCode === 422) {
+          // Erro de validação - BLOQUEIA mensagens técnicas
+          if (errorMessage && (errorMessage.includes('validation.') || errorMessage.includes('and more errors'))) {
+            toast.error(
+              'Por favor, verifique os dados informados. Alguns campos podem estar incorretos ou já cadastrados.',
+              { duration: 5000 }
+            );
+          } else if (errorMessage) {
+            toast.error(errorMessage, { duration: 5000 });
+          } else {
+            toast.error('Por favor, verifique os dados informados.', { duration: 5000 });
+          }
+          
+          // NÃO seta erro em campo específico se a mensagem for técnica
+        } else if (errorMessage && !errorMessage.includes('validation.') && !errorMessage.includes('and more errors')) {
+          // Outros tipos de erro (apenas se não for técnico)
+          toast.error(errorMessage, { duration: 5000 });
+        } else {
+          toast.error('Não foi possível cadastrar. Verifique os dados informados.', { duration: 5000 });
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -159,6 +239,45 @@ export default function PatientRegisterPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-6 pb-6">
+              {/* Resumo de Erros (se houver múltiplos erros) */}
+              {Object.keys(errors).length > 2 && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-red-600 dark:text-red-400 font-semibold">
+                      ⚠️ Erros no formulário
+                    </span>
+                  </div>
+                  <p className="text-sm text-red-700 dark:text-red-300">
+                    Por favor, corrija os campos marcados em vermelho abaixo:
+                  </p>
+                  <ul className="text-xs text-red-600 dark:text-red-400 list-disc list-inside space-y-1">
+                    {Object.entries(errors).map(([field, error]) => {
+                      if (!error?.message) return null;
+                      const fieldNames: Record<string, string> = {
+                        name: 'Nome completo',
+                        email: 'E-mail',
+                        phone: 'Telefone',
+                        password: 'Senha',
+                        cpf: 'CPF',
+                        birth_date: 'Data de nascimento',
+                        gender: 'Sexo',
+                        address: 'Endereço',
+                        city: 'Cidade',
+                        state: 'UF',
+                        confirm_password: 'Confirmação de senha',
+                        acceptTerms: 'Aceitação dos termos',
+                      };
+                      // Traduz a mensagem para garantir que nunca apareça mensagem técnica
+                      const translatedMessage = translateValidationError(field, error.message);
+                      return (
+                        <li key={field}>
+                          <strong>{fieldNames[field] || field}:</strong> {translatedMessage}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
         {/* Two Columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left Column */}
@@ -169,7 +288,7 @@ export default function PatientRegisterPage() {
                 Nome Completo
               </Label>
               <Input id="name" placeholder="João da Silva" className="h-11" {...register('name')} />
-              {errors.name && <p className="text-xs text-red-500 animate-fade-in">{errors.name.message}</p>}
+              <ErrorMessage field="name" error={errors.name} className="text-xs text-red-500 animate-fade-in" />
             </div>
 
             <div className="space-y-2">
@@ -183,13 +302,13 @@ export default function PatientRegisterPage() {
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
               </div>
-              {errors.birth_date && <p className="text-xs text-red-500">{errors.birth_date.message}</p>}
+              <ErrorMessage field="birth_date" error={errors.birth_date} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
               <Input id="phone" placeholder="(11) 98765-4321" {...register('phone')} />
-              {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
+              <ErrorMessage field="phone" error={errors.phone} />
             </div>
           </div>
 
@@ -198,7 +317,7 @@ export default function PatientRegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF</Label>
               <Input id="cpf" placeholder="000.000.000-00" {...register('cpf')} />
-              {errors.cpf && <p className="text-xs text-red-500">{errors.cpf.message}</p>}
+              <ErrorMessage field="cpf" error={errors.cpf} />
             </div>
 
             <div className="space-y-2">
@@ -218,13 +337,13 @@ export default function PatientRegisterPage() {
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
               </div>
-              {errors.gender && <p className="text-xs text-red-500">{errors.gender.message}</p>}
+              <ErrorMessage field="gender" error={errors.gender} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" type="email" placeholder="seu@email.com" {...register('email')} />
-              {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+              <ErrorMessage field="email" error={errors.email} />
             </div>
           </div>
         </div>
@@ -234,14 +353,14 @@ export default function PatientRegisterPage() {
           <div className="space-y-2">
             <Label htmlFor="address">Endereço</Label>
             <Input id="address" placeholder="Rua, número, bairro" {...register('address')} />
-            {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
+            <ErrorMessage field="address" error={errors.address} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="city">Cidade</Label>
               <Input id="city" placeholder="São Paulo" {...register('city')} />
-              {errors.city && <p className="text-xs text-red-500">{errors.city.message}</p>}
+              <ErrorMessage field="city" error={errors.city} />
             </div>
 
             <div className="space-y-2">
@@ -261,7 +380,7 @@ export default function PatientRegisterPage() {
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
               </div>
-              {errors.state && <p className="text-xs text-red-500">{errors.state.message}</p>}
+              <ErrorMessage field="state" error={errors.state} />
             </div>
           </div>
         </div>
@@ -275,7 +394,7 @@ export default function PatientRegisterPage() {
               placeholder="Mínimo 8 caracteres"
               {...register('password')}
             />
-            {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+            <ErrorMessage field="password" error={errors.password} />
           </div>
 
           <div className="space-y-2">
@@ -285,9 +404,7 @@ export default function PatientRegisterPage() {
               placeholder="Repita a senha"
               {...register('confirm_password')}
             />
-            {errors.confirm_password && (
-              <p className="text-xs text-red-500">{errors.confirm_password.message}</p>
-            )}
+            <ErrorMessage field="confirm_password" error={errors.confirm_password} />
           </div>
         </div>
 
@@ -310,9 +427,7 @@ export default function PatientRegisterPage() {
             </Link>
           </Label>
         </div>
-        {errors.acceptTerms && (
-          <p className="text-xs text-red-500">{errors.acceptTerms.message}</p>
-        )}
+        <ErrorMessage field="acceptTerms" error={errors.acceptTerms} />
 
               {/* Submit Button */}
               <Button

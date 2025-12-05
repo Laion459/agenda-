@@ -2,23 +2,24 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 import { getStoredToken } from "@/lib/auth-storage";
 
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const normalizedBaseUrl = rawBaseUrl.endsWith("/api")
-  ? rawBaseUrl
-  : `${rawBaseUrl.replace(/\/$/, "")}/api`;
+const API_BASE_URL = 'http://localhost:8000/api';
 
 const api = axios.create({
-  baseURL: normalizedBaseUrl,
-  timeout: 30000, // 30 segundos
+  baseURL: API_BASE_URL,
+  timeout: 30000,
 });
 
-// Interceptor de requisição
 api.interceptors.request.use(
   (config) => {
     const token = getStoredToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    if (!config.baseURL || config.baseURL.includes('3000')) {
+      config.baseURL = 'http://localhost:8000/api';
+    }
+    
     return config;
   },
   (error) => {
@@ -26,20 +27,16 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor de resposta
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Se a resposta é um blob, retorna diretamente
     if (response.config.responseType === 'blob') {
       return response;
     }
     return response;
   },
   (error: AxiosError) => {
-    // Tratamento centralizado de erros
     const handledError = handleApiErrorResponse(error);
     
-    // Garante que o erro tenha pelo menos uma mensagem
     if (!handledError.message) {
       if (error.response?.data) {
         const data = error.response.data as { message?: string; errors?: Record<string, unknown> };
@@ -51,7 +48,6 @@ api.interceptors.response.use(
       }
     }
     
-    // Preserva informações importantes do erro original de forma serializável
     const enhancedError = {
       ...handledError,
       name: handledError.name || 'AxiosError',
@@ -72,7 +68,6 @@ api.interceptors.response.use(
       } : undefined,
     } as AxiosError;
     
-    // Se o erro é relacionado a blob, tenta converter
     if (error.config?.responseType === 'blob' && error.response?.data) {
       const blob = error.response.data instanceof Blob 
         ? error.response.data 
@@ -84,11 +79,7 @@ api.interceptors.response.use(
   }
 );
 
-/**
- * Trata erros da API de forma centralizada
- */
 function handleApiErrorResponse(error: AxiosError): AxiosError {
-  // Erro de rede (sem resposta do servidor)
   if (!error.response) {
     if (error.code === 'ECONNABORTED') {
       error.message = 'Tempo de requisição excedido. Tente novamente.';
@@ -103,10 +94,8 @@ function handleApiErrorResponse(error: AxiosError): AxiosError {
   const status = error.response.status;
   const data = error.response.data as { message?: string; errors?: Record<string, string | string[]> };
 
-  // Tratamento por status HTTP
   switch (status) {
     case 401:
-      // Não autenticado - redirecionar para home
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
@@ -122,7 +111,6 @@ function handleApiErrorResponse(error: AxiosError): AxiosError {
       break;
 
     case 422:
-      // Erro de validação
       const validationErrors = extractValidationErrors(data);
       error.message = validationErrors || data?.message || 'Dados inválidos. Verifique os campos.';
       break;
@@ -144,9 +132,6 @@ function handleApiErrorResponse(error: AxiosError): AxiosError {
   return error;
 }
 
-/**
- * Extrai mensagens de erro de validação
- */
 function extractValidationErrors(data: { errors?: Record<string, string | string[]> }): string | null {
   if (!data?.errors) return null;
 
